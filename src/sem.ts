@@ -1,9 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
-// ---------------------------------------------------------------------------
-// Error
-// ---------------------------------------------------------------------------
-
 export class SemError extends Error {
   constructor(
     message: string,
@@ -14,10 +10,6 @@ export class SemError extends Error {
     this.name = "SemError";
   }
 }
-
-// ---------------------------------------------------------------------------
-// Exec helper
-// ---------------------------------------------------------------------------
 
 type ExecFn = ExtensionAPI["exec"];
 
@@ -32,10 +24,6 @@ async function run(exec: ExecFn, args: string[], signal?: AbortSignal): Promise<
   }
   return result.stdout;
 }
-
-// ---------------------------------------------------------------------------
-// Typed wrappers
-// ---------------------------------------------------------------------------
 
 /** Returns the terminal-format entity tree (no --json needed). */
 export async function semEntities(

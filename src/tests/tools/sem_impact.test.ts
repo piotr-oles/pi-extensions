@@ -2,10 +2,6 @@ import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { describe, expect, it, vi } from "vitest";
 import { registerSemImpact } from "../../tools/sem_impact.js";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 type ExecResult = {
   content: Array<{ type: string; text: string }>;
   details: Record<string, unknown>;
@@ -37,10 +33,6 @@ const MOCK_TEXT = `⊕ function login (src/auth.ts:10–30)
 
 const MOCK_EXEC_OK = { stdout: MOCK_TEXT, stderr: "", code: 0, killed: false };
 
-// ---------------------------------------------------------------------------
-// Registration
-// ---------------------------------------------------------------------------
-
 describe("registerSemImpact", () => {
   it("registers a tool named sem_impact", () => {
     const { pi } = buildMockPi();
@@ -53,10 +45,6 @@ describe("registerSemImpact", () => {
     expect(tool.promptGuidelines?.length).toBeGreaterThan(0);
   });
 });
-
-// ---------------------------------------------------------------------------
-// execute — mode flag mapping
-// ---------------------------------------------------------------------------
 
 describe("sem_impact execute mode flags", () => {
   it("passes no mode flag for mode 'all' (sem returns everything by default)", async () => {
@@ -121,10 +109,6 @@ describe("sem_impact execute mode flags", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// execute — output and details
-// ---------------------------------------------------------------------------
-
 describe("sem_impact execute output", () => {
   it("forwards sem terminal output directly", async () => {
     const { execute, exec } = buildMockPi();
@@ -140,10 +124,6 @@ describe("sem_impact execute output", () => {
     expect(result.details).toMatchObject({ entity: "login", mode: "deps" });
   });
 });
-
-// ---------------------------------------------------------------------------
-// execute — error handling
-// ---------------------------------------------------------------------------
 
 describe("sem_impact execute errors", () => {
   it("returns error text on sem failure", async () => {

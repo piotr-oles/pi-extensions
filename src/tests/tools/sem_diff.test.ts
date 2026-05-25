@@ -8,10 +8,6 @@ type ExecResult = {
 
 import { registerSemDiff } from "../../tools/sem_diff.js";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function buildMockPi() {
   let captured: ToolDefinition | undefined;
   const exec = vi.fn();
@@ -30,10 +26,6 @@ function buildMockPi() {
 
 const MOCK_MARKDOWN = "## Semantic diff\n\n### myFunc — modified\n\n```\n- old\n+ new\n```";
 
-// ---------------------------------------------------------------------------
-// Registration
-// ---------------------------------------------------------------------------
-
 describe("registerSemDiff", () => {
   it("registers a tool named sem_diff", () => {
     const { pi } = buildMockPi();
@@ -46,10 +38,6 @@ describe("registerSemDiff", () => {
     expect(tool.promptGuidelines?.length).toBeGreaterThan(0);
   });
 });
-
-// ---------------------------------------------------------------------------
-// execute — argument mapping
-// ---------------------------------------------------------------------------
 
 describe("sem_diff execute arguments", () => {
   it("calls sem diff with markdown format", async () => {
@@ -114,10 +102,6 @@ describe("sem_diff execute arguments", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// execute — output
-// ---------------------------------------------------------------------------
-
 describe("sem_diff execute output", () => {
   it("returns sem markdown output in content", async () => {
     const { execute, exec } = buildMockPi();
@@ -147,10 +131,6 @@ describe("sem_diff execute output", () => {
     expect(result.details).toMatchObject({ staged: true });
   });
 });
-
-// ---------------------------------------------------------------------------
-// execute — error handling
-// ---------------------------------------------------------------------------
 
 describe("sem_diff execute errors", () => {
   it("returns error text on sem failure", async () => {

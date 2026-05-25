@@ -24,10 +24,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import semPi from "../index.js";
 
 
-// ---------------------------------------------------------------------------
-// Fixtures
-// ---------------------------------------------------------------------------
-
 const MOCK_CONTEXT_TEXT = `context for function myFunc (budget: 4000, used: 50)
 
   target:
@@ -45,10 +41,6 @@ const MOCK_IMPACT_TEXT = `⊕ function myFunc (src/utils.ts:1–5)
     ← function run (src/app.ts)`;
 
 const MOCK_DIFF_MD = "## Semantic diff\n\n### myFunc — modified\n\n```\n- old\n+ new\n```";
-
-// ---------------------------------------------------------------------------
-// Session factory
-// ---------------------------------------------------------------------------
 
 /**
  * Creates a test session with the real pi runtime.
@@ -109,10 +101,6 @@ async function makeSession() {
 
   return { session, execMock };
 }
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 describe("sem-pi extension (integration)", () => {
   let t: TestSession;
@@ -260,7 +248,6 @@ describe("sem-pi extension (integration)", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
 // Smoke test — verifySandboxInstall
 //
 // Packs the extension via `npm pack`, installs it in a temp sandbox, loads it
@@ -270,7 +257,6 @@ describe("sem-pi extension (integration)", () => {
 //
 // Runs in a separate suite so it can be skipped in watch mode without
 // affecting the integration tests above.
-// ---------------------------------------------------------------------------
 
 describe("sem-pi smoke (sandbox install)", { timeout: 120_000 }, () => {
   it("packs and installs cleanly; all 4 tools are registered", async () => {

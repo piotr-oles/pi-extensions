@@ -2,10 +2,6 @@ import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { describe, expect, it, vi } from "vitest";
 import { registerSemEntities } from "../../tools/sem_entities.js";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 type ExecResult = {
   content: Array<{ type: string; text: string }>;
   details: Record<string, unknown>;
@@ -35,10 +31,6 @@ const MOCK_TEXT = `entities: src/utils.ts
 
 const MOCK_EXEC_OK = { stdout: MOCK_TEXT, stderr: "", code: 0, killed: false };
 
-// ---------------------------------------------------------------------------
-// Registration
-// ---------------------------------------------------------------------------
-
 describe("registerSemEntities", () => {
   it("registers a tool named sem_entities", () => {
     const { pi } = buildMockPi();
@@ -52,10 +44,6 @@ describe("registerSemEntities", () => {
     expect(tool.promptGuidelines?.length).toBeGreaterThan(0);
   });
 });
-
-// ---------------------------------------------------------------------------
-// execute — happy path
-// ---------------------------------------------------------------------------
 
 describe("sem_entities execute", () => {
   it("calls sem entities with given path", async () => {
@@ -97,10 +85,6 @@ describe("sem_entities execute", () => {
     expect(result.content[0].text).toContain("No entities found");
   });
 });
-
-// ---------------------------------------------------------------------------
-// execute — error handling
-// ---------------------------------------------------------------------------
 
 describe("sem_entities execute errors", () => {
   it("returns error text on sem failure", async () => {

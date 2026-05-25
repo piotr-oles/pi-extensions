@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { checkSemStatus, registerSemStartupCheck } from "../setup.js";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function makeExec(responses: Record<string, { code: number }>) {
   return vi.fn().mockImplementation(async (cmd: string, args: string[]) => {
     const key = `${cmd} ${args[0]}`;
@@ -41,10 +37,6 @@ const ALL_OK = { "sem --version": { code: 0 }, "git check-ignore": { code: 0 } }
 const SEM_MISSING = { "sem --version": { code: 127 }, "git check-ignore": { code: 0 } };
 const NOT_IGNORED = { "sem --version": { code: 0 }, "git check-ignore": { code: 1 } };
 const BOTH_FAIL = { "sem --version": { code: 127 }, "git check-ignore": { code: 1 } };
-
-// ---------------------------------------------------------------------------
-// checkSemStatus
-// ---------------------------------------------------------------------------
 
 describe("checkSemStatus", () => {
   it("returns semAvailable=true when sem exits 0", async () => {
@@ -105,10 +97,6 @@ describe("checkSemStatus", () => {
     );
   });
 });
-
-// ---------------------------------------------------------------------------
-// registerSemStartupCheck
-// ---------------------------------------------------------------------------
 
 describe("registerSemStartupCheck — session_start", () => {
   it("shows no warning when everything is ok", async () => {

@@ -1,9 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
-// ---------------------------------------------------------------------------
-// Checks
-// ---------------------------------------------------------------------------
-
 async function isSemAvailable(pi: ExtensionAPI): Promise<boolean> {
   try {
     const result = await pi.exec("sem", ["--version"], { timeout: 5_000 });
@@ -46,10 +42,6 @@ export async function checkSemStatus(pi: ExtensionAPI): Promise<SemStatus> {
   return { semAvailable, semIgnored };
 }
 
-// ---------------------------------------------------------------------------
-// /sem-setup command
-// ---------------------------------------------------------------------------
-
 export function registerSemSetupCommand(pi: ExtensionAPI) {
   pi.registerCommand("sem-setup", {
     description: "Check sem setup status and show fix instructions",
@@ -73,10 +65,6 @@ export function registerSemSetupCommand(pi: ExtensionAPI) {
     },
   });
 }
-
-// ---------------------------------------------------------------------------
-// Session-start warning
-// ---------------------------------------------------------------------------
 
 export function registerSemStartupCheck(pi: ExtensionAPI) {
   let commandRegistered = false;

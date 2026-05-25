@@ -2,10 +2,6 @@ import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { describe, expect, it, vi } from "vitest";
 import { registerSemContext } from "../../tools/sem_context.js";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 type ExecResult = {
   content: Array<{ type: string; text: string }>;
   details: Record<string, unknown>;
@@ -34,10 +30,6 @@ const MOCK_TEXT = `context for function myFunc (budget: 4000, used: 50)
 
 const MOCK_EXEC_OK = { stdout: MOCK_TEXT, stderr: "", code: 0, killed: false };
 
-// ---------------------------------------------------------------------------
-// Registration
-// ---------------------------------------------------------------------------
-
 describe("registerSemContext", () => {
   it("registers a tool named sem_context", () => {
     const { pi } = buildMockPi();
@@ -51,10 +43,6 @@ describe("registerSemContext", () => {
     expect(tool.promptGuidelines?.length).toBeGreaterThan(0);
   });
 });
-
-// ---------------------------------------------------------------------------
-// execute — happy path
-// ---------------------------------------------------------------------------
 
 describe("sem_context execute", () => {
   it("calls sem context with entity name (no --json)", async () => {
@@ -120,10 +108,6 @@ describe("sem_context execute", () => {
     expect(result.details).toMatchObject({ entity: "myFunc" });
   });
 });
-
-// ---------------------------------------------------------------------------
-// execute — error handling
-// ---------------------------------------------------------------------------
 
 describe("sem_context execute errors", () => {
   it("returns error text on sem failure", async () => {

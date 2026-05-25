@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { SemError, semContext, semDiff, semEntities, semImpact } from "../sem.js";
 
-// ---------------------------------------------------------------------------
-// Fixtures
-// ---------------------------------------------------------------------------
-
 const ENTITIES_TEXT = `entities: src/
 
   function myFunc (L1:5)
@@ -21,10 +17,6 @@ const IMPACT_TEXT = `⊕ function myFunc (src/utils.ts:1–5)
   ← depended on by:
     ← function caller (src/other.ts)`;
 
-// ---------------------------------------------------------------------------
-// Helper
-// ---------------------------------------------------------------------------
-
 function makeExec(stdout: string, code = 0) {
   return vi.fn().mockResolvedValue({ stdout, stderr: "", code, killed: false });
 }
@@ -32,10 +24,6 @@ function makeExec(stdout: string, code = 0) {
 function makeFailingExec(stderr: string, code = 1) {
   return vi.fn().mockResolvedValue({ stdout: "", stderr, code, killed: false });
 }
-
-// ---------------------------------------------------------------------------
-// semEntities
-// ---------------------------------------------------------------------------
 
 describe("semEntities", () => {
   it("calls sem entities with the given path (no --json)", async () => {
@@ -69,10 +57,6 @@ describe("semEntities", () => {
     expect(exec).toHaveBeenCalledWith("sem", expect.any(Array), expect.objectContaining({ signal }));
   });
 });
-
-// ---------------------------------------------------------------------------
-// semContext
-// ---------------------------------------------------------------------------
 
 describe("semContext", () => {
   it("calls sem context with entity name (no --json)", async () => {
@@ -110,10 +94,6 @@ describe("semContext", () => {
     await expect(semContext(exec, "noSuchEntity", {})).rejects.toBeInstanceOf(SemError);
   });
 });
-
-// ---------------------------------------------------------------------------
-// semImpact
-// ---------------------------------------------------------------------------
 
 describe("semImpact", () => {
   it("calls sem impact with entity name (no --json, no mode flag for 'all')", async () => {
@@ -166,10 +146,6 @@ describe("semImpact", () => {
     await expect(semImpact(exec, "noSuchEntity", {})).rejects.toBeInstanceOf(SemError);
   });
 });
-
-// ---------------------------------------------------------------------------
-// semDiff
-// ---------------------------------------------------------------------------
 
 describe("semDiff", () => {
   it("calls sem diff with markdown format by default", async () => {
