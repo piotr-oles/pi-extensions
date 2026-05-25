@@ -22,29 +22,17 @@ import {
 } from "@marcfargas/pi-test-harness";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import semPi from "../index.js";
-import type { SemContextResult } from "../sem.js";
+
 
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
 
-const MOCK_CONTEXT: SemContextResult = {
-  entity: "myFunc",
-  entityId: "src/utils.ts::function::myFunc",
-  budget: 4000,
-  total_tokens: 50,
-  entries: [
-    {
-      entityId: "src/utils.ts::function::myFunc",
-      file: "src/utils.ts",
-      name: "myFunc",
-      type: "function",
-      role: "target",
-      content: "function myFunc() {}",
-      tokens: 50,
-    },
-  ],
-};
+const MOCK_CONTEXT_TEXT = `context for function myFunc (budget: 4000, used: 50)
+
+  target:
+    function myFunc (src/utils.ts, ~50 tokens)
+      function myFunc() {}`;
 
 const MOCK_ENTITIES_TEXT = `entities: src/
 
@@ -77,12 +65,7 @@ async function makeSession() {
     ): Promise<{ stdout: string; stderr: string; code: number; killed: boolean }> => {
       const sub = args[0];
       if (sub === "context") {
-        return Promise.resolve({
-          stdout: JSON.stringify(MOCK_CONTEXT),
-          stderr: "",
-          code: 0,
-          killed: false,
-        });
+        return Promise.resolve({ stdout: MOCK_CONTEXT_TEXT, stderr: "", code: 0, killed: false });
       }
       if (sub === "entities") {
         return Promise.resolve({ stdout: MOCK_ENTITIES_TEXT, stderr: "", code: 0, killed: false });
@@ -162,14 +145,14 @@ describe("sem-pi extension (integration)", () => {
     // exec was called once with the right subcommand
     expect(execMock).toHaveBeenCalledWith(
       "sem",
-      expect.arrayContaining(["context", "--json", "myFunc"]),
+      expect.arrayContaining(["context", "myFunc"]),
       expect.anything(),
     );
 
     // Tool result contains the formatted output
     const results = t.events.toolResultsFor("sem_context");
     expect(results).toHaveLength(1);
-    expect(results[0].text).toContain("Entity: myFunc");
+    expect(results[0].text).toContain("context for function myFunc");
     expect(results[0].isError).toBe(false);
   });
 

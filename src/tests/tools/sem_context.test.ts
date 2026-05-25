@@ -1,8 +1,6 @@
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { describe, expect, it, vi } from "vitest";
-import type { SemContextResult } from "../../sem.js";
 import { registerSemContext } from "../../tools/sem_context.js";
-
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -23,30 +21,18 @@ function buildMockPi() {
     }),
   };
   registerSemContext(pi as any);
-  // Typed wrapper: supplies the required-but-unused onUpdate and ctx args, and
-  // narrows content to the text-only shape our tools always return.
   const execute = (params: Record<string, unknown>): Promise<ExecResult> =>
     captured!.execute("id", params as any, undefined, undefined, {} as any) as Promise<ExecResult>;
   return { pi, exec, tool: captured!, execute };
 }
 
-const MOCK_RESULT: SemContextResult = {
-  entity: "myFunc",
-  entityId: "src/utils.ts::function::myFunc",
-  budget: 4000,
-  total_tokens: 50,
-  entries: [
-    {
-      entityId: "src/utils.ts::function::myFunc",
-      file: "src/utils.ts",
-      name: "myFunc",
-      type: "function",
-      role: "target",
-      content: "function myFunc() {}",
-      tokens: 10,
-    },
-  ],
-};
+const MOCK_TEXT = `context for function myFunc (budget: 4000, used: 50)
+
+  target:
+    function myFunc (src/utils.ts, ~10 tokens)
+      function myFunc() {}`;
+
+const MOCK_EXEC_OK = { stdout: MOCK_TEXT, stderr: "", code: 0, killed: false };
 
 // ---------------------------------------------------------------------------
 // Registration
@@ -71,44 +57,32 @@ describe("registerSemContext", () => {
 // ---------------------------------------------------------------------------
 
 describe("sem_context execute", () => {
-  it("calls sem context with entity name", async () => {
+  it("calls sem context with entity name (no --json)", async () => {
     const { exec, execute } = buildMockPi();
-    exec.mockResolvedValue({
-      stdout: JSON.stringify(MOCK_RESULT),
-      stderr: "",
-      code: 0,
-      killed: false,
-    });
+    exec.mockResolvedValue(MOCK_EXEC_OK);
     await execute({ entity: "myFunc" });
     expect(exec).toHaveBeenCalledWith(
       "sem",
-      expect.arrayContaining(["context", "--json", "myFunc"]),
+      expect.arrayContaining(["context", "myFunc"]),
       expect.anything(),
     );
-  // sem context always uses --json to get full source (terminal format only shows 1-line previews)
+    expect(exec).not.toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--json"]),
+      expect.anything(),
+    );
   });
 
-  it("returns formatted text with full source in content", async () => {
+  it("forwards sem terminal output directly as content", async () => {
     const { exec, execute } = buildMockPi();
-    exec.mockResolvedValue({
-      stdout: JSON.stringify(MOCK_RESULT),
-      stderr: "",
-      code: 0,
-      killed: false,
-    });
+    exec.mockResolvedValue(MOCK_EXEC_OK);
     const result = await execute({ entity: "myFunc" });
-    expect(result.content[0].text).toContain("Entity: myFunc");
-    expect(result.content[0].text).toContain("function myFunc() {}");
+    expect(result.content[0].text).toBe(MOCK_TEXT);
   });
 
   it("passes budget to sem", async () => {
     const { exec, execute } = buildMockPi();
-    exec.mockResolvedValue({
-      stdout: JSON.stringify(MOCK_RESULT),
-      stderr: "",
-      code: 0,
-      killed: false,
-    });
+    exec.mockResolvedValue(MOCK_EXEC_OK);
     await execute({ entity: "myFunc", budget: 2000 });
     expect(exec).toHaveBeenCalledWith(
       "sem",
@@ -119,12 +93,7 @@ describe("sem_context execute", () => {
 
   it("passes file to sem when provided", async () => {
     const { exec, execute } = buildMockPi();
-    exec.mockResolvedValue({
-      stdout: JSON.stringify(MOCK_RESULT),
-      stderr: "",
-      code: 0,
-      killed: false,
-    });
+    exec.mockResolvedValue(MOCK_EXEC_OK);
     await execute({ entity: "myFunc", file: "src/utils.ts" });
     expect(exec).toHaveBeenCalledWith(
       "sem",
@@ -135,12 +104,7 @@ describe("sem_context execute", () => {
 
   it("passes entity_id to sem when provided", async () => {
     const { exec, execute } = buildMockPi();
-    exec.mockResolvedValue({
-      stdout: JSON.stringify(MOCK_RESULT),
-      stderr: "",
-      code: 0,
-      killed: false,
-    });
+    exec.mockResolvedValue(MOCK_EXEC_OK);
     await execute({ entity: "myFunc", entity_id: "src/utils.ts::function::myFunc" });
     expect(exec).toHaveBeenCalledWith(
       "sem",
@@ -149,16 +113,11 @@ describe("sem_context execute", () => {
     );
   });
 
-  it("includes token stats in details", async () => {
+  it("includes entity in details", async () => {
     const { exec, execute } = buildMockPi();
-    exec.mockResolvedValue({
-      stdout: JSON.stringify(MOCK_RESULT),
-      stderr: "",
-      code: 0,
-      killed: false,
-    });
+    exec.mockResolvedValue(MOCK_EXEC_OK);
     const result = await execute({ entity: "myFunc" });
-    expect(result.details).toMatchObject({ tokens: 50, budget: 4000 });
+    expect(result.details).toMatchObject({ entity: "myFunc" });
   });
 });
 

@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from "vitest";
-import type { SemContextResult } from "../sem.js";
 import { SemError, semContext, semDiff, semEntities, semImpact } from "../sem.js";
 
 // ---------------------------------------------------------------------------
@@ -11,23 +10,11 @@ const ENTITIES_TEXT = `entities: src/
   function myFunc (L1:5)
   class MyClass (L7:20)`;
 
-const CONTEXT_RESULT: SemContextResult = {
-  entity: "myFunc",
-  entityId: "src/utils.ts::function::myFunc",
-  budget: 4000,
-  total_tokens: 50,
-  entries: [
-    {
-      entityId: "src/utils.ts::function::myFunc",
-      file: "src/utils.ts",
-      name: "myFunc",
-      type: "function",
-      role: "target",
-      content: "function myFunc() {}",
-      tokens: 10,
-    },
-  ],
-};
+const CONTEXT_TEXT = `context for function myFunc (budget: 4000, used: 50)
+
+  target:
+    function myFunc (src/utils.ts, ~10 tokens)
+      function myFunc() {}`;
 
 const IMPACT_TEXT = `⊕ function myFunc (src/utils.ts:1–5)
 
@@ -88,36 +75,32 @@ describe("semEntities", () => {
 // ---------------------------------------------------------------------------
 
 describe("semContext", () => {
-  it("calls sem context with --json and entity name", async () => {
-    const exec = makeExec(JSON.stringify(CONTEXT_RESULT));
+  it("calls sem context with entity name (no --json)", async () => {
+    const exec = makeExec(CONTEXT_TEXT);
     await semContext(exec, "myFunc", {});
-    expect(exec).toHaveBeenCalledWith(
-      "sem",
-      expect.arrayContaining(["context", "--json", "myFunc"]),
-      expect.anything(),
-    );
+    expect(exec).toHaveBeenCalledWith("sem", ["context", "myFunc"], expect.anything());
   });
 
-  it("parses and returns context result", async () => {
-    const exec = makeExec(JSON.stringify(CONTEXT_RESULT));
+  it("returns raw terminal output as a string", async () => {
+    const exec = makeExec(CONTEXT_TEXT);
     const result = await semContext(exec, "myFunc", {});
-    expect(result).toEqual(CONTEXT_RESULT);
+    expect(result).toBe(CONTEXT_TEXT);
   });
 
   it("appends --file when provided", async () => {
-    const exec = makeExec(JSON.stringify(CONTEXT_RESULT));
+    const exec = makeExec(CONTEXT_TEXT);
     await semContext(exec, "myFunc", { file: "src/utils.ts" });
     expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--file", "src/utils.ts"]), expect.anything());
   });
 
   it("appends --budget when provided", async () => {
-    const exec = makeExec(JSON.stringify(CONTEXT_RESULT));
+    const exec = makeExec(CONTEXT_TEXT);
     await semContext(exec, "myFunc", { budget: 2000 });
     expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--budget", "2000"]), expect.anything());
   });
 
   it("appends --entity-id when provided", async () => {
-    const exec = makeExec(JSON.stringify(CONTEXT_RESULT));
+    const exec = makeExec(CONTEXT_TEXT);
     await semContext(exec, "myFunc", { entityId: "src/utils.ts::function::myFunc" });
     expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--entity-id", "src/utils.ts::function::myFunc"]), expect.anything());
   });

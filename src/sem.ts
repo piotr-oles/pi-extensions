@@ -1,28 +1,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 // ---------------------------------------------------------------------------
-// JSON output types — only for sem context (needs full source content)
-// ---------------------------------------------------------------------------
-
-export interface SemContextEntry {
-  entityId: string;
-  file: string;
-  name: string;
-  type: string;
-  role: "target" | "dependency" | "direct_dependent" | string;
-  content: string;
-  tokens: number;
-}
-
-export interface SemContextResult {
-  entity: string;
-  entityId: string;
-  budget: number;
-  total_tokens: number;
-  entries: SemContextEntry[];
-}
-
-// ---------------------------------------------------------------------------
 // Error
 // ---------------------------------------------------------------------------
 
@@ -68,19 +46,18 @@ export async function semEntities(
   return run(exec, ["entities", path], signal);
 }
 
-/** Returns JSON-parsed context (terminal format only shows 1-line previews). */
+/** Returns the terminal-format context (already designed for LLMs). */
 export async function semContext(
   exec: ExecFn,
   entity: string,
   opts: { file?: string; budget?: number; entityId?: string },
   signal?: AbortSignal,
-): Promise<SemContextResult> {
-  const args = ["context", "--json", entity];
+): Promise<string> {
+  const args = ["context", entity];
   if (opts.file) args.push("--file", opts.file);
   if (opts.budget) args.push("--budget", String(opts.budget));
   if (opts.entityId) args.push("--entity-id", opts.entityId);
-  const out = await run(exec, args, signal);
-  return JSON.parse(out) as SemContextResult;
+  return run(exec, args, signal);
 }
 
 /**
