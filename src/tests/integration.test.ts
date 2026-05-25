@@ -107,8 +107,6 @@ describe("sem-pi extension (integration)", () => {
 
   afterEach(() => t?.dispose());
 
-  // ── Registration ──────────────────────────────────────────────────────────
-
   it("loads without errors and registers tools via the real ExtensionAPI", async () => {
     const { session } = await makeSession();
     t = session;
@@ -116,8 +114,6 @@ describe("sem-pi extension (integration)", () => {
     // the real ToolDefinition contract was satisfied (required fields, valid schema).
     expect(t).toBeDefined();
   });
-
-  // ── sem_context ───────────────────────────────────────────────────────────
 
   it("sem_context: model call reaches exec and returns formatted content", async () => {
     const { session, execMock } = await makeSession();
@@ -162,8 +158,6 @@ describe("sem-pi extension (integration)", () => {
     );
   });
 
-  // ── sem_entities ──────────────────────────────────────────────────────────
-
   it("sem_entities: model call reaches exec and returns entity tree", async () => {
     const { session, execMock } = await makeSession();
     t = session;
@@ -183,8 +177,6 @@ describe("sem-pi extension (integration)", () => {
     expect(results[0].text).toContain("class MyClass");
     expect(results[0].isError).toBe(false);
   });
-
-  // ── sem_impact ────────────────────────────────────────────────────────────
 
   it("sem_impact: model call reaches exec and returns impact report", async () => {
     const { session, execMock } = await makeSession();
@@ -208,8 +200,6 @@ describe("sem-pi extension (integration)", () => {
     expect(results[0].text).toContain("function myFunc");
     expect(results[0].isError).toBe(false);
   });
-
-  // ── sem_diff ──────────────────────────────────────────────────────────────
 
   it("sem_diff: model call reaches exec and returns markdown diff", async () => {
     const { session, execMock } = await makeSession();
