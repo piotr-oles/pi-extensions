@@ -22,7 +22,7 @@ import {
 } from "@marcfargas/pi-test-harness";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import semPi from "../index.js";
-import type { SemContextResult, SemEntity, SemImpactResult } from "../sem.js";
+import type { SemContextResult } from "../sem.js";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -46,32 +46,15 @@ const MOCK_CONTEXT: SemContextResult = {
   ],
 };
 
-const MOCK_ENTITIES: SemEntity[] = [
-  { name: "myFunc", type: "function", start_line: 1, end_line: 5, parent_id: null },
-  { name: "MyClass", type: "class", start_line: 7, end_line: 20, parent_id: null },
-];
+const MOCK_ENTITIES_TEXT = `entities: src/
 
-const MOCK_IMPACT: SemImpactResult = {
-  entity: {
-    entityId: "src/utils.ts::function::myFunc",
-    name: "myFunc",
-    type: "function",
-    file: "src/utils.ts",
-    lines: [1, 5],
-  },
-  dependencies: [],
-  dependents: [
-    {
-      entityId: "src/app.ts::function::run",
-      name: "run",
-      type: "function",
-      file: "src/app.ts",
-      lines: [10, 20],
-    },
-  ],
-  impact: { depth: 1, total: 1, entities: [] },
-  tests: [],
-};
+  function myFunc (L1:5)
+  class MyClass (L7:20)`;
+
+const MOCK_IMPACT_TEXT = `⊕ function myFunc (src/utils.ts:1–5)
+
+  ← depended on by:
+    ← function run (src/app.ts)`;
 
 const MOCK_DIFF_MD = "## Semantic diff\n\n### myFunc — modified\n\n```\n- old\n+ new\n```";
 
@@ -102,20 +85,10 @@ async function makeSession() {
         });
       }
       if (sub === "entities") {
-        return Promise.resolve({
-          stdout: JSON.stringify(MOCK_ENTITIES),
-          stderr: "",
-          code: 0,
-          killed: false,
-        });
+        return Promise.resolve({ stdout: MOCK_ENTITIES_TEXT, stderr: "", code: 0, killed: false });
       }
       if (sub === "impact") {
-        return Promise.resolve({
-          stdout: JSON.stringify(MOCK_IMPACT),
-          stderr: "",
-          code: 0,
-          killed: false,
-        });
+        return Promise.resolve({ stdout: MOCK_IMPACT_TEXT, stderr: "", code: 0, killed: false });
       }
       if (sub === "diff") {
         return Promise.resolve({ stdout: MOCK_DIFF_MD, stderr: "", code: 0, killed: false });
@@ -231,7 +204,7 @@ describe("sem-pi extension (integration)", () => {
       ]),
     );
 
-    expect(execMock).toHaveBeenCalledWith("sem", ["entities", "--json", "src/"], expect.anything());
+    expect(execMock).toHaveBeenCalledWith("sem", ["entities", "src/"], expect.anything());
 
     const results = t.events.toolResultsFor("sem_entities");
     expect(results).toHaveLength(1);
@@ -255,13 +228,13 @@ describe("sem-pi extension (integration)", () => {
 
     expect(execMock).toHaveBeenCalledWith(
       "sem",
-      expect.arrayContaining(["impact", "--json", "myFunc"]),
+      expect.arrayContaining(["impact", "myFunc"]),
       expect.anything(),
     );
 
     const results = t.events.toolResultsFor("sem_impact");
     expect(results).toHaveLength(1);
-    expect(results[0].text).toContain("function `myFunc`");
+    expect(results[0].text).toContain("function myFunc");
     expect(results[0].isError).toBe(false);
   });
 

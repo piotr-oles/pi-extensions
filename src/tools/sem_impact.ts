@@ -1,7 +1,6 @@
 import { StringEnum } from "@earendil-works/pi-ai";
-import type { AgentToolResult, ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-import { formatImpact } from "../format.js";
 import { SemError, semImpact } from "../sem.js";
 
 export function registerSemImpact(pi: ExtensionAPI) {
@@ -44,28 +43,18 @@ export function registerSemImpact(pi: ExtensionAPI) {
       ),
     }),
 
-    async execute(_id, params, signal): Promise<AgentToolResult<Record<string, unknown>>> {
+    async execute(_id, params, signal) {
       const { entity, file, entity_id, mode = "all", depth } = params;
-      const opts = {
-        file,
-        entityId: entity_id,
-        deps: mode === "deps" || mode === "all",
-        dependents: mode === "dependents" || mode === "all",
-        tests: mode === "tests" || mode === "all",
-        depth,
-      };
       try {
-        const result = await semImpact(pi.exec.bind(pi), entity, opts, signal);
+        const text = await semImpact(
+          pi.exec.bind(pi),
+          entity,
+          { file, entityId: entity_id, mode, depth },
+          signal,
+        );
         return {
-          content: [{ type: "text", text: formatImpact(result) }],
-          details: {
-            entity: result.entity.name,
-            entityId: result.entity.entityId,
-            dependencyCount: result.dependencies.length,
-            dependentCount: result.dependents.length,
-            transitiveCount: result.impact.total,
-            testCount: result.tests.length,
-          },
+          content: [{ type: "text", text }],
+          details: { entity, file, mode },
         };
       } catch (err) {
         const msg =

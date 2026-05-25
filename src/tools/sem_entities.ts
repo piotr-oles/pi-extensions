@@ -1,6 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-import { formatEntities } from "../format.js";
 import { SemError, semEntities } from "../sem.js";
 
 export function registerSemEntities(pi: ExtensionAPI) {
@@ -13,8 +12,8 @@ export function registerSemEntities(pi: ExtensionAPI) {
       "Cheaper than reading files to discover what exists.",
     promptSnippet: "List code symbols in file or directory",
     promptGuidelines: [
-      "Use instead of read to discover defined functions, classes, types.",
-      "Use on directory for overview of all symbols across files.",
+      "Use sem_entities instead of find or rg to discover defined functions, classes, and types.",
+      "Use sem_entities on a directory for an overview of all symbols across files.",
       "Pass entity_id values to sem_context or sem_impact for precise lookups.",
     ],
     parameters: Type.Object({
@@ -28,14 +27,10 @@ export function registerSemEntities(pi: ExtensionAPI) {
     async execute(_id, params, signal, _onUpdate, ctx) {
       const path = params.path ?? ctx.cwd;
       try {
-        const entities = await semEntities(pi.exec.bind(pi), path, signal);
-        const text =
-          entities.length === 0
-            ? `No entities found in: ${path}`
-            : `Entities in: ${path}\n\n${formatEntities(entities)}`;
+        const text = await semEntities(pi.exec.bind(pi), path, signal);
         return {
-          content: [{ type: "text", text }],
-          details: { path, count: entities.length },
+          content: [{ type: "text", text: text || `No entities found in: ${path}` }],
+          details: { path },
         };
       } catch (err) {
         const msg =

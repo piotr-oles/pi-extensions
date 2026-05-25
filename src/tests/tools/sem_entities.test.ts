@@ -1,17 +1,15 @@
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { describe, expect, it, vi } from "vitest";
-
-type ExecResult = {
-  content: Array<{ type: string; text: string }>;
-  details: Record<string, unknown>;
-};
-
-import type { SemEntity } from "../../sem.js";
 import { registerSemEntities } from "../../tools/sem_entities.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+type ExecResult = {
+  content: Array<{ type: string; text: string }>;
+  details: Record<string, unknown>;
+};
 
 function buildMockPi(cwd = "/project") {
   let captured: ToolDefinition | undefined;
@@ -30,10 +28,12 @@ function buildMockPi(cwd = "/project") {
   return { pi, exec, tool, execute };
 }
 
-const MOCK_ENTITIES: SemEntity[] = [
-  { name: "myFunc", type: "function", start_line: 1, end_line: 5, parent_id: null },
-  { name: "MyClass", type: "class", start_line: 7, end_line: 20, parent_id: null },
-];
+const MOCK_TEXT = `entities: src/utils.ts
+
+  function myFunc (L1:5)
+  class MyClass (L7:20)`;
+
+const MOCK_EXEC_OK = { stdout: MOCK_TEXT, stderr: "", code: 0, killed: false };
 
 // ---------------------------------------------------------------------------
 // Registration
@@ -42,6 +42,7 @@ const MOCK_ENTITIES: SemEntity[] = [
 describe("registerSemEntities", () => {
   it("registers a tool named sem_entities", () => {
     const { pi } = buildMockPi();
+    expect(pi.registerTool).toHaveBeenCalledOnce();
     const def = vi.mocked(pi.registerTool).mock.calls[0][0];
     expect(def.name).toBe("sem_entities");
   });
@@ -57,69 +58,43 @@ describe("registerSemEntities", () => {
 // ---------------------------------------------------------------------------
 
 describe("sem_entities execute", () => {
-  it("uses provided path", async () => {
-    const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({
-      stdout: JSON.stringify(MOCK_ENTITIES),
-      stderr: "",
-      code: 0,
-      killed: false,
-    });
-    await execute({ path: "src/components" });
+  it("calls sem entities with given path", async () => {
+    const { exec, execute } = buildMockPi();
+    exec.mockResolvedValue(MOCK_EXEC_OK);
+    await execute({ path: "src/utils.ts" });
     expect(exec).toHaveBeenCalledWith(
       "sem",
-      ["entities", "--json", "src/components"],
+      ["entities", "src/utils.ts"],
       expect.anything(),
     );
   });
 
-  it("falls back to ctx.cwd when path is omitted", async () => {
-    const { execute, exec } = buildMockPi("/my/project");
-    exec.mockResolvedValue({
-      stdout: JSON.stringify(MOCK_ENTITIES),
-      stderr: "",
-      code: 0,
-      killed: false,
-    });
+  it("uses cwd when path is omitted", async () => {
+    const { exec, execute } = buildMockPi("/my/project");
+    exec.mockResolvedValue(MOCK_EXEC_OK);
     await execute({});
-    expect(exec).toHaveBeenCalledWith(
-      "sem",
-      ["entities", "--json", "/my/project"],
-      expect.anything(),
-    );
+    expect(exec).toHaveBeenCalledWith("sem", ["entities", "/my/project"], expect.anything());
   });
 
-  it("returns formatted entity tree in content", async () => {
-    const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({
-      stdout: JSON.stringify(MOCK_ENTITIES),
-      stderr: "",
-      code: 0,
-      killed: false,
-    });
-    const result = await execute({ path: "src/" });
-    expect(result.content[0].text).toContain("function myFunc");
-    expect(result.content[0].text).toContain("class MyClass");
+  it("forwards sem output directly as content", async () => {
+    const { exec, execute } = buildMockPi();
+    exec.mockResolvedValue(MOCK_EXEC_OK);
+    const result = await execute({ path: "src/utils.ts" });
+    expect(result.content[0].text).toBe(MOCK_TEXT);
   });
 
-  it("includes entity count in details", async () => {
-    const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({
-      stdout: JSON.stringify(MOCK_ENTITIES),
-      stderr: "",
-      code: 0,
-      killed: false,
-    });
-    const result = await execute({ path: "src/" });
-    expect(result.details).toMatchObject({ count: 2 });
+  it("includes path in details", async () => {
+    const { exec, execute } = buildMockPi();
+    exec.mockResolvedValue(MOCK_EXEC_OK);
+    const result = await execute({ path: "src/utils.ts" });
+    expect(result.details).toMatchObject({ path: "src/utils.ts" });
   });
 
-  it("returns no-entities message when list is empty", async () => {
-    const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({ stdout: "[]", stderr: "", code: 0, killed: false });
-    const result = await execute({ path: "src/" });
+  it("returns fallback text when output is empty", async () => {
+    const { exec, execute } = buildMockPi();
+    exec.mockResolvedValue({ stdout: "", stderr: "", code: 0, killed: false });
+    const result = await execute({ path: "src/empty.ts" });
     expect(result.content[0].text).toContain("No entities found");
-    expect(result.details).toMatchObject({ count: 0 });
   });
 });
 
@@ -129,17 +104,17 @@ describe("sem_entities execute", () => {
 
 describe("sem_entities execute errors", () => {
   it("returns error text on sem failure", async () => {
-    const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({ stdout: "", stderr: "not a git repository", code: 1, killed: false });
-    const result = await execute({ path: "." });
+    const { exec, execute } = buildMockPi();
+    exec.mockResolvedValue({ stdout: "", stderr: "file not found", code: 1, killed: false });
+    const result = await execute({ path: "no/such.ts" });
     expect(result.content[0].text).toContain("sem_entities failed");
     expect(result.details).toMatchObject({ error: true });
   });
 
   it("returns error text on unexpected exception", async () => {
-    const { execute, exec } = buildMockPi();
+    const { exec, execute } = buildMockPi();
     exec.mockRejectedValue(new Error("ENOENT"));
-    const result = await execute({ path: "." });
+    const result = await execute({ path: "src/utils.ts" });
     expect(result.content[0].text).toContain("sem_entities error");
     expect(result.details).toMatchObject({ error: true });
   });

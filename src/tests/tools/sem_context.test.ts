@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { SemContextResult } from "../../sem.js";
 import { registerSemContext } from "../../tools/sem_context.js";
 
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -84,9 +85,10 @@ describe("sem_context execute", () => {
       expect.arrayContaining(["context", "--json", "myFunc"]),
       expect.anything(),
     );
+  // sem context always uses --json to get full source (terminal format only shows 1-line previews)
   });
 
-  it("returns formatted text in content", async () => {
+  it("returns formatted text with full source in content", async () => {
     const { exec, execute } = buildMockPi();
     exec.mockResolvedValue({
       stdout: JSON.stringify(MOCK_RESULT),
@@ -96,6 +98,7 @@ describe("sem_context execute", () => {
     });
     const result = await execute({ entity: "myFunc" });
     expect(result.content[0].text).toContain("Entity: myFunc");
+    expect(result.content[0].text).toContain("function myFunc() {}");
   });
 
   it("passes budget to sem", async () => {

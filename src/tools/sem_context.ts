@@ -13,8 +13,8 @@ export function registerSemContext(pi: ExtensionAPI) {
       "Cheaper than reading whole file when you only need one entity.",
     promptSnippet: "Semantic context for code entity with token budget",
     promptGuidelines: [
-      "Use instead of read to understand entity — not modify it.",
-      "Inspect dependency without reading whole file.",
+      "Use sem_context instead of read or cat to understand a code entity — use read only when editing the file.",
+      "Use sem_context to inspect a dependency without reading or cat-ing the whole file.",
       "Small budget (2000) for signature only. Large (8000+) for deep understanding.",
     ],
     parameters: Type.Object({
