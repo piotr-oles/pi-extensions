@@ -12,7 +12,8 @@ jobs:
 
     strategy:
       matrix:
-        node-version: ["20", "22"]
+        # @earendil-works/pi-coding-agent requires Node >=22.19.0 (undici@8)
+        node-version: ["22"]
 
     steps:
       - name: Checkout
