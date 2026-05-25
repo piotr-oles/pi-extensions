@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
 
+env:
+  # Opt into Node.js 24 for action runners (suppresses Node 20 deprecation warnings)
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   test:
     name: Type-check & test (Node ${{ matrix.node-version }})
