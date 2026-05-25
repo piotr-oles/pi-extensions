@@ -1,4 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { registerSemStartupCheck } from "./setup.js";
 import { registerSemContext } from "./tools/sem_context.js";
 import { registerSemDiff } from "./tools/sem_diff.js";
 import { registerSemEntities } from "./tools/sem_entities.js";
@@ -20,6 +21,8 @@ export default function semPi(pi: ExtensionAPI) {
   registerSemEntities(pi);
   registerSemImpact(pi);
   registerSemDiff(pi);
+
+  registerSemStartupCheck(pi);
 
   pi.on("before_agent_start", async (event) => {
     return {
