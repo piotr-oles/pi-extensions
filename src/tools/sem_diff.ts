@@ -7,19 +7,18 @@ export function registerSemDiff(pi: ExtensionAPI) {
     name: "sem_diff",
     label: "Sem Diff",
     description:
-      "Show a semantic diff of code changes — grouped by entity (function, class, method) rather than raw line diffs. " +
-      "Supports the same ref syntax as git diff: omit args for working tree, use 'staged' for index, " +
-      "or pass from/to for commit ranges.",
-    promptSnippet: "Show semantic diff of code changes grouped by entity",
+      "Semantic diff grouped by entity (function, class, method), not raw lines. " +
+      "Same ref syntax as git diff: omit for working tree, staged=true for index, from/to for commit ranges.",
+    promptSnippet: "Semantic diff grouped by entity",
     promptGuidelines: [
-      "Use sem_diff instead of bash+git-diff when you want to understand what changed semantically, not just line-by-line.",
-      "Use sem_diff with staged:true to review what's about to be committed.",
-      "Use sem_diff with from/to to compare branches or commit ranges (e.g. from:'main', to:'HEAD').",
+      "Use instead of bash+git-diff to understand semantic changes, not just line diffs.",
+      "staged:true to review staged changes.",
+      "from/to for branch or commit range comparison.",
     ],
     parameters: Type.Object({
       from: Type.Optional(
         Type.String({
-          description: "Start git ref (commit, branch, tag). Omit for working tree diff.",
+          description: "Start git ref. Omit for working tree.",
         }),
       ),
       to: Type.Optional(
@@ -29,7 +28,7 @@ export function registerSemDiff(pi: ExtensionAPI) {
       ),
       staged: Type.Optional(
         Type.Boolean({
-          description: "Show only staged changes (equivalent to git diff --staged)",
+          description: "Only staged changes (git diff --staged)",
         }),
       ),
     }),

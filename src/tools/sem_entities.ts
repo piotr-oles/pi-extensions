@@ -8,20 +8,19 @@ export function registerSemEntities(pi: ExtensionAPI) {
     name: "sem_entities",
     label: "Sem Entities",
     description:
-      "List all code entities (functions, classes, methods, variables) in a file or directory. " +
-      "Returns a compact tree of symbols with type and line range. " +
-      "Much cheaper than reading files when you need to discover what exists.",
-    promptSnippet: "List code symbols in a file or directory",
+      "List code entities (functions, classes, methods, variables) in file or directory. " +
+      "Compact tree with type and line range. " +
+      "Cheaper than reading files to discover what exists.",
+    promptSnippet: "List code symbols in file or directory",
     promptGuidelines: [
-      "Use sem_entities instead of read when you want to know what functions, classes, or types are defined in a file.",
-      "Use sem_entities on a directory to get an overview of all symbols across multiple files.",
-      "Use the entity_id values from sem_entities output as input to sem_context or sem_impact for precise lookups.",
+      "Use instead of read to discover defined functions, classes, types.",
+      "Use on directory for overview of all symbols across files.",
+      "Pass entity_id values to sem_context or sem_impact for precise lookups.",
     ],
     parameters: Type.Object({
       path: Type.Optional(
         Type.String({
-          description:
-            "File or directory path to list entities from (defaults to current directory)",
+          description: "File or directory path (defaults to cwd)",
         }),
       ),
     }),

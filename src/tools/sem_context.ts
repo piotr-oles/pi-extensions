@@ -8,34 +8,33 @@ export function registerSemContext(pi: ExtensionAPI) {
     name: "sem_context",
     label: "Sem Context",
     description:
-      "Get token-budgeted context for a named code entity (function, class, method, variable). " +
-      "Returns the entity's full source plus its key dependencies, all within a token budget. " +
-      "Much cheaper than reading the whole file when you only need to understand one entity.",
-    promptSnippet: "Get semantic context for a code entity with token budget",
+      "Token-budgeted context for named code entity (function, class, method, variable). " +
+      "Returns full source + key deps within budget. " +
+      "Cheaper than reading whole file when you only need one entity.",
+    promptSnippet: "Semantic context for code entity with token budget",
     promptGuidelines: [
-      "Use sem_context instead of read when you need to understand what a function, class, or method does — not modify it.",
-      "Use sem_context to inspect a dependency without reading its entire file.",
-      "Pass a smaller budget (e.g. 2000) when you only need the signature, larger (8000+) for deep understanding.",
+      "Use instead of read to understand entity — not modify it.",
+      "Inspect dependency without reading whole file.",
+      "Small budget (2000) for signature only. Large (8000+) for deep understanding.",
     ],
     parameters: Type.Object({
       entity: Type.String({
-        description:
-          "Name of the entity to look up (e.g. 'AuthService', 'parseConfig', 'UserController.login')",
+        description: "Entity name (e.g. 'AuthService', 'parseConfig', 'UserController.login')",
       }),
       file: Type.Optional(
         Type.String({
-          description: "File path to disambiguate when multiple entities share the same name",
+          description: "File path to disambiguate same-name entities",
         }),
       ),
       budget: Type.Optional(
         Type.Number({
-          description: "Token budget for the returned context (default: 4000)",
+          description: "Token budget (default: 4000)",
         }),
       ),
       entity_id: Type.Optional(
         Type.String({
           description:
-            "Exact entity ID from sem_entities output (e.g. 'src/auth.ts::function::login') — use to avoid ambiguity",
+            "Exact entity ID from sem_entities (e.g. 'src/auth.ts::function::login') — avoids ambiguity",
         }),
       ),
     }),

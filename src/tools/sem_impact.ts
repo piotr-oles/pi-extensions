@@ -9,39 +9,37 @@ export function registerSemImpact(pi: ExtensionAPI) {
     name: "sem_impact",
     label: "Sem Impact",
     description:
-      "Show the impact of changing a code entity: its direct dependencies, direct dependents, " +
-      "transitive blast radius, and affected tests. " +
-      "Use before modifying an entity to understand what else might break.",
-    promptSnippet: "Analyze dependencies and blast radius for a code entity",
+      "Impact of changing code entity: direct deps, dependents, transitive blast radius, affected tests. " +
+      "Use before modifying to understand what breaks.",
+    promptSnippet: "Analyze dependencies and blast radius for code entity",
     promptGuidelines: [
-      "Use sem_impact before modifying a function or class to understand what callers depend on it.",
-      "Use sem_impact with mode 'deps' to see what an entity depends on before refactoring it.",
-      "Use sem_impact with mode 'tests' to find which tests cover an entity.",
-      "Increase depth beyond the default 2 for large refactors where transitive impact matters.",
+      "Use before modifying to see what callers depend on it.",
+      "mode='deps' — see what entity depends on before refactoring.",
+      "mode='tests' — find tests covering entity.",
+      "Increase depth past 2 for large refactors with transitive impact.",
     ],
     parameters: Type.Object({
       entity: Type.String({
-        description: "Name of the entity to analyze (e.g. 'AuthService', 'parseConfig')",
+        description: "Entity name (e.g. 'AuthService', 'parseConfig')",
       }),
       file: Type.Optional(
         Type.String({
-          description: "File path to disambiguate when multiple entities share the same name",
+          description: "File path to disambiguate same-name entities",
         }),
       ),
       entity_id: Type.Optional(
         Type.String({
-          description: "Exact entity ID from sem_entities output — use to avoid ambiguity",
+          description: "Exact entity ID from sem_entities — avoids ambiguity",
         }),
       ),
       mode: Type.Optional(
         StringEnum(["all", "deps", "dependents", "tests"] as const, {
-          description:
-            "What to show: 'all' (default), 'deps' (dependencies only), 'dependents' (callers only), 'tests' (affected tests only)",
+          description: "'all' (default) | 'deps' | 'dependents' (callers) | 'tests'",
         }),
       ),
       depth: Type.Optional(
         Type.Number({
-          description: "Max traversal depth for transitive impact (default: 2, 0 = unlimited)",
+          description: "Max traversal depth (default: 2, 0 = unlimited)",
         }),
       ),
     }),
