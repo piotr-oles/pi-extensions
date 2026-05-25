@@ -37,6 +37,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Lint + format check (biome ci is stricter than biome check: warns = errors)
+      - name: Lint & format
+        run: pnpm check
+
       # TypeScript type-check — vitest uses esbuild and skips type errors,
       # so tsc is the only gate that catches interface drift with the real
       # @earendil-works/* packages.

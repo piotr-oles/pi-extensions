@@ -1,7 +1,7 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { AgentToolResult, ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-import { semContext, SemError } from "../sem.js";
 import { formatContext } from "../format.js";
+import { SemError, semContext } from "../sem.js";
 
 export function registerSemContext(pi: ExtensionAPI) {
   pi.registerTool({
@@ -19,20 +19,28 @@ export function registerSemContext(pi: ExtensionAPI) {
     ],
     parameters: Type.Object({
       entity: Type.String({
-        description: "Name of the entity to look up (e.g. 'AuthService', 'parseConfig', 'UserController.login')",
+        description:
+          "Name of the entity to look up (e.g. 'AuthService', 'parseConfig', 'UserController.login')",
       }),
-      file: Type.Optional(Type.String({
-        description: "File path to disambiguate when multiple entities share the same name",
-      })),
-      budget: Type.Optional(Type.Number({
-        description: "Token budget for the returned context (default: 4000)",
-      })),
-      entity_id: Type.Optional(Type.String({
-        description: "Exact entity ID from sem_entities output (e.g. 'src/auth.ts::function::login') — use to avoid ambiguity",
-      })),
+      file: Type.Optional(
+        Type.String({
+          description: "File path to disambiguate when multiple entities share the same name",
+        }),
+      ),
+      budget: Type.Optional(
+        Type.Number({
+          description: "Token budget for the returned context (default: 4000)",
+        }),
+      ),
+      entity_id: Type.Optional(
+        Type.String({
+          description:
+            "Exact entity ID from sem_entities output (e.g. 'src/auth.ts::function::login') — use to avoid ambiguity",
+        }),
+      ),
     }),
 
-    async execute(_id, params, signal) {
+    async execute(_id, params, signal): Promise<AgentToolResult<Record<string, unknown>>> {
       const { entity, file, budget = 4000, entity_id } = params;
       try {
         const result = await semContext(
@@ -43,13 +51,19 @@ export function registerSemContext(pi: ExtensionAPI) {
         );
         return {
           content: [{ type: "text", text: formatContext(result) }],
-          details: { entity: result.entity, entityId: result.entityId, tokens: result.total_tokens, budget: result.budget },
+          details: {
+            entity: result.entity,
+            entityId: result.entityId,
+            tokens: result.total_tokens,
+            budget: result.budget,
+          },
         };
       } catch (err) {
-        const msg = err instanceof SemError
-          ? `sem_context failed: ${err.message}`
-          : `sem_context error: ${String(err)}`;
-        return { content: [{ type: "text", text: msg }], details: { error: true } as any };
+        const msg =
+          err instanceof SemError
+            ? `sem_context failed: ${err.message}`
+            : `sem_context error: ${String(err)}`;
+        return { content: [{ type: "text", text: msg }], details: { error: true } };
       }
     },
   });

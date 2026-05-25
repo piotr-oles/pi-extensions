@@ -1,8 +1,8 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { Type } from "typebox";
 import { StringEnum } from "@earendil-works/pi-ai";
-import { semImpact, SemError } from "../sem.js";
+import type { AgentToolResult, ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { Type } from "typebox";
 import { formatImpact } from "../format.js";
+import { SemError, semImpact } from "../sem.js";
 
 export function registerSemImpact(pi: ExtensionAPI) {
   pi.registerTool({
@@ -23,21 +23,30 @@ export function registerSemImpact(pi: ExtensionAPI) {
       entity: Type.String({
         description: "Name of the entity to analyze (e.g. 'AuthService', 'parseConfig')",
       }),
-      file: Type.Optional(Type.String({
-        description: "File path to disambiguate when multiple entities share the same name",
-      })),
-      entity_id: Type.Optional(Type.String({
-        description: "Exact entity ID from sem_entities output — use to avoid ambiguity",
-      })),
-      mode: Type.Optional(StringEnum(["all", "deps", "dependents", "tests"] as const, {
-        description: "What to show: 'all' (default), 'deps' (dependencies only), 'dependents' (callers only), 'tests' (affected tests only)",
-      })),
-      depth: Type.Optional(Type.Number({
-        description: "Max traversal depth for transitive impact (default: 2, 0 = unlimited)",
-      })),
+      file: Type.Optional(
+        Type.String({
+          description: "File path to disambiguate when multiple entities share the same name",
+        }),
+      ),
+      entity_id: Type.Optional(
+        Type.String({
+          description: "Exact entity ID from sem_entities output — use to avoid ambiguity",
+        }),
+      ),
+      mode: Type.Optional(
+        StringEnum(["all", "deps", "dependents", "tests"] as const, {
+          description:
+            "What to show: 'all' (default), 'deps' (dependencies only), 'dependents' (callers only), 'tests' (affected tests only)",
+        }),
+      ),
+      depth: Type.Optional(
+        Type.Number({
+          description: "Max traversal depth for transitive impact (default: 2, 0 = unlimited)",
+        }),
+      ),
     }),
 
-    async execute(_id, params, signal) {
+    async execute(_id, params, signal): Promise<AgentToolResult<Record<string, unknown>>> {
       const { entity, file, entity_id, mode = "all", depth } = params;
       const opts = {
         file,
@@ -61,10 +70,11 @@ export function registerSemImpact(pi: ExtensionAPI) {
           },
         };
       } catch (err) {
-        const msg = err instanceof SemError
-          ? `sem_impact failed: ${err.message}`
-          : `sem_impact error: ${String(err)}`;
-        return { content: [{ type: "text", text: msg }], details: { error: true } as any };
+        const msg =
+          err instanceof SemError
+            ? `sem_impact failed: ${err.message}`
+            : `sem_impact error: ${String(err)}`;
+        return { content: [{ type: "text", text: msg }], details: { error: true } };
       }
     },
   });

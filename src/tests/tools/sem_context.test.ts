@@ -1,20 +1,25 @@
-import { describe, expect, it, vi } from "vitest";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
-import { registerSemContext } from "../../tools/sem_context.js";
+import { describe, expect, it, vi } from "vitest";
 import type { SemContextResult } from "../../sem.js";
+import { registerSemContext } from "../../tools/sem_context.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-type ExecResult = { content: Array<{ type: string; text: string }>; details: Record<string, unknown> };
+type ExecResult = {
+  content: Array<{ type: string; text: string }>;
+  details: Record<string, unknown>;
+};
 
 function buildMockPi() {
   let captured: ToolDefinition<any, any, any> | undefined;
   const exec = vi.fn();
   const pi = {
     exec,
-    registerTool: vi.fn((def: ToolDefinition<any, any, any>) => { captured = def; }),
+    registerTool: vi.fn((def: ToolDefinition<any, any, any>) => {
+      captured = def;
+    }),
   };
   registerSemContext(pi as any);
   // Typed wrapper: supplies the required-but-unused onUpdate and ctx args, and
@@ -29,15 +34,17 @@ const MOCK_RESULT: SemContextResult = {
   entityId: "src/utils.ts::function::myFunc",
   budget: 4000,
   total_tokens: 50,
-  entries: [{
-    entityId: "src/utils.ts::function::myFunc",
-    file: "src/utils.ts",
-    name: "myFunc",
-    type: "function",
-    role: "target",
-    content: "function myFunc() {}",
-    tokens: 10,
-  }],
+  entries: [
+    {
+      entityId: "src/utils.ts::function::myFunc",
+      file: "src/utils.ts",
+      name: "myFunc",
+      type: "function",
+      role: "target",
+      content: "function myFunc() {}",
+      tokens: 10,
+    },
+  ],
 };
 
 // ---------------------------------------------------------------------------
@@ -65,42 +72,88 @@ describe("registerSemContext", () => {
 describe("sem_context execute", () => {
   it("calls sem context with entity name", async () => {
     const { exec, execute } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_RESULT), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_RESULT),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     await execute({ entity: "myFunc" });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["context", "--json", "myFunc"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["context", "--json", "myFunc"]),
+      expect.anything(),
+    );
   });
 
   it("returns formatted text in content", async () => {
     const { exec, execute } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_RESULT), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_RESULT),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     const result = await execute({ entity: "myFunc" });
     expect(result.content[0].text).toContain("Entity: myFunc");
   });
 
   it("passes budget to sem", async () => {
     const { exec, execute } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_RESULT), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_RESULT),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     await execute({ entity: "myFunc", budget: 2000 });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--budget", "2000"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--budget", "2000"]),
+      expect.anything(),
+    );
   });
 
   it("passes file to sem when provided", async () => {
     const { exec, execute } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_RESULT), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_RESULT),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     await execute({ entity: "myFunc", file: "src/utils.ts" });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--file", "src/utils.ts"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--file", "src/utils.ts"]),
+      expect.anything(),
+    );
   });
 
   it("passes entity_id to sem when provided", async () => {
     const { exec, execute } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_RESULT), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_RESULT),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     await execute({ entity: "myFunc", entity_id: "src/utils.ts::function::myFunc" });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--entity-id", "src/utils.ts::function::myFunc"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--entity-id", "src/utils.ts::function::myFunc"]),
+      expect.anything(),
+    );
   });
 
   it("includes token stats in details", async () => {
     const { exec, execute } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_RESULT), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_RESULT),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     const result = await execute({ entity: "myFunc" });
     expect(result.details).toMatchObject({ tokens: 50, budget: 4000 });
   });

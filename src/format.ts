@@ -1,8 +1,4 @@
-import type {
-  SemContextResult,
-  SemEntity,
-  SemImpactResult,
-} from "./sem.js";
+import type { SemContextResult, SemEntity, SemImpactResult } from "./sem.js";
 
 // ---------------------------------------------------------------------------
 // sem entities → compact tree
@@ -28,9 +24,8 @@ export function formatEntities(entities: SemEntity[]): string {
 
   function render(list: SemEntity[], indent: string) {
     for (const e of list) {
-      const range = e.start_line === e.end_line
-        ? `L${e.start_line}`
-        : `L${e.start_line}–${e.end_line}`;
+      const range =
+        e.start_line === e.end_line ? `L${e.start_line}` : `L${e.start_line}–${e.end_line}`;
       lines.push(`${indent}${e.type} ${e.name} (${range})`);
 
       // Derive the id key children use as parent_id.
@@ -38,7 +33,7 @@ export function formatEntities(entities: SemEntity[]): string {
       // only have terminal nodes in the flat list we reconstruct by matching
       // the entity name against children's parent_id suffix.
       const childList = findChildren(entities, e);
-      if (childList.length > 0) render(childList, indent + "  ");
+      if (childList.length > 0) render(childList, `${indent}  `);
     }
   }
 
@@ -80,10 +75,13 @@ export function formatContext(result: SemContextResult): string {
 // sem impact → LLM-friendly output
 // ---------------------------------------------------------------------------
 
-function entityRef(e: { name: string; type: string; file: string; lines: [number, number] }): string {
-  const range = e.lines[0] === e.lines[1]
-    ? `L${e.lines[0]}`
-    : `L${e.lines[0]}–${e.lines[1]}`;
+function entityRef(e: {
+  name: string;
+  type: string;
+  file: string;
+  lines: [number, number];
+}): string {
+  const range = e.lines[0] === e.lines[1] ? `L${e.lines[0]}` : `L${e.lines[0]}–${e.lines[1]}`;
   return `${e.type} \`${e.name}\` (${e.file} ${range})`;
 }
 

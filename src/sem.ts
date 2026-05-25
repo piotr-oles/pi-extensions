@@ -107,11 +107,7 @@ export class SemError extends Error {
 
 type ExecFn = ExtensionAPI["exec"];
 
-async function run(
-  exec: ExecFn,
-  args: string[],
-  signal?: AbortSignal,
-): Promise<string> {
+async function run(exec: ExecFn, args: string[], signal?: AbortSignal): Promise<string> {
   const result = await exec("sem", args, { signal, timeout: 30_000 });
   if (result.code !== 0) {
     throw new SemError(

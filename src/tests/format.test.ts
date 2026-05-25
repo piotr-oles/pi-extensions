@@ -31,8 +31,20 @@ describe("formatEntities", () => {
   it("indents children under their parent", () => {
     const entities: SemEntity[] = [
       { name: "MyClass", type: "class", start_line: 1, end_line: 20, parent_id: null },
-      { name: "render", type: "method", start_line: 5, end_line: 10, parent_id: "file.ts::class::MyClass" },
-      { name: "helper", type: "method", start_line: 12, end_line: 18, parent_id: "file.ts::class::MyClass" },
+      {
+        name: "render",
+        type: "method",
+        start_line: 5,
+        end_line: 10,
+        parent_id: "file.ts::class::MyClass",
+      },
+      {
+        name: "helper",
+        type: "method",
+        start_line: 12,
+        end_line: 18,
+        parent_id: "file.ts::class::MyClass",
+      },
     ];
     const out = formatEntities(entities);
     const lines = out.split("\n");
@@ -44,7 +56,13 @@ describe("formatEntities", () => {
   it("handles multiple roots with children", () => {
     const entities: SemEntity[] = [
       { name: "ClassA", type: "class", start_line: 1, end_line: 10, parent_id: null },
-      { name: "methodA", type: "method", start_line: 3, end_line: 8, parent_id: "file.ts::class::ClassA" },
+      {
+        name: "methodA",
+        type: "method",
+        start_line: 3,
+        end_line: 8,
+        parent_id: "file.ts::class::ClassA",
+      },
       { name: "standaloneFunc", type: "function", start_line: 15, end_line: 20, parent_id: null },
     ];
     const out = formatEntities(entities);
@@ -102,9 +120,7 @@ describe("formatContext", () => {
   it("uses role as-is for non-target entries", () => {
     const result: SemContextResult = {
       ...baseResult,
-      entries: [
-        { ...baseResult.entries[0], role: "dependency" },
-      ],
+      entries: [{ ...baseResult.entries[0], role: "dependency" }],
     };
     const out = formatContext(result);
     expect(out).toContain("dependency");
@@ -166,13 +182,15 @@ describe("formatImpact", () => {
   it("lists direct dependencies", () => {
     const result: SemImpactResult = {
       ...baseResult,
-      dependencies: [{
-        entityId: "src/db.ts::function::query",
-        name: "query",
-        type: "function",
-        file: "src/db.ts",
-        lines: [5, 15],
-      }],
+      dependencies: [
+        {
+          entityId: "src/db.ts::function::query",
+          name: "query",
+          type: "function",
+          file: "src/db.ts",
+          lines: [5, 15],
+        },
+      ],
     };
     const out = formatImpact(result);
     expect(out).toContain("## Dependencies (1)");
@@ -183,13 +201,15 @@ describe("formatImpact", () => {
   it("lists direct dependents", () => {
     const result: SemImpactResult = {
       ...baseResult,
-      dependents: [{
-        entityId: "src/api.ts::function::handleLogin",
-        name: "handleLogin",
-        type: "function",
-        file: "src/api.ts",
-        lines: [20, 40],
-      }],
+      dependents: [
+        {
+          entityId: "src/api.ts::function::handleLogin",
+          name: "handleLogin",
+          type: "function",
+          file: "src/api.ts",
+          lines: [20, 40],
+        },
+      ],
     };
     const out = formatImpact(result);
     expect(out).toContain("## Direct dependents (1)");
@@ -202,14 +222,16 @@ describe("formatImpact", () => {
       impact: {
         depth: 2,
         total: 1,
-        entities: [{
-          entityId: "src/api.ts::function::handleLogin",
-          name: "handleLogin",
-          type: "function",
-          file: "src/api.ts",
-          lines: [20, 40],
-          depth: 1,
-        }],
+        entities: [
+          {
+            entityId: "src/api.ts::function::handleLogin",
+            name: "handleLogin",
+            type: "function",
+            file: "src/api.ts",
+            lines: [20, 40],
+            depth: 1,
+          },
+        ],
       },
     };
     const out = formatImpact(result);
@@ -221,13 +243,15 @@ describe("formatImpact", () => {
   it("lists affected tests", () => {
     const result: SemImpactResult = {
       ...baseResult,
-      tests: [{
-        entityId: "src/auth.test.ts::function::testLogin",
-        name: "testLogin",
-        type: "function",
-        file: "src/auth.test.ts",
-        lines: [5, 20],
-      }],
+      tests: [
+        {
+          entityId: "src/auth.test.ts::function::testLogin",
+          name: "testLogin",
+          type: "function",
+          file: "src/auth.test.ts",
+          lines: [5, 20],
+        },
+      ],
     };
     const out = formatImpact(result);
     expect(out).toContain("## Affected tests (1)");
@@ -237,13 +261,15 @@ describe("formatImpact", () => {
   it("uses single-line format for same start/end lines", () => {
     const result: SemImpactResult = {
       ...baseResult,
-      dependencies: [{
-        entityId: "src/config.ts::variable::MAX",
-        name: "MAX",
-        type: "variable",
-        file: "src/config.ts",
-        lines: [3, 3],
-      }],
+      dependencies: [
+        {
+          entityId: "src/config.ts::variable::MAX",
+          name: "MAX",
+          type: "variable",
+          file: "src/config.ts",
+          lines: [3, 3],
+        },
+      ],
     };
     const out = formatImpact(result);
     expect(out).toContain("L3)");

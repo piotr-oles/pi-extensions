@@ -1,9 +1,13 @@
-import { describe, expect, it, vi } from "vitest";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
+import { describe, expect, it, vi } from "vitest";
 
-type ExecResult = { content: Array<{ type: string; text: string }>; details: Record<string, unknown> };
-import { registerSemEntities } from "../../tools/sem_entities.js";
+type ExecResult = {
+  content: Array<{ type: string; text: string }>;
+  details: Record<string, unknown>;
+};
+
 import type { SemEntity } from "../../sem.js";
+import { registerSemEntities } from "../../tools/sem_entities.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -14,7 +18,9 @@ function buildMockPi(cwd = "/project") {
   const exec = vi.fn();
   const pi = {
     exec,
-    registerTool: vi.fn((def: ToolDefinition) => { captured = def; }),
+    registerTool: vi.fn((def: ToolDefinition) => {
+      captured = def;
+    }),
   };
   registerSemEntities(pi as any);
   const tool = captured!;
@@ -53,21 +59,44 @@ describe("registerSemEntities", () => {
 describe("sem_entities execute", () => {
   it("uses provided path", async () => {
     const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_ENTITIES), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_ENTITIES),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     await execute({ path: "src/components" });
-    expect(exec).toHaveBeenCalledWith("sem", ["entities", "--json", "src/components"], expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      ["entities", "--json", "src/components"],
+      expect.anything(),
+    );
   });
 
   it("falls back to ctx.cwd when path is omitted", async () => {
     const { execute, exec } = buildMockPi("/my/project");
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_ENTITIES), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_ENTITIES),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     await execute({});
-    expect(exec).toHaveBeenCalledWith("sem", ["entities", "--json", "/my/project"], expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      ["entities", "--json", "/my/project"],
+      expect.anything(),
+    );
   });
 
   it("returns formatted entity tree in content", async () => {
     const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_ENTITIES), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_ENTITIES),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     const result = await execute({ path: "src/" });
     expect(result.content[0].text).toContain("function myFunc");
     expect(result.content[0].text).toContain("class MyClass");
@@ -75,7 +104,12 @@ describe("sem_entities execute", () => {
 
   it("includes entity count in details", async () => {
     const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_ENTITIES), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_ENTITIES),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     const result = await execute({ path: "src/" });
     expect(result.details).toMatchObject({ count: 2 });
   });

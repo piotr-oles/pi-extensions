@@ -1,6 +1,6 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { AgentToolResult, ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-import { semDiff, SemError } from "../sem.js";
+import { SemError, semDiff } from "../sem.js";
 
 export function registerSemDiff(pi: ExtensionAPI) {
   pi.registerTool({
@@ -17,18 +17,24 @@ export function registerSemDiff(pi: ExtensionAPI) {
       "Use sem_diff with from/to to compare branches or commit ranges (e.g. from:'main', to:'HEAD').",
     ],
     parameters: Type.Object({
-      from: Type.Optional(Type.String({
-        description: "Start git ref (commit, branch, tag). Omit for working tree diff.",
-      })),
-      to: Type.Optional(Type.String({
-        description: "End git ref. Omit to use HEAD.",
-      })),
-      staged: Type.Optional(Type.Boolean({
-        description: "Show only staged changes (equivalent to git diff --staged)",
-      })),
+      from: Type.Optional(
+        Type.String({
+          description: "Start git ref (commit, branch, tag). Omit for working tree diff.",
+        }),
+      ),
+      to: Type.Optional(
+        Type.String({
+          description: "End git ref. Omit to use HEAD.",
+        }),
+      ),
+      staged: Type.Optional(
+        Type.Boolean({
+          description: "Show only staged changes (equivalent to git diff --staged)",
+        }),
+      ),
     }),
 
-    async execute(_id, params, signal) {
+    async execute(_id, params, signal): Promise<AgentToolResult<Record<string, unknown>>> {
       const { from, to, staged } = params;
       try {
         const markdown = await semDiff(
@@ -42,10 +48,11 @@ export function registerSemDiff(pi: ExtensionAPI) {
           details: { from, to, staged: staged ?? false },
         };
       } catch (err) {
-        const msg = err instanceof SemError
-          ? `sem_diff failed: ${err.message}`
-          : `sem_diff error: ${String(err)}`;
-        return { content: [{ type: "text", text: msg }], details: { error: true } as any };
+        const msg =
+          err instanceof SemError
+            ? `sem_diff failed: ${err.message}`
+            : `sem_diff error: ${String(err)}`;
+        return { content: [{ type: "text", text: msg }], details: { error: true } };
       }
     },
   });

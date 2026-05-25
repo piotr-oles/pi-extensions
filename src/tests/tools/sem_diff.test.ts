@@ -1,7 +1,11 @@
-import { describe, expect, it, vi } from "vitest";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
+import { describe, expect, it, vi } from "vitest";
 
-type ExecResult = { content: Array<{ type: string; text: string }>; details: Record<string, unknown> };
+type ExecResult = {
+  content: Array<{ type: string; text: string }>;
+  details: Record<string, unknown>;
+};
+
 import { registerSemDiff } from "../../tools/sem_diff.js";
 
 // ---------------------------------------------------------------------------
@@ -13,7 +17,9 @@ function buildMockPi() {
   const exec = vi.fn();
   const pi = {
     exec,
-    registerTool: vi.fn((def: ToolDefinition) => { captured = def; }),
+    registerTool: vi.fn((def: ToolDefinition) => {
+      captured = def;
+    }),
   };
   registerSemDiff(pi as any);
   const tool = captured!;
@@ -50,14 +56,22 @@ describe("sem_diff execute arguments", () => {
     const { execute, exec } = buildMockPi();
     exec.mockResolvedValue({ stdout: MOCK_MARKDOWN, stderr: "", code: 0, killed: false });
     await execute({});
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["diff", "--format", "markdown"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["diff", "--format", "markdown"]),
+      expect.anything(),
+    );
   });
 
   it("appends --staged when staged is true", async () => {
     const { execute, exec } = buildMockPi();
     exec.mockResolvedValue({ stdout: "", stderr: "", code: 0, killed: false });
     await execute({ staged: true });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--staged"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--staged"]),
+      expect.anything(),
+    );
   });
 
   it("does not append --staged when staged is false", async () => {
@@ -72,14 +86,22 @@ describe("sem_diff execute arguments", () => {
     const { execute, exec } = buildMockPi();
     exec.mockResolvedValue({ stdout: "", stderr: "", code: 0, killed: false });
     await execute({ from: "main" });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--from", "main"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--from", "main"]),
+      expect.anything(),
+    );
   });
 
   it("appends --to when provided", async () => {
     const { execute, exec } = buildMockPi();
     exec.mockResolvedValue({ stdout: "", stderr: "", code: 0, killed: false });
     await execute({ from: "main", to: "HEAD" });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--to", "HEAD"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--to", "HEAD"]),
+      expect.anything(),
+    );
   });
 
   it("does not append --from or --to when omitted", async () => {

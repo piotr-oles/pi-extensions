@@ -12,15 +12,15 @@
  */
 
 import * as path from "node:path";
-import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   calls,
   createTestSession,
   says,
+  type TestSession,
   verifySandboxInstall,
   when,
-  type TestSession,
 } from "@marcfargas/pi-test-harness";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import semPi from "../index.js";
 import type { SemContextResult, SemEntity, SemImpactResult } from "../sem.js";
 
@@ -87,25 +87,47 @@ const MOCK_DIFF_MD = "## Semantic diff\n\n### myFunc — modified\n\n```\n- old\
  * arg (the sem subcommand) so each tool gets the right fixture.
  */
 async function makeSession() {
-  const execMock = vi.fn((
-    _cmd: string,
-    args: string[],
-  ): Promise<{ stdout: string; stderr: string; code: number; killed: boolean }> => {
-    const sub = args[0];
-    if (sub === "context") {
-      return Promise.resolve({ stdout: JSON.stringify(MOCK_CONTEXT), stderr: "", code: 0, killed: false });
-    }
-    if (sub === "entities") {
-      return Promise.resolve({ stdout: JSON.stringify(MOCK_ENTITIES), stderr: "", code: 0, killed: false });
-    }
-    if (sub === "impact") {
-      return Promise.resolve({ stdout: JSON.stringify(MOCK_IMPACT), stderr: "", code: 0, killed: false });
-    }
-    if (sub === "diff") {
-      return Promise.resolve({ stdout: MOCK_DIFF_MD, stderr: "", code: 0, killed: false });
-    }
-    return Promise.resolve({ stdout: "", stderr: `unknown subcommand: ${sub}`, code: 1, killed: false });
-  });
+  const execMock = vi.fn(
+    (
+      _cmd: string,
+      args: string[],
+    ): Promise<{ stdout: string; stderr: string; code: number; killed: boolean }> => {
+      const sub = args[0];
+      if (sub === "context") {
+        return Promise.resolve({
+          stdout: JSON.stringify(MOCK_CONTEXT),
+          stderr: "",
+          code: 0,
+          killed: false,
+        });
+      }
+      if (sub === "entities") {
+        return Promise.resolve({
+          stdout: JSON.stringify(MOCK_ENTITIES),
+          stderr: "",
+          code: 0,
+          killed: false,
+        });
+      }
+      if (sub === "impact") {
+        return Promise.resolve({
+          stdout: JSON.stringify(MOCK_IMPACT),
+          stderr: "",
+          code: 0,
+          killed: false,
+        });
+      }
+      if (sub === "diff") {
+        return Promise.resolve({ stdout: MOCK_DIFF_MD, stderr: "", code: 0, killed: false });
+      }
+      return Promise.resolve({
+        stdout: "",
+        stderr: `unknown subcommand: ${sub}`,
+        code: 1,
+        killed: false,
+      });
+    },
+  );
 
   const session = await createTestSession({
     extensionFactories: [
@@ -209,11 +231,7 @@ describe("sem-pi extension (integration)", () => {
       ]),
     );
 
-    expect(execMock).toHaveBeenCalledWith(
-      "sem",
-      ["entities", "--json", "src/"],
-      expect.anything(),
-    );
+    expect(execMock).toHaveBeenCalledWith("sem", ["entities", "--json", "src/"], expect.anything());
 
     const results = t.events.toolResultsFor("sem_entities");
     expect(results).toHaveLength(1);
@@ -253,12 +271,7 @@ describe("sem-pi extension (integration)", () => {
     const { session, execMock } = await makeSession();
     t = session;
 
-    await t.run(
-      when("Show semantic diff", [
-        calls("sem_diff", {}),
-        says("Here are the changes."),
-      ]),
-    );
+    await t.run(when("Show semantic diff", [calls("sem_diff", {}), says("Here are the changes.")]));
 
     expect(execMock).toHaveBeenCalledWith(
       "sem",

@@ -1,9 +1,13 @@
-import { describe, expect, it, vi } from "vitest";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
+import { describe, expect, it, vi } from "vitest";
 
-type ExecResult = { content: Array<{ type: string; text: string }>; details: Record<string, unknown> };
-import { registerSemImpact } from "../../tools/sem_impact.js";
+type ExecResult = {
+  content: Array<{ type: string; text: string }>;
+  details: Record<string, unknown>;
+};
+
 import type { SemImpactResult } from "../../sem.js";
+import { registerSemImpact } from "../../tools/sem_impact.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -14,7 +18,9 @@ function buildMockPi() {
   const exec = vi.fn();
   const pi = {
     exec,
-    registerTool: vi.fn((def: ToolDefinition) => { captured = def; }),
+    registerTool: vi.fn((def: ToolDefinition) => {
+      captured = def;
+    }),
   };
   registerSemImpact(pi as any);
   const tool = captured!;
@@ -31,39 +37,47 @@ const MOCK_RESULT: SemImpactResult = {
     file: "src/auth.ts",
     lines: [10, 30],
   },
-  dependencies: [{
-    entityId: "src/db.ts::function::query",
-    name: "query",
-    type: "function",
-    file: "src/db.ts",
-    lines: [5, 15],
-  }],
-  dependents: [{
-    entityId: "src/api.ts::function::handleLogin",
-    name: "handleLogin",
-    type: "function",
-    file: "src/api.ts",
-    lines: [20, 40],
-  }],
-  impact: {
-    depth: 2,
-    total: 1,
-    entities: [{
+  dependencies: [
+    {
+      entityId: "src/db.ts::function::query",
+      name: "query",
+      type: "function",
+      file: "src/db.ts",
+      lines: [5, 15],
+    },
+  ],
+  dependents: [
+    {
       entityId: "src/api.ts::function::handleLogin",
       name: "handleLogin",
       type: "function",
       file: "src/api.ts",
       lines: [20, 40],
-      depth: 1,
-    }],
+    },
+  ],
+  impact: {
+    depth: 2,
+    total: 1,
+    entities: [
+      {
+        entityId: "src/api.ts::function::handleLogin",
+        name: "handleLogin",
+        type: "function",
+        file: "src/api.ts",
+        lines: [20, 40],
+        depth: 1,
+      },
+    ],
   },
-  tests: [{
-    entityId: "src/auth.test.ts::function::testLogin",
-    name: "testLogin",
-    type: "function",
-    file: "src/auth.test.ts",
-    lines: [5, 20],
-  }],
+  tests: [
+    {
+      entityId: "src/auth.test.ts::function::testLogin",
+      name: "testLogin",
+      type: "function",
+      file: "src/auth.test.ts",
+      lines: [5, 20],
+    },
+  ],
 };
 
 // ---------------------------------------------------------------------------
@@ -90,7 +104,12 @@ describe("registerSemImpact", () => {
 describe("sem_impact execute mode flags", () => {
   it("sends --deps --dependents --tests for mode 'all'", async () => {
     const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_RESULT), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_RESULT),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     await execute({ entity: "login", mode: "all" });
     const args: string[] = exec.mock.calls[0][1];
     expect(args).toContain("--deps");
@@ -100,7 +119,12 @@ describe("sem_impact execute mode flags", () => {
 
   it("sends only --deps for mode 'deps'", async () => {
     const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_RESULT), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_RESULT),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     await execute({ entity: "login", mode: "deps" });
     const args: string[] = exec.mock.calls[0][1];
     expect(args).toContain("--deps");
@@ -110,7 +134,12 @@ describe("sem_impact execute mode flags", () => {
 
   it("sends only --dependents for mode 'dependents'", async () => {
     const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_RESULT), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_RESULT),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     await execute({ entity: "login", mode: "dependents" });
     const args: string[] = exec.mock.calls[0][1];
     expect(args).not.toContain("--deps");
@@ -120,7 +149,12 @@ describe("sem_impact execute mode flags", () => {
 
   it("sends only --tests for mode 'tests'", async () => {
     const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_RESULT), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_RESULT),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     await execute({ entity: "login", mode: "tests" });
     const args: string[] = exec.mock.calls[0][1];
     expect(args).not.toContain("--deps");
@@ -130,7 +164,12 @@ describe("sem_impact execute mode flags", () => {
 
   it("defaults to mode 'all' when mode is omitted", async () => {
     const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_RESULT), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_RESULT),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     await execute({ entity: "login" });
     const args: string[] = exec.mock.calls[0][1];
     expect(args).toContain("--deps");
@@ -140,9 +179,18 @@ describe("sem_impact execute mode flags", () => {
 
   it("passes --depth when provided", async () => {
     const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_RESULT), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_RESULT),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     await execute({ entity: "login", depth: 5 });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--depth", "5"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--depth", "5"]),
+      expect.anything(),
+    );
   });
 });
 
@@ -153,7 +201,12 @@ describe("sem_impact execute mode flags", () => {
 describe("sem_impact execute output", () => {
   it("returns formatted impact analysis in content", async () => {
     const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_RESULT), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_RESULT),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     const result = await execute({ entity: "login" });
     expect(result.content[0].text).toContain("function `login`");
     expect(result.content[0].text).toContain("query");
@@ -162,7 +215,12 @@ describe("sem_impact execute output", () => {
 
   it("includes counts in details", async () => {
     const { execute, exec } = buildMockPi();
-    exec.mockResolvedValue({ stdout: JSON.stringify(MOCK_RESULT), stderr: "", code: 0, killed: false });
+    exec.mockResolvedValue({
+      stdout: JSON.stringify(MOCK_RESULT),
+      stderr: "",
+      code: 0,
+      killed: false,
+    });
     const result = await execute({ entity: "login" });
     expect(result.details).toMatchObject({
       dependencyCount: 1,

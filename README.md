@@ -57,6 +57,9 @@ pnpm install
 pnpm test          # unit + integration + smoke (all ~2 s)
 pnpm test:watch    # watch mode
 pnpm test:coverage # coverage report
+pnpm lint          # biome lint + format check
+pnpm lint:fix      # auto-fix lint + formatting
+pnpm format        # auto-format only
 ```
 
 ### Test layers
