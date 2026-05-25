@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Type-check & test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: ["20", "22"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # TypeScript type-check — vitest uses esbuild and skips type errors,
+      # so tsc is the only gate that catches interface drift with the real
+      # @earendil-works/* packages.
+      - name: Type-check
+        run: pnpm exec tsc --noEmit
+
+      # Unit tests  : tool logic, argument construction, output parsing
+      # Integration : real pi runtime + mocked exec (7 tests, ~100 ms)
+      # Smoke test  : npm pack → install → load in real pi (1 test, ~2 s)
+      - name: Test
+        run: pnpm test

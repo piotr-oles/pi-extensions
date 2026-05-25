@@ -1,0 +1,25 @@
+{
+  "name": "sem-pi",
+  "version": "0.1.0",
+  "description": "Pi Agent extension: semantic code tools via sem CLI",
+  "type": "module",
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-agent-core": "^0.75.5",
+    "@earendil-works/pi-ai": "^0.75.5",
+    "@earendil-works/pi-coding-agent": "^0.75.5",
+    "@marcfargas/pi-test-harness": "^0.6.1",
+    "typebox": "^1.1.38",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1"
+  }
+}
