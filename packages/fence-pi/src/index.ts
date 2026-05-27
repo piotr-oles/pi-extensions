@@ -55,7 +55,7 @@ function buildBlockReason(findings: Finding[]): string {
 }
 
 function buildWarnMessage(findings: Finding[]): string {
-  const lines = ["⚠ sem-fence: fence/divider comments detected in added code:"];
+  const lines = ["⚠ fence-pi: fence/divider comments detected in added code:"];
   for (const { relativePath, fences } of findings) {
     lines.push(`  ${relativePath}:`);
     lines.push(...fences.map(formatFinding));
@@ -66,8 +66,8 @@ function buildWarnMessage(findings: Finding[]): string {
 
 // ─── Extension ────────────────────────────────────────────────────────────────
 
-export default function semFence(pi: ExtensionAPI) {
-  pi.registerFlag("sem-fence-block", {
+export default function fencePi(pi: ExtensionAPI) {
+  pi.registerFlag("fence-pi-block", {
     type: "boolean",
     description: "Block writes/edits that introduce fence/divider comments (default: warn only)",
     default: false,

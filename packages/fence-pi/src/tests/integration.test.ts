@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
  * Catches packaging bugs (missing files, wrong `pi.extensions` path) before
  * any release.
  */
-describe("sem-fence smoke (sandbox install)", { timeout: 120_000 }, () => {
+describe("fence-pi smoke (sandbox install)", { timeout: 120_000 }, () => {
   it("packs and installs cleanly; extension registers without errors", async () => {
     const packageDir = path.resolve(import.meta.dirname, "../..");
     const result = await verifySandboxInstall({
