@@ -2,6 +2,9 @@
   "name": "fence-pi",
   "version": "0.1.1",
   "description": "Pi Agent extension: block or warn on fence/divider comments in written code",
+  "keywords": [
+    "pi-package"
+  ],
   "type": "module",
   "files": [
     "src",
@@ -32,6 +35,10 @@
     "tree-sitter-python": "^0.25.0",
     "tree-sitter-go": "^0.25.0",
     "tree-sitter-rust": "^0.24.0"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-agent-core": "*",
+    "@earendil-works/pi-coding-agent": "*"
   },
   "devDependencies": {
     "@earendil-works/pi-agent-core": "^0.75.5",
