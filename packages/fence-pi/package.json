@@ -1,6 +1,6 @@
 {
   "name": "fence-pi",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pi Agent extension: block or warn on fence/divider comments in written code",
   "type": "module",
   "files": [
