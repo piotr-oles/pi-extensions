@@ -43,7 +43,7 @@ async function loadGrammar(wasmPath: string): Promise<Language> {
   if (cached) {
     return cached;
   }
-  const bytes = await readFile(wasmPath);
+  const bytes = new Uint8Array(await readFile(wasmPath));
   const lang = await Language.load(bytes);
   grammarCache.set(wasmPath, lang);
   return lang;
