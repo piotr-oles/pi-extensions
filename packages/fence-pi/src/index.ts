@@ -1,6 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import {
+  type ExtensionAPI,
+  isEditToolResult,
+  isToolCallEventType,
+  isWriteToolResult,
+} from "@earendil-works/pi-coding-agent";
 import { isFenceComment } from "./fence.js";
 import { type CommentNode, extractComments } from "./parse.js";
 
@@ -63,8 +68,6 @@ function buildWarnText(findings: Finding[]): string {
   return lines.join("\n");
 }
 
-// ─── Extension ────────────────────────────────────────────────────────────────
-
 export default function fencePi(pi: ExtensionAPI) {
   pi.registerFlag("fence-pi-block", {
     type: "boolean",
@@ -86,15 +89,12 @@ export default function fencePi(pi: ExtensionAPI) {
   });
 
   pi.on("tool_call", async (event, ctx) => {
-    if (event.toolName !== "write" && event.toolName !== "edit") return undefined;
-
-    const relativePath = event.input.path as string;
-    const absolutePath = resolve(ctx.cwd, relativePath);
     const isBlockMode = pi.getFlag("fence-pi-block") === true;
 
     // ── write ──────────────────────────────────────────────────────────────
-    if (event.toolName === "write") {
-      const newContent = event.input.content as string;
+    if (isToolCallEventType("write", event)) {
+      const { path: relativePath, content: newContent } = event.input;
+      const absolutePath = resolve(ctx.cwd, relativePath);
       const oldContent = await readExisting(absolutePath);
 
       const existingTexts = new Set(
@@ -105,46 +105,45 @@ export default function fencePi(pi: ExtensionAPI) {
       );
 
       if (fences.length === 0) return undefined;
-
-      if (isBlockMode) {
-        return { block: true, reason: buildBlockReason([{ relativePath, fences }]) };
-      }
+      if (isBlockMode) return { block: true, reason: buildBlockReason([{ relativePath, fences }]) };
 
       pendingFindings.set(event.toolCallId, { relativePath, fences });
       return undefined;
     }
 
     // ── edit ───────────────────────────────────────────────────────────────
-    const edits = (event.input as { edits: Array<{ oldText: string; newText: string }> }).edits;
-    const oldContent = await readExisting(absolutePath);
-    const fences: CommentNode[] = [];
+    if (isToolCallEventType("edit", event)) {
+      const { path: relativePath, edits } = event.input;
+      const absolutePath = resolve(ctx.cwd, relativePath);
+      const oldContent = await readExisting(absolutePath);
+      const fences: CommentNode[] = [];
 
-    for (const edit of edits) {
-      const newComments = await extractComments(edit.newText, relativePath);
-      const oldTexts = new Set(
-        (await extractComments(edit.oldText, relativePath)).map((c) => c.text),
-      );
-      const lineOffset = oldContent ? findStartLine(oldContent, edit.oldText) - 1 : 0;
+      for (const edit of edits) {
+        const newComments = await extractComments(edit.newText, relativePath);
+        const oldTexts = new Set(
+          (await extractComments(edit.oldText, relativePath)).map((c) => c.text),
+        );
+        const lineOffset = oldContent ? findStartLine(oldContent, edit.oldText) - 1 : 0;
 
-      for (const c of newComments) {
-        if (!oldTexts.has(c.text) && isFenceComment(c.text)) {
-          fences.push({ ...c, startLine: c.startLine + lineOffset });
+        for (const c of newComments) {
+          if (!oldTexts.has(c.text) && isFenceComment(c.text)) {
+            fences.push({ ...c, startLine: c.startLine + lineOffset });
+          }
         }
       }
+
+      if (fences.length === 0) return undefined;
+      if (isBlockMode) return { block: true, reason: buildBlockReason([{ relativePath, fences }]) };
+
+      pendingFindings.set(event.toolCallId, { relativePath, fences });
+      return undefined;
     }
 
-    if (fences.length === 0) return undefined;
-
-    if (isBlockMode) {
-      return { block: true, reason: buildBlockReason([{ relativePath, fences }]) };
-    }
-
-    pendingFindings.set(event.toolCallId, { relativePath, fences });
     return undefined;
   });
 
   pi.on("tool_result", async (event) => {
-    if (event.toolName !== "write" && event.toolName !== "edit") return undefined;
+    if (!isWriteToolResult(event) && !isEditToolResult(event)) return undefined;
 
     const finding = pendingFindings.get(event.toolCallId);
     if (!finding) return undefined;
@@ -153,8 +152,10 @@ export default function fencePi(pi: ExtensionAPI) {
 
     // Append the warning to the tool result content so the model sees it
     // inline, alongside the write confirmation, without a separate turn.
-    return {
-      content: [...event.content, { type: "text" as const, text: buildWarnText([finding]) }],
+    const warning: { type: "text"; text: string } = {
+      type: "text",
+      text: buildWarnText([finding]),
     };
+    return { content: [...event.content, warning] };
   });
 }
