@@ -29,7 +29,7 @@ JS, TS, Python, Go, Rust.
 
 ## Modes
 
-Control via `pi-fence-mode` flag:
+Control via `pi-fence-mode` flag passed as CLI arg:
 
 | Mode | Behavior |
 |------|----------|
@@ -37,15 +37,6 @@ Control via `pi-fence-mode` flag:
 | `block` | Write blocked, model must retry without fences |
 | `remove` | Fence comments stripped before write |
 
-Set in pi config:
-
-```json
-{
-  "flags": {
-    "pi-fence-mode": "block"
-  }
-}
-```
 
 ## How it works
 
