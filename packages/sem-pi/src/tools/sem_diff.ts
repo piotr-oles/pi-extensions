@@ -36,11 +36,7 @@ export function registerSemDiff(pi: ExtensionAPI) {
     async execute(_id, params, signal): Promise<AgentToolResult<Record<string, unknown>>> {
       const { from, to, staged } = params;
       try {
-        const markdown = await semDiff(
-          pi.exec.bind(pi),
-          { from, to, staged },
-          signal,
-        );
+        const markdown = await semDiff(pi.exec.bind(pi), { from, to, staged }, signal);
         const text = markdown.trim() || "No semantic changes found.";
         return {
           content: [{ type: "text", text }],
