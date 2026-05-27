@@ -7,7 +7,9 @@ import {
   isWriteToolResult,
 } from "@earendil-works/pi-coding-agent";
 import { isFenceComment, removeFenceComments } from "./fence.js";
+import { buildBlockReason, buildRemoveText, buildWarnText } from "./messages.js";
 import { type CommentNode, extractComments } from "./parse.js";
+import type { Finding } from "./types.js";
 
 const PROMPT_INSTRUCTIONS = `
 Do not insert decorative fence or divider comments like:
@@ -17,11 +19,6 @@ Do not insert decorative fence or divider comments like:
   # ################
 Use named functions, classes, or blank lines to separate code sections instead.
 `.trim();
-
-interface Finding {
-  relativePath: string;
-  fences: CommentNode[];
-}
 
 type FenceMode = "warn" | "block" | "remove";
 
@@ -72,6 +69,7 @@ export default function piFence(pi: ExtensionAPI) {
       }
       if (mode === "remove") {
         event.input.content = removeFenceComments(event.input.content, fences);
+        pendingFindings.set(event.toolCallId, { relativePath, fences });
         return undefined;
       }
       if (mode === "block") {
@@ -104,22 +102,21 @@ export default function piFence(pi: ExtensionAPI) {
         return undefined;
       }
 
-      if (mode === "remove") {
-        // Lines in each fences array are relative to the edit fragment —
-        // no offset needed; just mutate newText in place.
-        for (const { edit, fences } of perEdit) {
-          edit.newText = removeFenceComments(edit.newText, fences);
-        }
-        return undefined;
-      }
-
-      // block / warn: flatten with file-level line offsets.
+      // Flatten fences with file-level line offsets for all modes.
       const allFences: CommentNode[] = [];
       for (const { edit, fences } of perEdit) {
         const lineOffset = oldContent ? findStartLine(oldContent, edit.oldText) - 1 : 0;
         for (const c of fences) {
           allFences.push({ ...c, startLine: c.startLine + lineOffset });
         }
+      }
+
+      if (mode === "remove") {
+        for (const { edit, fences } of perEdit) {
+          edit.newText = removeFenceComments(edit.newText, fences);
+        }
+        pendingFindings.set(event.toolCallId, { relativePath, fences: allFences });
+        return undefined;
       }
 
       if (mode === "block") {
@@ -147,9 +144,11 @@ export default function piFence(pi: ExtensionAPI) {
 
     // Append the warning to the tool result content so the model sees it
     // inline, alongside the write confirmation, without a separate turn.
+    const mode = resolveMode(pi.getFlag("pi-fence-mode"));
+    const text = mode === "remove" ? buildRemoveText([finding]) : buildWarnText([finding]);
     const warning: { type: "text"; text: string } = {
       type: "text",
-      text: buildWarnText([finding]),
+      text,
     };
     return { content: [...event.content, warning] };
   });
@@ -170,28 +169,4 @@ function findStartLine(haystack: string, needle: string): number {
     return 1;
   }
   return haystack.slice(0, idx).split("\n").length;
-}
-
-function formatFinding(f: CommentNode): string {
-  return `    line ${f.startLine}, col ${f.startCol + 1}: ${f.text.trim()}`;
-}
-
-function buildBlockReason(findings: Finding[]): string {
-  const lines = ["Write blocked — fence/divider comments in added code:"];
-  for (const { relativePath, fences } of findings) {
-    lines.push(`  ${relativePath}:`);
-    lines.push(...fences.map(formatFinding));
-  }
-  lines.push("Remove these comments and retry.");
-  return lines.join("\n");
-}
-
-function buildWarnText(findings: Finding[]): string {
-  const lines = ["⚠ pi-fence: fence/divider comments detected in added code:"];
-  for (const { relativePath, fences } of findings) {
-    lines.push(`  ${relativePath}:`);
-    lines.push(...fences.map(formatFinding));
-  }
-  lines.push("Please remove them.");
-  return lines.join("\n");
 }
