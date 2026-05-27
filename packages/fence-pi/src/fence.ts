@@ -37,8 +37,12 @@ const FENCE_SEQUENCE_RE = /[-=*#~_^+|\u2500-\u257F]{3,}/u;
  */
 export function stripMarkers(raw: string): string {
   const t = raw.trim();
-  if (t.startsWith("//")) return t.replace(/^\/\/\s?/, "").trim();
-  if (t.startsWith("#")) return t.replace(/^#\s?/, "").trim();
+  if (t.startsWith("//")) {
+    return t.replace(/^\/\/\s?/, "").trim();
+  }
+  if (t.startsWith("#")) {
+    return t.replace(/^#\s?/, "").trim();
+  }
   // Block comment: strip /* ... */
   return t
     .replace(/^\/\*+\s?/, "")
@@ -68,7 +72,9 @@ export function isFenceComment(rawText: string): boolean {
  * operations don't invalidate later indices.
  */
 export function removeFenceComments(content: string, nodes: CommentNode[]): string {
-  if (nodes.length === 0) return content;
+  if (nodes.length === 0) {
+    return content;
+  }
 
   const lines = content.split("\n");
 
@@ -79,7 +85,9 @@ export function removeFenceComments(content: string, nodes: CommentNode[]): stri
   for (const node of sorted) {
     const startIdx = node.startLine - 1;
     const endIdx = node.endLine - 1;
-    if (startIdx < 0 || startIdx >= lines.length) continue;
+    if (startIdx < 0 || startIdx >= lines.length) {
+      continue;
+    }
 
     const beforeComment = lines[startIdx].slice(0, node.startCol);
     const isStandalone = beforeComment.trim() === "";

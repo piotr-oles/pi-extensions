@@ -21,8 +21,12 @@ async function isSemIgnored(pi: ExtensionAPI): Promise<boolean> {
       timeout: 5_000,
     });
     // exit 0 = ignored, exit 1 = not ignored, other = not a repo / git error
-    if (result.code === 0) return true;
-    if (result.code === 1) return false;
+    if (result.code === 0) {
+      return true;
+    }
+    if (result.code === 1) {
+      return false;
+    }
     return true; // can't determine — skip check
   } catch {
     return true;
@@ -55,7 +59,9 @@ export function registerSemSetupCommand(pi: ExtensionAPI) {
       if (!semIgnored) {
         lines.push("    fix     : echo '.sem/' >> .gitignore");
       }
-      if (ok) lines.push("\n✓ Everything looks good!");
+      if (ok) {
+        lines.push("\n✓ Everything looks good!");
+      }
 
       ctx.ui.notify(lines.join("\n"), ok ? "info" : "warning");
     },
@@ -67,7 +73,9 @@ export function registerSemStartupCheck(pi: ExtensionAPI) {
 
   pi.on("session_start", async (_event, ctx) => {
     const { semAvailable, semIgnored } = await checkSemStatus(pi);
-    if (semAvailable && semIgnored) return;
+    if (semAvailable && semIgnored) {
+      return;
+    }
 
     if (!commandRegistered) {
       registerSemSetupCommand(pi);
@@ -75,8 +83,12 @@ export function registerSemStartupCheck(pi: ExtensionAPI) {
     }
 
     const issues: string[] = [];
-    if (!semAvailable) issues.push("sem binary not found");
-    if (!semIgnored) issues.push(".sem/ not in .gitignore");
+    if (!semAvailable) {
+      issues.push("sem binary not found");
+    }
+    if (!semIgnored) {
+      issues.push(".sem/ not in .gitignore");
+    }
 
     ctx.ui.notify(
       `sem-pi: setup incomplete — ${issues.join(", ")}. Run /sem-setup for instructions.`,

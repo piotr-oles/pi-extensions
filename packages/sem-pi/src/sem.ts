@@ -42,9 +42,15 @@ export async function semContext(
   signal?: AbortSignal,
 ): Promise<string> {
   const args = ["context", entity];
-  if (opts.file) args.push("--file", opts.file);
-  if (opts.budget) args.push("--budget", String(opts.budget));
-  if (opts.entityId) args.push("--entity-id", opts.entityId);
+  if (opts.file) {
+    args.push("--file", opts.file);
+  }
+  if (opts.budget) {
+    args.push("--budget", String(opts.budget));
+  }
+  if (opts.entityId) {
+    args.push("--entity-id", opts.entityId);
+  }
   return run(exec, args, signal);
 }
 
@@ -60,13 +66,23 @@ export async function semImpact(
   signal?: AbortSignal,
 ): Promise<string> {
   const args = ["impact", entity];
-  if (opts.file) args.push("--file", opts.file);
-  if (opts.entityId) args.push("--entity-id", opts.entityId);
-  if (opts.mode === "deps") args.push("--deps");
-  else if (opts.mode === "dependents") args.push("--dependents");
-  else if (opts.mode === "tests") args.push("--tests");
+  if (opts.file) {
+    args.push("--file", opts.file);
+  }
+  if (opts.entityId) {
+    args.push("--entity-id", opts.entityId);
+  }
+  if (opts.mode === "deps") {
+    args.push("--deps");
+  } else if (opts.mode === "dependents") {
+    args.push("--dependents");
+  } else if (opts.mode === "tests") {
+    args.push("--tests");
+  }
   // "all" (default) → no flag, sem returns all sections
-  if (opts.depth !== undefined) args.push("--depth", String(opts.depth));
+  if (opts.depth !== undefined) {
+    args.push("--depth", String(opts.depth));
+  }
   return run(exec, args, signal);
 }
 
@@ -76,8 +92,14 @@ export async function semDiff(
   signal?: AbortSignal,
 ): Promise<string> {
   const args = ["diff", "--format", "markdown"];
-  if (opts.staged) args.push("--staged");
-  if (opts.from) args.push("--from", opts.from);
-  if (opts.to) args.push("--to", opts.to);
+  if (opts.staged) {
+    args.push("--staged");
+  }
+  if (opts.from) {
+    args.push("--from", opts.from);
+  }
+  if (opts.to) {
+    args.push("--to", opts.to);
+  }
   return run(exec, args, signal);
 }

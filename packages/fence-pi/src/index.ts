@@ -26,7 +26,9 @@ interface Finding {
 type FenceMode = "warn" | "block" | "remove";
 
 function resolveMode(flag: boolean | string | undefined): FenceMode {
-  if (flag === "block" || flag === "warn" || flag === "remove") return flag;
+  if (flag === "block" || flag === "warn" || flag === "remove") {
+    return flag;
+  }
   return "warn";
 }
 
@@ -65,14 +67,16 @@ export default function fencePi(pi: ExtensionAPI) {
         (c) => !existingTexts.has(c.text) && isFenceComment(c.text),
       );
 
-      if (fences.length === 0) return undefined;
-
+      if (fences.length === 0) {
+        return undefined;
+      }
       if (mode === "remove") {
         event.input.content = removeFenceComments(event.input.content, fences);
         return undefined;
       }
-      if (mode === "block")
+      if (mode === "block") {
         return { block: true, reason: buildBlockReason([{ relativePath, fences }]) };
+      }
 
       pendingFindings.set(event.toolCallId, { relativePath, fences });
       return undefined;
@@ -91,10 +95,14 @@ export default function fencePi(pi: ExtensionAPI) {
           (await extractComments(edit.oldText, relativePath)).map((c) => c.text),
         );
         const fences = newComments.filter((c) => !oldTexts.has(c.text) && isFenceComment(c.text));
-        if (fences.length > 0) perEdit.push({ edit, fences });
+        if (fences.length > 0) {
+          perEdit.push({ edit, fences });
+        }
       }
 
-      if (perEdit.length === 0) return undefined;
+      if (perEdit.length === 0) {
+        return undefined;
+      }
 
       if (mode === "remove") {
         // Lines in each fences array are relative to the edit fragment —
@@ -109,11 +117,14 @@ export default function fencePi(pi: ExtensionAPI) {
       const allFences: CommentNode[] = [];
       for (const { edit, fences } of perEdit) {
         const lineOffset = oldContent ? findStartLine(oldContent, edit.oldText) - 1 : 0;
-        for (const c of fences) allFences.push({ ...c, startLine: c.startLine + lineOffset });
+        for (const c of fences) {
+          allFences.push({ ...c, startLine: c.startLine + lineOffset });
+        }
       }
 
-      if (mode === "block")
+      if (mode === "block") {
         return { block: true, reason: buildBlockReason([{ relativePath, fences: allFences }]) };
+      }
 
       pendingFindings.set(event.toolCallId, { relativePath, fences: allFences });
       return undefined;
@@ -123,10 +134,14 @@ export default function fencePi(pi: ExtensionAPI) {
   });
 
   pi.on("tool_result", async (event) => {
-    if (!isWriteToolResult(event) && !isEditToolResult(event)) return undefined;
+    if (!isWriteToolResult(event) && !isEditToolResult(event)) {
+      return undefined;
+    }
 
     const finding = pendingFindings.get(event.toolCallId);
-    if (!finding) return undefined;
+    if (!finding) {
+      return undefined;
+    }
 
     pendingFindings.delete(event.toolCallId);
 
@@ -151,7 +166,9 @@ async function readExisting(absolutePath: string): Promise<string | null> {
 /** Line number (1-indexed) where `needle` first appears in `haystack`. */
 function findStartLine(haystack: string, needle: string): number {
   const idx = haystack.indexOf(needle);
-  if (idx === -1) return 1;
+  if (idx === -1) {
+    return 1;
+  }
   return haystack.slice(0, idx).split("\n").length;
 }
 

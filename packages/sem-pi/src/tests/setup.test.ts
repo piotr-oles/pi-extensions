@@ -19,7 +19,9 @@ function buildMockPi(execResponses: Record<string, { code: number }>) {
     exec,
     registerCommand: registerCommandMock,
     on: vi.fn((event: string, handler: (event: unknown, ctx: unknown) => Promise<void>) => {
-      if (event === "session_start") sessionStartHandler = handler;
+      if (event === "session_start") {
+        sessionStartHandler = handler;
+      }
     }),
   };
 
@@ -53,7 +55,9 @@ describe("checkSemStatus", () => {
 
   it("returns semAvailable=false when exec throws", async () => {
     const exec = vi.fn().mockImplementation(async (cmd: string) => {
-      if (cmd === "sem") throw new Error("ENOENT");
+      if (cmd === "sem") {
+        throw new Error("ENOENT");
+      }
       return { stdout: "", stderr: "", code: 0, killed: false };
     });
     const status = await checkSemStatus({ exec } as any);
@@ -74,7 +78,9 @@ describe("checkSemStatus", () => {
 
   it("returns semIgnored=true (skip check) when git is unavailable", async () => {
     const exec = vi.fn().mockImplementation(async (cmd: string) => {
-      if (cmd === "git") throw new Error("ENOENT");
+      if (cmd === "git") {
+        throw new Error("ENOENT");
+      }
       return { stdout: "", stderr: "", code: 0, killed: false };
     });
     const status = await checkSemStatus({ exec } as any);

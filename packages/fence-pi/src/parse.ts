@@ -22,7 +22,9 @@ export interface CommentNode {
 let parserReady: Promise<void> | null = null;
 
 function ensureInitialized(): Promise<void> {
-  if (parserReady) return parserReady;
+  if (parserReady) {
+    return parserReady;
+  }
   parserReady = (async () => {
     // web-tree-sitter blocks './package.json' in exports, so resolve the
     // main JS entry and derive the WASM path from its directory.
@@ -38,7 +40,9 @@ const grammarCache = new Map<string, Language>();
 
 async function loadGrammar(wasmPath: string): Promise<Language> {
   const cached = grammarCache.get(wasmPath);
-  if (cached) return cached;
+  if (cached) {
+    return cached;
+  }
   const bytes = await readFile(wasmPath);
   const lang = await Language.load(bytes);
   grammarCache.set(wasmPath, lang);
@@ -62,7 +66,9 @@ function collectComments(
   }
   for (let i = 0; i < node.childCount; i++) {
     const child = node.child(i);
-    if (child) collectComments(child, commentTypes, out);
+    if (child) {
+      collectComments(child, commentTypes, out);
+    }
   }
 }
 
@@ -72,7 +78,9 @@ function collectComments(
  */
 export async function extractComments(content: string, filePath: string): Promise<CommentNode[]> {
   const config = getLanguageConfig(filePath);
-  if (!config) return [];
+  if (!config) {
+    return [];
+  }
 
   await ensureInitialized();
   const lang = await loadGrammar(config.wasmPath());
@@ -80,7 +88,9 @@ export async function extractComments(content: string, filePath: string): Promis
   const parser = new Parser();
   parser.setLanguage(lang);
   const tree = parser.parse(content);
-  if (!tree) return [];
+  if (!tree) {
+    return [];
+  }
 
   const results: CommentNode[] = [];
   collectComments(tree.rootNode, config.commentNodeTypes, results);
