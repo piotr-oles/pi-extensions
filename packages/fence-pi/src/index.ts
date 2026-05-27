@@ -15,7 +15,7 @@ Do not insert decorative fence or divider comments such as:
 Use named functions, classes, or blank lines to separate code sections instead.
 `.trim();
 
-// ─── Per-turn batch accumulator ───────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Finding {
   relativePath: string;
@@ -53,7 +53,7 @@ function buildBlockReason(findings: Finding[]): string {
   return lines.join("\n");
 }
 
-function buildWarnMessage(findings: Finding[]): string {
+function buildWarnText(findings: Finding[]): string {
   const lines = ["⚠ fence-pi: fence/divider comments detected in added code:"];
   for (const { relativePath, fences } of findings) {
     lines.push(`  ${relativePath}:`);
@@ -76,30 +76,13 @@ export default function fencePi(pi: ExtensionAPI) {
     systemPrompt: `${event.systemPrompt}\n\n${PROMPT_INSTRUCTIONS}`,
   }));
 
-  // Per-turn batch accumulator for warn mode.
-  // tool_call handlers for a single turn can fire concurrently, so we collect
-  // all findings and flush them in one steer message via a setTimeout(0).
-  let pendingFindings: Finding[] = [];
-  let flushTimer: ReturnType<typeof setTimeout> | null = null;
+  // Findings detected in tool_call (before the write), keyed by toolCallId.
+  // Consumed in tool_result (after the write) to append the warning inline.
+  // Reset on turn_start to guard against aborted turns leaking state.
+  const pendingFindings = new Map<string, Finding>();
 
-  function scheduleFlush(): void {
-    if (flushTimer !== null) return;
-    flushTimer = setTimeout(() => {
-      flushTimer = null;
-      if (pendingFindings.length === 0) return;
-      const message = buildWarnMessage(pendingFindings);
-      pendingFindings = [];
-      pi.sendUserMessage(message, { deliverAs: "steer" });
-    }, 0);
-  }
-
-  // Reset batch at the start of each new turn.
   pi.on("turn_start", () => {
-    pendingFindings = [];
-    if (flushTimer !== null) {
-      clearTimeout(flushTimer);
-      flushTimer = null;
-    }
+    pendingFindings.clear();
   });
 
   pi.on("tool_call", async (event, ctx) => {
@@ -107,31 +90,27 @@ export default function fencePi(pi: ExtensionAPI) {
 
     const relativePath = event.input.path as string;
     const absolutePath = resolve(ctx.cwd, relativePath);
-    const mode = pi.getFlag("fence-pi-block") === true ? "block" : "warn";
+    const isBlockMode = pi.getFlag("fence-pi-block") === true;
 
     // ── write ──────────────────────────────────────────────────────────────
     if (event.toolName === "write") {
       const newContent = event.input.content as string;
       const oldContent = await readExisting(absolutePath);
 
-      // Build set of comment texts that already exist in the file.
       const existingTexts = new Set(
         oldContent ? (await extractComments(oldContent, relativePath)).map((c) => c.text) : [],
       );
-
-      const allComments = await extractComments(newContent, relativePath);
-      const fences = allComments.filter(
+      const fences = (await extractComments(newContent, relativePath)).filter(
         (c) => !existingTexts.has(c.text) && isFenceComment(c.text),
       );
 
       if (fences.length === 0) return undefined;
 
-      if (mode === "block") {
+      if (isBlockMode) {
         return { block: true, reason: buildBlockReason([{ relativePath, fences }]) };
       }
 
-      pendingFindings.push({ relativePath, fences });
-      scheduleFlush();
+      pendingFindings.set(event.toolCallId, { relativePath, fences });
       return undefined;
     }
 
@@ -145,8 +124,6 @@ export default function fencePi(pi: ExtensionAPI) {
       const oldTexts = new Set(
         (await extractComments(edit.oldText, relativePath)).map((c) => c.text),
       );
-
-      // Compute absolute line offset from where oldText sits in the file.
       const lineOffset = oldContent ? findStartLine(oldContent, edit.oldText) - 1 : 0;
 
       for (const c of newComments) {
@@ -158,12 +135,26 @@ export default function fencePi(pi: ExtensionAPI) {
 
     if (fences.length === 0) return undefined;
 
-    if (mode === "block") {
+    if (isBlockMode) {
       return { block: true, reason: buildBlockReason([{ relativePath, fences }]) };
     }
 
-    pendingFindings.push({ relativePath, fences });
-    scheduleFlush();
+    pendingFindings.set(event.toolCallId, { relativePath, fences });
     return undefined;
+  });
+
+  pi.on("tool_result", async (event) => {
+    if (event.toolName !== "write" && event.toolName !== "edit") return undefined;
+
+    const finding = pendingFindings.get(event.toolCallId);
+    if (!finding) return undefined;
+
+    pendingFindings.delete(event.toolCallId);
+
+    // Append the warning to the tool result content so the model sees it
+    // inline, alongside the write confirmation, without a separate turn.
+    return {
+      content: [...event.content, { type: "text" as const, text: buildWarnText([finding]) }],
+    };
   });
 }
