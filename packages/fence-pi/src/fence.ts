@@ -4,7 +4,8 @@
  * A comment is a "fence" when its inner text (after stripping comment markers)
  * contains a sequence of 3 or more consecutive separator characters.
  *
- * Separator characters: - = * # ~ _ ^ + |
+ * Separator characters: ASCII  - = * # ~ _ ^ + |
+ *                        Unicode \u2500-\u257F (box-drawing block: ─ ━ │ ═ ║ …)
  *
  * Examples flagged as fences:
  *   // ---- section ----
@@ -13,6 +14,8 @@
  *   // --- start of function ---
  *   # ################
  *   /* ~~~ helpers ~~~ * /
+ *   // ─────────────────────            ← Unicode box-drawing
+ *   // ━━━ section ━━━
  *
  * Examples NOT flagged (no 3-consecutive separator sequence):
  *   // TODO: fix this
@@ -21,7 +24,8 @@
  *   // fix the off-by-one error          ← single dashes in words
  */
 
-const FENCE_SEQUENCE_RE = /[-=*#~_^+|]{3,}/;
+// ASCII separators + Unicode box-drawing block (U+2500–U+257F: ─ ━ │ ═ ║ ┌ ┐ └ ┘ …)
+const FENCE_SEQUENCE_RE = /[-=*#~_^+|\u2500-\u257F]{3,}/u;
 
 /**
  * Strip leading comment markers and surrounding whitespace from a raw comment.

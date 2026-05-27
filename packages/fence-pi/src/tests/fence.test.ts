@@ -56,6 +56,13 @@ describe("isFenceComment — fences (should return true)", () => {
     ["// --- NOTE: this is important ---"],
     ["// --- start of function (do not remove) ---"],
     ["// === Auth: login flow ==="],
+    // UTF-8 box-drawing characters (U+2500–U+257F)
+    ["// ──────────────────"], // U+2500 light horizontal
+    ["// ━━━━━━━━━━━━━━━━━━"], // U+2501 heavy horizontal
+    ["// ════════════════"], // U+2550 double horizontal
+    ["// ─── section ───"], // bookended box-drawing
+    ["// ━━━ NOTE: important ━━━"], // bookended heavy
+    ["// ═══ Auth Module ═══"], // bookended double
   ])("%s", (input) => {
     expect(isFenceComment(input)).toBe(true);
   });
@@ -67,6 +74,9 @@ describe("isFenceComment — not fences (should return false)", () => {
   it.each([
     // zero separators
     ["// TODO: fix this"],
+    // UTF-8 — fewer than 3 consecutive (same rule as ASCII "// -- section --")
+    ["// ── section ──"], // only 2 consecutive box chars each side
+    ["// ─ ─ ─ ─"], // spaced — no 3-consecutive sequence
     ["// Copyright (c) 2024"],
     ["// regular comment"],
     ["# Python comment here"],
