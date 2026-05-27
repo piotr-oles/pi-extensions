@@ -1,14 +1,12 @@
 # pi-extensions
 
-[![CI](https://github.com/piotr-oles/pi-extensions/actions/workflows/ci.yml/badge.svg)](https://github.com/piotr-oles/pi-extensions/actions/workflows/ci.yml)
-
 A monorepo of [pi coding agent](https://github.com/earendil-works/pi) extensions, built and tested together under `packages/`.
 
 ## Packages
 
 | Package | Description |
 |---------|-------------|
-| [`sem-pi`](packages/sem-pi) | Exposes [sem](https://github.com/piotr-oles/sem) as agent tools — semantic code navigation without reading entire files |
+| [`@piotr-oles/sem-pi`](packages/sem-pi) | Exposes [sem](https://github.com/Ata1.raxy-Labs/sem) as agent tools — semantic code navigation without reading entire files |
 
 ## Development
 

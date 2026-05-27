@@ -1,0 +1,37 @@
+{
+  "name": "@piotr-oles/sem-fence",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pi Agent extension: block or warn on fence/divider comments in written code",
+  "type": "module",
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check src/",
+    "lint:fix": "biome check --write src/",
+    "format": "biome format --write src/",
+    "check": "biome ci src/"
+  },
+  "dependencies": {
+    "web-tree-sitter": "^0.26.9",
+    "tree-sitter-javascript": "^0.23.1",
+    "tree-sitter-typescript": "^0.23.2",
+    "tree-sitter-python": "^0.25.0",
+    "tree-sitter-go": "^0.25.0",
+    "tree-sitter-rust": "^0.24.0"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-agent-core": "^0.75.5",
+    "@earendil-works/pi-coding-agent": "^0.75.5",
+    "@marcfargas/pi-test-harness": "^0.6.1",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1"
+  }
+}
