@@ -32,8 +32,8 @@ function resolveMode(flag: boolean | string | undefined): FenceMode {
   return "warn";
 }
 
-export default function fencePi(pi: ExtensionAPI) {
-  pi.registerFlag("fence-pi-mode", {
+export default function piFence(pi: ExtensionAPI) {
+  pi.registerFlag("pi-fence-mode", {
     type: "string",
     description: "How to handle fence/divider comments: warn (default), block, or remove",
     default: "warn",
@@ -53,7 +53,7 @@ export default function fencePi(pi: ExtensionAPI) {
   });
 
   pi.on("tool_call", async (event, ctx) => {
-    const mode = resolveMode(pi.getFlag("fence-pi-mode"));
+    const mode = resolveMode(pi.getFlag("pi-fence-mode"));
 
     if (isToolCallEventType("write", event)) {
       const { path: relativePath, content: newContent } = event.input;
@@ -187,7 +187,7 @@ function buildBlockReason(findings: Finding[]): string {
 }
 
 function buildWarnText(findings: Finding[]): string {
-  const lines = ["⚠ fence-pi: fence/divider comments detected in added code:"];
+  const lines = ["⚠ pi-fence: fence/divider comments detected in added code:"];
   for (const { relativePath, fences } of findings) {
     lines.push(`  ${relativePath}:`);
     lines.push(...fences.map(formatFinding));

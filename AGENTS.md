@@ -8,8 +8,8 @@ A pnpm monorepo of [pi coding agent](https://github.com/earendil-works/pi) exten
 
 ## Packages
 
-### `fence-pi` (`packages/fence-pi`)
-Hooks into pi's `tool_call` / `tool_result` events to detect decorative fence/divider comments being written (e.g. `// ---- section ----`, `// ===== Title =====`). Operates in three modes controlled by the `fence-pi-mode` flag:
+### `pi-fence` (`packages/pi-fence`)
+Hooks into pi's `tool_call` / `tool_result` events to detect decorative fence/divider comments being written (e.g. `// ---- section ----`, `// ===== Title =====`). Operates in three modes controlled by the `pi-fence-mode` flag:
 
 - **warn** (default) — appends a warning to the tool result after writing
 - **block** — returns `{ block: true }` before the write happens
@@ -17,7 +17,7 @@ Hooks into pi's `tool_call` / `tool_result` events to detect decorative fence/di
 
 Uses [tree-sitter](https://tree-sitter.github.io/) to parse comment nodes. Supports JS/TS, Python, Go, and Rust.
 
-### `sem-pi` (`packages/sem-pi`) — private
+### `pi-sem` (`packages/pi-sem`) — private
 Wraps the [`sem`](https://github.com/piotr-oles/sem) CLI as four pi tools: `sem_context`, `sem_entities`, `sem_impact`, `sem_diff`. Gives the model semantic understanding of code structure without reading entire files.
 
 ## Tech stack
@@ -27,7 +27,7 @@ Wraps the [`sem`](https://github.com/piotr-oles/sem) CLI as four pi tools: `sem_
 - **Package manager**: pnpm 10 with workspaces
 - **Linter/formatter**: Biome
 - **Tests**: Vitest
-- **Releases**: Changesets (only `fence-pi` is published; `sem-pi` is private)
+- **Releases**: Changesets (only `pi-fence` is published; `pi-sem` is private)
 
 ## Development commands
 
@@ -50,7 +50,7 @@ pnpm test:coverage            # coverage report
 ## Conventions
 
 ### No fence/divider comments
-`fence-pi` itself is active in this repo. Do not write decorative separator comments like:
+`pi-fence` itself is active in this repo. Do not write decorative separator comments like:
 
 ```ts
 // ---- helpers ----
@@ -86,12 +86,12 @@ This is what pi loads from the `"pi": { "extensions": [...] }` field in `package
 
 Tests live in `src/tests/` inside each package. Vitest is the test runner.
 
-`sem-pi` uses three layers:
+`pi-sem` uses three layers:
 - **Unit** — tool logic with `exec` mocked via `vi.fn()`
 - **Integration** — real pi runtime + mocked `sem` subprocess
 - **Smoke** — `npm pack` → install → load in real pi
 
-`fence-pi` uses the [`@marcfargas/pi-test-harness`](https://www.npmjs.com/package/@marcfargas/pi-test-harness) package to simulate pi events against the extension.
+`pi-fence` uses the [`@marcfargas/pi-test-harness`](https://www.npmjs.com/package/@marcfargas/pi-test-harness) package to simulate pi events against the extension.
 
 ## Adding a new package
 

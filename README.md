@@ -6,8 +6,8 @@ A monorepo of [pi coding agent](https://github.com/earendil-works/pi) extensions
 
 | Package | Description |
 |---------|-------------|
-| [`fence-pi`](packages/fence-pi) | Detects and handles decorative fence/divider comments in written code — warn, block, or auto-remove |
-| [`sem-pi`](packages/sem-pi) *(private)* | Exposes [sem](https://github.com/piotr-oles/sem) as agent tools — semantic code navigation without reading entire files |
+| [`pi-fence`](packages/pi-fence) | Detects and handles decorative fence/divider comments in written code — warn, block, or auto-remove |
+| [`pi-sem`](packages/pi-sem) *(private)* | Exposes [sem](https://github.com/piotr-oles/sem) as agent tools — semantic code navigation without reading entire files |
 
 ## Development
 

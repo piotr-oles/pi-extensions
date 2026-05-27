@@ -101,7 +101,7 @@ async function makeSession() {
   return { session, execMock };
 }
 
-describe("sem-pi extension (integration)", () => {
+describe("pi-sem extension (integration)", () => {
   let t: TestSession;
 
   afterEach(() => t?.dispose());
@@ -247,7 +247,7 @@ describe("sem-pi extension (integration)", () => {
 // Runs in a separate suite so it can be skipped in watch mode without
 // affecting the integration tests above.
 
-describe("sem-pi smoke (sandbox install)", { timeout: 120_000 }, () => {
+describe("pi-sem smoke (sandbox install)", { timeout: 120_000 }, () => {
   it("packs and installs cleanly; all 4 tools are registered", async () => {
     const packageDir = path.resolve(import.meta.dirname, "../..");
     const result = await verifySandboxInstall({

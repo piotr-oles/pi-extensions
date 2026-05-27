@@ -15,7 +15,7 @@ importers:
         specifier: ^2.31.0
         version: 2.31.0(@types/node@25.9.1)
 
-  packages/fence-pi:
+  packages/pi-fence:
     dependencies:
       tree-sitter-go:
         specifier: ^0.25.0
@@ -52,7 +52,7 @@ importers:
         specifier: ^3.2.1
         version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
 
-  packages/sem-pi:
+  packages/pi-sem:
     devDependencies:
       '@earendil-works/pi-agent-core':
         specifier: ^0.75.5

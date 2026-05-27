@@ -1,5 +1,5 @@
 {
-  "name": "sem-pi",
+  "name": "pi-sem",
   "version": "0.1.0",
   "private": true,
   "description": "Pi Agent extension: semantic code tools via sem CLI",
