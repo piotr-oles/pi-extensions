@@ -1,4 +1,4 @@
-# fence-pi
+# pi-fence
 
 ## 0.1.1
 

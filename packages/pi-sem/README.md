@@ -1,4 +1,4 @@
-# sem-pi
+# pi-sem
 
 A [pi coding agent](https://github.com/earendil-works/pi) extension that exposes [sem](https://github.com/piotr-oles/sem) as agent tools — giving the model semantic understanding of code structure without reading entire files.
 
@@ -19,14 +19,14 @@ A [pi coding agent](https://github.com/earendil-works/pi) extension that exposes
 ## Installation
 
 ```bash
-pi ext add piotr-oles/pi-extensions:packages/sem-pi
+pi ext add piotr-oles/pi-extensions:packages/pi-sem
 ```
 
 Or add it to your pi config directly:
 
 ```json
 {
-  "extensions": ["piotr-oles/pi-extensions:packages/sem-pi"]
+  "extensions": ["piotr-oles/pi-extensions:packages/pi-sem"]
 }
 ```
 

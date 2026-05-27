@@ -50,7 +50,7 @@ export function registerSemSetupCommand(pi: ExtensionAPI) {
       const { semAvailable, semIgnored } = await checkSemStatus(pi);
       const ok = semAvailable && semIgnored;
 
-      const lines: string[] = ["sem-pi setup status:"];
+      const lines: string[] = ["pi-sem setup status:"];
       lines.push(`  sem binary  ${semAvailable ? "✓ available" : "✗ not found"}`);
       if (!semAvailable) {
         lines.push("    install : cargo install sem");
@@ -91,7 +91,7 @@ export function registerSemStartupCheck(pi: ExtensionAPI) {
     }
 
     ctx.ui.notify(
-      `sem-pi: setup incomplete — ${issues.join(", ")}. Run /sem-setup for instructions.`,
+      `pi-sem: setup incomplete — ${issues.join(", ")}. Run /sem-setup for instructions.`,
       "warning",
     );
   });
