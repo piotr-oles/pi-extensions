@@ -24,6 +24,8 @@
  *   // fix the off-by-one error          ← single dashes in words
  */
 
+import type { CommentNode } from "./parse.js";
+
 // ASCII separators + Unicode box-drawing block (U+2500–U+257F: ─ ━ │ ═ ║ ┌ ┐ └ ┘ …)
 const FENCE_SEQUENCE_RE = /[-=*#~_^+|\u2500-\u257F]{3,}/u;
 
@@ -52,4 +54,49 @@ export function stripMarkers(raw: string): string {
  */
 export function isFenceComment(rawText: string): boolean {
   return FENCE_SEQUENCE_RE.test(stripMarkers(rawText));
+}
+
+/**
+ * Remove the given comment nodes from `content` and return the cleaned string.
+ *
+ * - Standalone comments (only whitespace before them on their line) → whole
+ *   line(s) removed.
+ * - Inline comments (code precedes them on the same line) → comment stripped,
+ *   code kept with trailing whitespace trimmed.
+ *
+ * Nodes are processed in reverse start-position order so that earlier splice
+ * operations don't invalidate later indices.
+ */
+export function removeFenceComments(content: string, nodes: CommentNode[]): string {
+  if (nodes.length === 0) return content;
+
+  const lines = content.split("\n");
+
+  // Descending by startLine then startCol keeps earlier splices from
+  // shifting the indices of nodes we haven't processed yet.
+  const sorted = [...nodes].sort((a, b) => b.startLine - a.startLine || b.startCol - a.startCol);
+
+  for (const node of sorted) {
+    const startIdx = node.startLine - 1;
+    const endIdx = node.endLine - 1;
+    if (startIdx < 0 || startIdx >= lines.length) continue;
+
+    const beforeComment = lines[startIdx].slice(0, node.startCol);
+    const isStandalone = beforeComment.trim() === "";
+
+    if (isStandalone) {
+      // Remove every line the comment spans (single-line or block).
+      lines.splice(startIdx, endIdx - startIdx + 1);
+    } else {
+      // Inline: keep the code that precedes the comment on the first line.
+      // For multi-line block comments also drop the intermediate/last lines.
+      const afterComment = (lines[endIdx] ?? "").slice(node.endCol);
+      if (endIdx > startIdx) {
+        lines.splice(startIdx + 1, endIdx - startIdx);
+      }
+      lines[startIdx] = (beforeComment.trimEnd() + afterComment).trimEnd();
+    }
+  }
+
+  return lines.join("\n");
 }

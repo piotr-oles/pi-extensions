@@ -13,6 +13,10 @@ export interface CommentNode {
   startLine: number;
   /** 0-indexed column. */
   startCol: number;
+  /** 1-indexed end line (inclusive). */
+  endLine: number;
+  /** 0-indexed end column (exclusive — first column after the comment). */
+  endCol: number;
 }
 
 let parserReady: Promise<void> | null = null;
@@ -51,6 +55,8 @@ function collectComments(
       text: node.text,
       startLine: node.startPosition.row + 1, // tree-sitter is 0-based; we use 1-based
       startCol: node.startPosition.column,
+      endLine: node.endPosition.row + 1,
+      endCol: node.endPosition.column,
     });
     return; // comments never nest
   }

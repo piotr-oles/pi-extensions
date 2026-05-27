@@ -15,6 +15,8 @@ const x = 1;
     expect(nodes).toHaveLength(2);
     expect(nodes[0].text).toBe("// ---- helpers ----");
     expect(nodes[0].startLine).toBe(1);
+    expect(nodes[0].endLine).toBe(1);
+    expect(nodes[0].endCol).toBe(20);
     expect(nodes[1].text).toBe("// regular comment");
     expect(nodes[1].startLine).toBe(3);
   });
@@ -38,6 +40,7 @@ const x = 1;
     const nodes = await extractComments(src, "src/utils.ts");
     expect(nodes).toHaveLength(1);
     expect(nodes[0].startCol).toBe(13);
+    expect(nodes[0].endCol).toBe(13 + "// ---- fence ----".length);
   });
 
   it("returns [] for unsupported extension", async () => {

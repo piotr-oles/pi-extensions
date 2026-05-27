@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { isFenceComment, stripMarkers } from "../fence.js";
+import { isFenceComment, removeFenceComments, stripMarkers } from "../fence.js";
+import type { CommentNode } from "../parse.js";
 
-// ─── stripMarkers ─────────────────────────────────────────────────────────────
+// Helper: build a minimal CommentNode from a single-line comment string.
+function node(text: string, startLine: number, startCol = 0): CommentNode {
+  return { text, startLine, startCol, endLine: startLine, endCol: startCol + text.length };
+}
 
 describe("stripMarkers", () => {
   it("strips // prefix", () => {
@@ -23,8 +27,6 @@ describe("stripMarkers", () => {
     expect(stripMarkers("// ---- section ----")).toBe("---- section ----");
   });
 });
-
-// ─── isFenceComment — true positives ─────────────────────────────────────────
 
 describe("isFenceComment — fences (should return true)", () => {
   it.each([
@@ -68,8 +70,6 @@ describe("isFenceComment — fences (should return true)", () => {
   });
 });
 
-// ─── isFenceComment — true negatives ─────────────────────────────────────────
-
 describe("isFenceComment — not fences (should return false)", () => {
   it.each([
     // zero separators
@@ -92,5 +92,58 @@ describe("isFenceComment — not fences (should return false)", () => {
     ["// =="],
   ])("%s", (input) => {
     expect(isFenceComment(input)).toBe(false);
+  });
+});
+
+// ─── removeFenceComments ─────────────────────────────────────────────────────
+
+describe("removeFenceComments", () => {
+  it("returns content unchanged when no nodes given", () => {
+    const src = "const x = 1;\n";
+    expect(removeFenceComments(src, [])).toBe(src);
+  });
+
+  it("removes a standalone fence line", () => {
+    expect(
+      removeFenceComments("// ---- section ----\nconst x = 1;\n", [
+        node("// ---- section ----", 1),
+      ]),
+    ).toBe("const x = 1;\n");
+  });
+
+  it("removes a standalone fence between code lines", () => {
+    expect(removeFenceComments("const a = 1;\n// ===\nconst b = 2;\n", [node("// ===", 2)])).toBe(
+      "const a = 1;\nconst b = 2;\n",
+    );
+  });
+
+  it("removes multiple standalone fences", () => {
+    expect(
+      removeFenceComments("// ---- a ----\nconst x = 1;\n// ---- b ----\nconst y = 2;\n", [
+        node("// ---- a ----", 1),
+        node("// ---- b ----", 3),
+      ]),
+    ).toBe("const x = 1;\nconst y = 2;\n");
+  });
+
+  it("strips an inline fence comment, keeps the code", () => {
+    expect(
+      removeFenceComments("const x = 1; // ---- section ----\n", [
+        node("// ---- section ----", 1, 13),
+      ]),
+    ).toBe("const x = 1;\n");
+  });
+
+  it("handles an indented standalone fence", () => {
+    expect(
+      removeFenceComments("  // ---- section ----\nconst x = 1;\n", [
+        node("// ---- section ----", 1, 2),
+      ]),
+    ).toBe("const x = 1;\n");
+  });
+
+  it("preserves lines without fences untouched", () => {
+    const src = "// TODO: fix this\nconst x = 1;\n";
+    expect(removeFenceComments(src, [])).toBe(src);
   });
 });

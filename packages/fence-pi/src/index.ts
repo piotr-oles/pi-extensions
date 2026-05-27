@@ -6,13 +6,11 @@ import {
   isToolCallEventType,
   isWriteToolResult,
 } from "@earendil-works/pi-coding-agent";
-import { isFenceComment } from "./fence.js";
+import { isFenceComment, removeFenceComments } from "./fence.js";
 import { type CommentNode, extractComments } from "./parse.js";
 
-// ─── System prompt ────────────────────────────────────────────────────────────
-
 const PROMPT_INSTRUCTIONS = `
-Do not insert decorative fence or divider comments such as:
+Do not insert decorative fence or divider comments like:
   // ---- section ----
   // ===== Title =====
   // *** helpers ***
@@ -20,14 +18,127 @@ Do not insert decorative fence or divider comments such as:
 Use named functions, classes, or blank lines to separate code sections instead.
 `.trim();
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface Finding {
   relativePath: string;
   fences: CommentNode[];
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+type FenceMode = "warn" | "block" | "remove";
+
+function resolveMode(flag: boolean | string | undefined): FenceMode {
+  if (flag === "block" || flag === "warn" || flag === "remove") return flag;
+  return "warn";
+}
+
+export default function fencePi(pi: ExtensionAPI) {
+  pi.registerFlag("fence-pi-mode", {
+    type: "string",
+    description: "How to handle fence/divider comments: warn (default), block, or remove",
+    default: "warn",
+  });
+
+  pi.on("before_agent_start", async (event) => ({
+    systemPrompt: `${event.systemPrompt}\n\n${PROMPT_INSTRUCTIONS}`,
+  }));
+
+  // Findings detected in tool_call (before the write), keyed by toolCallId.
+  // Consumed in tool_result (after the write) to append the warning inline.
+  // Reset on turn_start to guard against aborted turns leaking state.
+  const pendingFindings = new Map<string, Finding>();
+
+  pi.on("turn_start", () => {
+    pendingFindings.clear();
+  });
+
+  pi.on("tool_call", async (event, ctx) => {
+    const mode = resolveMode(pi.getFlag("fence-pi-mode"));
+
+    if (isToolCallEventType("write", event)) {
+      const { path: relativePath, content: newContent } = event.input;
+      const absolutePath = resolve(ctx.cwd, relativePath);
+      const oldContent = await readExisting(absolutePath);
+
+      const existingTexts = new Set(
+        oldContent ? (await extractComments(oldContent, relativePath)).map((c) => c.text) : [],
+      );
+      const fences = (await extractComments(newContent, relativePath)).filter(
+        (c) => !existingTexts.has(c.text) && isFenceComment(c.text),
+      );
+
+      if (fences.length === 0) return undefined;
+
+      if (mode === "remove") {
+        event.input.content = removeFenceComments(event.input.content, fences);
+        return undefined;
+      }
+      if (mode === "block")
+        return { block: true, reason: buildBlockReason([{ relativePath, fences }]) };
+
+      pendingFindings.set(event.toolCallId, { relativePath, fences });
+      return undefined;
+    }
+
+    if (isToolCallEventType("edit", event)) {
+      const { path: relativePath, edits } = event.input;
+      const absolutePath = resolve(ctx.cwd, relativePath);
+      const oldContent = await readExisting(absolutePath);
+
+      // One pass: compute per-edit fence findings (lines relative to each fragment).
+      const perEdit: { edit: (typeof edits)[number]; fences: CommentNode[] }[] = [];
+      for (const edit of edits) {
+        const newComments = await extractComments(edit.newText, relativePath);
+        const oldTexts = new Set(
+          (await extractComments(edit.oldText, relativePath)).map((c) => c.text),
+        );
+        const fences = newComments.filter((c) => !oldTexts.has(c.text) && isFenceComment(c.text));
+        if (fences.length > 0) perEdit.push({ edit, fences });
+      }
+
+      if (perEdit.length === 0) return undefined;
+
+      if (mode === "remove") {
+        // Lines in each fences array are relative to the edit fragment —
+        // no offset needed; just mutate newText in place.
+        for (const { edit, fences } of perEdit) {
+          edit.newText = removeFenceComments(edit.newText, fences);
+        }
+        return undefined;
+      }
+
+      // block / warn: flatten with file-level line offsets.
+      const allFences: CommentNode[] = [];
+      for (const { edit, fences } of perEdit) {
+        const lineOffset = oldContent ? findStartLine(oldContent, edit.oldText) - 1 : 0;
+        for (const c of fences) allFences.push({ ...c, startLine: c.startLine + lineOffset });
+      }
+
+      if (mode === "block")
+        return { block: true, reason: buildBlockReason([{ relativePath, fences: allFences }]) };
+
+      pendingFindings.set(event.toolCallId, { relativePath, fences: allFences });
+      return undefined;
+    }
+
+    return undefined;
+  });
+
+  pi.on("tool_result", async (event) => {
+    if (!isWriteToolResult(event) && !isEditToolResult(event)) return undefined;
+
+    const finding = pendingFindings.get(event.toolCallId);
+    if (!finding) return undefined;
+
+    pendingFindings.delete(event.toolCallId);
+
+    // Append the warning to the tool result content so the model sees it
+    // inline, alongside the write confirmation, without a separate turn.
+    const warning: { type: "text"; text: string } = {
+      type: "text",
+      text: buildWarnText([finding]),
+    };
+    return { content: [...event.content, warning] };
+  });
+}
 
 async function readExisting(absolutePath: string): Promise<string | null> {
   try {
@@ -66,96 +177,4 @@ function buildWarnText(findings: Finding[]): string {
   }
   lines.push("Please remove them.");
   return lines.join("\n");
-}
-
-export default function fencePi(pi: ExtensionAPI) {
-  pi.registerFlag("fence-pi-block", {
-    type: "boolean",
-    description: "Block writes/edits that introduce fence/divider comments (default: warn only)",
-    default: false,
-  });
-
-  pi.on("before_agent_start", async (event) => ({
-    systemPrompt: `${event.systemPrompt}\n\n${PROMPT_INSTRUCTIONS}`,
-  }));
-
-  // Findings detected in tool_call (before the write), keyed by toolCallId.
-  // Consumed in tool_result (after the write) to append the warning inline.
-  // Reset on turn_start to guard against aborted turns leaking state.
-  const pendingFindings = new Map<string, Finding>();
-
-  pi.on("turn_start", () => {
-    pendingFindings.clear();
-  });
-
-  pi.on("tool_call", async (event, ctx) => {
-    const isBlockMode = pi.getFlag("fence-pi-block") === true;
-
-    // ── write ──────────────────────────────────────────────────────────────
-    if (isToolCallEventType("write", event)) {
-      const { path: relativePath, content: newContent } = event.input;
-      const absolutePath = resolve(ctx.cwd, relativePath);
-      const oldContent = await readExisting(absolutePath);
-
-      const existingTexts = new Set(
-        oldContent ? (await extractComments(oldContent, relativePath)).map((c) => c.text) : [],
-      );
-      const fences = (await extractComments(newContent, relativePath)).filter(
-        (c) => !existingTexts.has(c.text) && isFenceComment(c.text),
-      );
-
-      if (fences.length === 0) return undefined;
-      if (isBlockMode) return { block: true, reason: buildBlockReason([{ relativePath, fences }]) };
-
-      pendingFindings.set(event.toolCallId, { relativePath, fences });
-      return undefined;
-    }
-
-    // ── edit ───────────────────────────────────────────────────────────────
-    if (isToolCallEventType("edit", event)) {
-      const { path: relativePath, edits } = event.input;
-      const absolutePath = resolve(ctx.cwd, relativePath);
-      const oldContent = await readExisting(absolutePath);
-      const fences: CommentNode[] = [];
-
-      for (const edit of edits) {
-        const newComments = await extractComments(edit.newText, relativePath);
-        const oldTexts = new Set(
-          (await extractComments(edit.oldText, relativePath)).map((c) => c.text),
-        );
-        const lineOffset = oldContent ? findStartLine(oldContent, edit.oldText) - 1 : 0;
-
-        for (const c of newComments) {
-          if (!oldTexts.has(c.text) && isFenceComment(c.text)) {
-            fences.push({ ...c, startLine: c.startLine + lineOffset });
-          }
-        }
-      }
-
-      if (fences.length === 0) return undefined;
-      if (isBlockMode) return { block: true, reason: buildBlockReason([{ relativePath, fences }]) };
-
-      pendingFindings.set(event.toolCallId, { relativePath, fences });
-      return undefined;
-    }
-
-    return undefined;
-  });
-
-  pi.on("tool_result", async (event) => {
-    if (!isWriteToolResult(event) && !isEditToolResult(event)) return undefined;
-
-    const finding = pendingFindings.get(event.toolCallId);
-    if (!finding) return undefined;
-
-    pendingFindings.delete(event.toolCallId);
-
-    // Append the warning to the tool result content so the model sees it
-    // inline, alongside the write confirmation, without a separate turn.
-    const warning: { type: "text"; text: string } = {
-      type: "text",
-      text: buildWarnText([finding]),
-    };
-    return { content: [...event.content, warning] };
-  });
 }
