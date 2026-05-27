@@ -15,8 +15,6 @@ export interface CommentNode {
   startCol: number;
 }
 
-// ─── Singleton initialisation ────────────────────────────────────────────────
-
 let parserReady: Promise<void> | null = null;
 
 function ensureInitialized(): Promise<void> {
@@ -32,8 +30,6 @@ function ensureInitialized(): Promise<void> {
   return parserReady;
 }
 
-// ─── Per-language grammar cache ───────────────────────────────────────────────
-
 const grammarCache = new Map<string, Language>();
 
 async function loadGrammar(wasmPath: string): Promise<Language> {
@@ -44,8 +40,6 @@ async function loadGrammar(wasmPath: string): Promise<Language> {
   grammarCache.set(wasmPath, lang);
   return lang;
 }
-
-// ─── Tree traversal ───────────────────────────────────────────────────────────
 
 function collectComments(
   node: SyntaxNode,
@@ -65,8 +59,6 @@ function collectComments(
     if (child) collectComments(child, commentTypes, out);
   }
 }
-
-// ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
  * Parse `content` as source code belonging to `filePath` and return every

@@ -3,7 +3,6 @@ import { resolve } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { isFenceComment } from "./fence.js";
 import { type CommentNode, extractComments } from "./parse.js";
-import { loadMode } from "./settings.js";
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 
@@ -108,7 +107,7 @@ export default function fencePi(pi: ExtensionAPI) {
 
     const relativePath = event.input.path as string;
     const absolutePath = resolve(ctx.cwd, relativePath);
-    const mode = await loadMode(pi, ctx.cwd);
+    const mode = pi.getFlag("fence-pi-block") === true ? "block" : "warn";
 
     // ── write ──────────────────────────────────────────────────────────────
     if (event.toolName === "write") {
