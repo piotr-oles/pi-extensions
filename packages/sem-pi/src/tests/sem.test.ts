@@ -54,7 +54,11 @@ describe("semEntities", () => {
     const exec = makeExec(ENTITIES_TEXT);
     const signal = AbortSignal.abort();
     await semEntities(exec, ".", signal);
-    expect(exec).toHaveBeenCalledWith("sem", expect.any(Array), expect.objectContaining({ signal }));
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.any(Array),
+      expect.objectContaining({ signal }),
+    );
   });
 });
 
@@ -74,19 +78,31 @@ describe("semContext", () => {
   it("appends --file when provided", async () => {
     const exec = makeExec(CONTEXT_TEXT);
     await semContext(exec, "myFunc", { file: "src/utils.ts" });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--file", "src/utils.ts"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--file", "src/utils.ts"]),
+      expect.anything(),
+    );
   });
 
   it("appends --budget when provided", async () => {
     const exec = makeExec(CONTEXT_TEXT);
     await semContext(exec, "myFunc", { budget: 2000 });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--budget", "2000"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--budget", "2000"]),
+      expect.anything(),
+    );
   });
 
   it("appends --entity-id when provided", async () => {
     const exec = makeExec(CONTEXT_TEXT);
     await semContext(exec, "myFunc", { entityId: "src/utils.ts::function::myFunc" });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--entity-id", "src/utils.ts::function::myFunc"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--entity-id", "src/utils.ts::function::myFunc"]),
+      expect.anything(),
+    );
   });
 
   it("throws SemError on failure", async () => {
@@ -117,19 +133,31 @@ describe("semImpact", () => {
   it("appends --dependents for mode 'dependents'", async () => {
     const exec = makeExec(IMPACT_TEXT);
     await semImpact(exec, "myFunc", { mode: "dependents" });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--dependents"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--dependents"]),
+      expect.anything(),
+    );
   });
 
   it("appends --tests for mode 'tests'", async () => {
     const exec = makeExec(IMPACT_TEXT);
     await semImpact(exec, "myFunc", { mode: "tests" });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--tests"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--tests"]),
+      expect.anything(),
+    );
   });
 
   it("appends --depth when provided", async () => {
     const exec = makeExec(IMPACT_TEXT);
     await semImpact(exec, "myFunc", { depth: 5 });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--depth", "5"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--depth", "5"]),
+      expect.anything(),
+    );
   });
 
   it("passes no mode flag for mode 'all'", async () => {
@@ -151,7 +179,11 @@ describe("semDiff", () => {
   it("calls sem diff with markdown format by default", async () => {
     const exec = makeExec("## Changes");
     await semDiff(exec, {});
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["diff", "--format", "markdown"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["diff", "--format", "markdown"]),
+      expect.anything(),
+    );
   });
 
   it("returns raw stdout as string", async () => {
@@ -164,13 +196,21 @@ describe("semDiff", () => {
   it("appends --staged when staged is true", async () => {
     const exec = makeExec("");
     await semDiff(exec, { staged: true });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--staged"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--staged"]),
+      expect.anything(),
+    );
   });
 
   it("appends --from and --to when provided", async () => {
     const exec = makeExec("");
     await semDiff(exec, { from: "main", to: "HEAD" });
-    expect(exec).toHaveBeenCalledWith("sem", expect.arrayContaining(["--from", "main", "--to", "HEAD"]), expect.anything());
+    expect(exec).toHaveBeenCalledWith(
+      "sem",
+      expect.arrayContaining(["--from", "main", "--to", "HEAD"]),
+      expect.anything(),
+    );
   });
 
   it("throws SemError on failure", async () => {

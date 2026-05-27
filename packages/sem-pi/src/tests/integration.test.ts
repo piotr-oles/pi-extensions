@@ -23,7 +23,6 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 import semPi from "../index.js";
 
-
 const MOCK_CONTEXT_TEXT = `context for function myFunc (budget: 4000, used: 50)
 
   target:

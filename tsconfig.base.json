@@ -5,6 +5,5 @@
     "moduleResolution": "NodeNext",
     "strict": true,
     "skipLibCheck": true
-  },
-  "include": ["src"]
+  }
 }

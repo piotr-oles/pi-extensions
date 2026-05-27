@@ -1,5 +1,5 @@
 import { StringEnum } from "@earendil-works/pi-ai";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { AgentToolResult, ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { SemError, semImpact } from "../sem.js";
 
@@ -43,7 +43,7 @@ export function registerSemImpact(pi: ExtensionAPI) {
       ),
     }),
 
-    async execute(_id, params, signal) {
+    async execute(_id, params, signal): Promise<AgentToolResult<Record<string, unknown>>> {
       const { entity, file, entity_id, mode = "all", depth } = params;
       try {
         const text = await semImpact(

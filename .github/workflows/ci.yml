@@ -37,18 +37,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Lint + format check (biome ci is stricter than biome check: warns = errors)
+      # Lint + format check across all packages
       - name: Lint & format
         run: pnpm check
 
-      # TypeScript type-check — vitest uses esbuild and skips type errors,
-      # so tsc is the only gate that catches interface drift with the real
-      # @earendil-works/* packages.
+      # TypeScript type-check across all packages
       - name: Type-check
-        run: pnpm exec tsc --noEmit
+        run: pnpm typecheck
 
-      # Unit tests  : tool logic, argument construction, output parsing
-      # Integration : real pi runtime + mocked exec (7 tests, ~100 ms)
-      # Smoke test  : npm pack → install → load in real pi (1 test, ~2 s)
+      # Unit + integration + smoke tests across all packages
       - name: Test
         run: pnpm test

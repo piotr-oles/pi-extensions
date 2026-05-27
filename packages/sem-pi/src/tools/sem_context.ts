@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { AgentToolResult, ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { SemError, semContext } from "../sem.js";
 
@@ -38,7 +38,7 @@ export function registerSemContext(pi: ExtensionAPI) {
       ),
     }),
 
-    async execute(_id, params, signal) {
+    async execute(_id, params, signal): Promise<AgentToolResult<Record<string, unknown>>> {
       const { entity, file, budget = 4000, entity_id } = params;
       try {
         const text = await semContext(

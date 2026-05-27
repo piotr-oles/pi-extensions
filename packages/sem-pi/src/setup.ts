@@ -35,10 +35,7 @@ export interface SemStatus {
 }
 
 export async function checkSemStatus(pi: ExtensionAPI): Promise<SemStatus> {
-  const [semAvailable, semIgnored] = await Promise.all([
-    isSemAvailable(pi),
-    isSemIgnored(pi),
-  ]);
+  const [semAvailable, semIgnored] = await Promise.all([isSemAvailable(pi), isSemIgnored(pi)]);
   return { semAvailable, semIgnored };
 }
 
@@ -53,7 +50,6 @@ export function registerSemSetupCommand(pi: ExtensionAPI) {
       lines.push(`  sem binary  ${semAvailable ? "✓ available" : "✗ not found"}`);
       if (!semAvailable) {
         lines.push("    install : cargo install sem");
-        lines.push("    or      : https://github.com/piotr-oles/sem");
       }
       lines.push(`  .sem/       ${semIgnored ? "✓ git-ignored" : "✗ not in .gitignore"}`);
       if (!semIgnored) {

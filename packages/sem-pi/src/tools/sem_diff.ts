@@ -38,7 +38,7 @@ export function registerSemDiff(pi: ExtensionAPI) {
       try {
         const markdown = await semDiff(
           pi.exec.bind(pi),
-          { from, to, staged, format: "markdown" },
+          { from, to, staged },
           signal,
         );
         const text = markdown.trim() || "No semantic changes found.";

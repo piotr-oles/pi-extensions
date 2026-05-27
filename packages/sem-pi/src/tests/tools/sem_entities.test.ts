@@ -50,11 +50,7 @@ describe("sem_entities execute", () => {
     const { exec, execute } = buildMockPi();
     exec.mockResolvedValue(MOCK_EXEC_OK);
     await execute({ path: "src/utils.ts" });
-    expect(exec).toHaveBeenCalledWith(
-      "sem",
-      ["entities", "src/utils.ts"],
-      expect.anything(),
-    );
+    expect(exec).toHaveBeenCalledWith("sem", ["entities", "src/utils.ts"], expect.anything());
   });
 
   it("uses cwd when path is omitted", async () => {

@@ -1,34 +1,21 @@
 {
-  "name": "sem-pi",
-  "version": "0.1.0",
+  "name": "pi-extensions",
+  "version": "0.0.0",
+  "private": true,
   "packageManager": "pnpm@10.30.1",
   "engines": {
     "node": ">=22.19.0"
   },
-  "description": "Pi Agent extension: semantic code tools via sem CLI",
   "type": "module",
-  "pi": {
-    "extensions": [
-      "./src/index.ts"
-    ]
-  },
   "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "lint": "biome check src/",
-    "lint:fix": "biome check --write src/",
-    "format": "biome format --write src/",
-    "check": "biome ci src/"
+    "test": "pnpm -r run test",
+    "typecheck": "pnpm -r run typecheck",
+    "lint": "biome check packages/",
+    "lint:fix": "biome check --write packages/",
+    "format": "biome format --write packages/",
+    "check": "biome ci packages/"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.15",
-    "@earendil-works/pi-agent-core": "^0.75.5",
-    "@earendil-works/pi-ai": "^0.75.5",
-    "@earendil-works/pi-coding-agent": "^0.75.5",
-    "@marcfargas/pi-test-harness": "^0.6.1",
-    "typebox": "^1.1.38",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.1"
+    "@biomejs/biome": "^2.4.15"
   }
 }
