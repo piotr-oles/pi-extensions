@@ -1,7 +1,8 @@
 # pi-fence
 
-## 0.1.1
+## 0.1.0
 
-### Patch Changes
+### Minor Changes
 
-- 62a44d8: initial release
+- 3646939: initial release
+
