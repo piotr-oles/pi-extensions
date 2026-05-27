@@ -52,6 +52,10 @@ describe("isFenceComment — fences (should return true)", () => {
     ["    // ---- section ----"],
     // block comment
     ["/* ===== section ===== */"],
+    // bookended: separators on both sides with meaningful text in the middle
+    ["// --- NOTE: this is important ---"],
+    ["// --- start of function (do not remove) ---"],
+    ["// === Auth: login flow ==="],
   ])("%s", (input) => {
     expect(isFenceComment(input)).toBe(true);
   });
@@ -61,9 +65,6 @@ describe("isFenceComment — fences (should return true)", () => {
 
 describe("isFenceComment — not fences (should return false)", () => {
   it.each([
-    // meaningful text dominates
-    ["// --- NOTE: this is important ---"],
-    ["// --- start of function (do not remove) ---"],
     // zero separators
     ["// TODO: fix this"],
     ["// Copyright (c) 2024"],

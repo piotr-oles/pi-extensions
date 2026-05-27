@@ -2,27 +2,26 @@
  * Fence comment detection.
  *
  * A comment is a "fence" when its inner text (after stripping comment markers)
- * contains at least 3 separator characters AND those separators make up ≥ 50%
- * of the non-whitespace characters.
+ * contains a sequence of 3 or more consecutive separator characters.
  *
  * Separator characters: - = * # ~ _ ^ + |
  *
  * Examples flagged as fences:
  *   // ---- section ----
  *   // ===== Auth Module =====
- *   // *** helpers ***
+ *   // --- NOTE: this is important ---   ← use // NOTE: this is important instead
+ *   // --- start of function ---
  *   # ################
  *   /* ~~~ helpers ~~~ * /
- *   // ________________
  *
- * Examples NOT flagged (meaningful text dominates):
- *   // --- NOTE: this is important ---    (23% separators)
+ * Examples NOT flagged (no 3-consecutive separator sequence):
  *   // TODO: fix this
  *   // Copyright (c) 2024
  *   // https://example.com
+ *   // fix the off-by-one error          ← single dashes in words
  */
 
-const SEPARATOR_RE = /[-=*#~_^+|]/g;
+const FENCE_SEQUENCE_RE = /[-=*#~_^+|]{3,}/;
 
 /**
  * Strip leading comment markers and surrounding whitespace from a raw comment.
@@ -48,16 +47,5 @@ export function stripMarkers(raw: string): string {
  * (including comment markers like `//`, `#`, `/* ... * /`).
  */
 export function isFenceComment(rawText: string): boolean {
-  const inner = stripMarkers(rawText);
-  if (inner.length < 3) return false;
-
-  const separators = (inner.match(SEPARATOR_RE) ?? []).length;
-  if (separators < 3) return false;
-
-  const nonSpace = inner.replace(/\s/g, "").length;
-  if (nonSpace === 0) return false;
-
-  // 40% threshold: catches `/* ~~~ helpers ~~~ */` (46%) while rejecting
-  // `// --- NOTE: this is important ---` (23%) and similar meaningful text.
-  return separators / nonSpace >= 0.4;
+  return FENCE_SEQUENCE_RE.test(stripMarkers(rawText));
 }
