@@ -95,8 +95,6 @@ describe("isFenceComment — not fences (should return false)", () => {
   });
 });
 
-// ─── removeFenceComments ─────────────────────────────────────────────────────
-
 describe("removeFenceComments", () => {
   it("returns content unchanged when no nodes given", () => {
     const src = "const x = 1;\n";
