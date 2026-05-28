@@ -21,31 +21,30 @@ function wasmResolver(packageName: string, wasmFile: string): () => string {
   };
 }
 
+const tsConfig: LanguageConfig = {
+  wasmPath: wasmResolver("tree-sitter-typescript", "tree-sitter-typescript.wasm"),
+  commentNodeTypes: ["comment"],
+};
+
+const tsxConfig: LanguageConfig = {
+  wasmPath: wasmResolver("tree-sitter-typescript", "tree-sitter-tsx.wasm"),
+  commentNodeTypes: ["comment"],
+};
+
+const jsConfig: LanguageConfig = {
+  wasmPath: wasmResolver("tree-sitter-javascript", "tree-sitter-javascript.wasm"),
+  commentNodeTypes: ["comment"],
+};
+
 const LANGUAGE_MAP: Record<string, LanguageConfig> = {
-  ts: {
-    wasmPath: wasmResolver("tree-sitter-typescript", "tree-sitter-typescript.wasm"),
-    commentNodeTypes: ["comment"],
-  },
-  tsx: {
-    wasmPath: wasmResolver("tree-sitter-typescript", "tree-sitter-tsx.wasm"),
-    commentNodeTypes: ["comment"],
-  },
-  js: {
-    wasmPath: wasmResolver("tree-sitter-javascript", "tree-sitter-javascript.wasm"),
-    commentNodeTypes: ["comment"],
-  },
-  jsx: {
-    wasmPath: wasmResolver("tree-sitter-javascript", "tree-sitter-javascript.wasm"),
-    commentNodeTypes: ["comment"],
-  },
-  mjs: {
-    wasmPath: wasmResolver("tree-sitter-javascript", "tree-sitter-javascript.wasm"),
-    commentNodeTypes: ["comment"],
-  },
-  cjs: {
-    wasmPath: wasmResolver("tree-sitter-javascript", "tree-sitter-javascript.wasm"),
-    commentNodeTypes: ["comment"],
-  },
+  ts: tsConfig,
+  cts: tsConfig,
+  mts: tsConfig,
+  tsx: tsxConfig,
+  js: jsConfig,
+  jsx: jsConfig,
+  mjs: jsConfig,
+  cjs: jsConfig,
   py: {
     wasmPath: wasmResolver("tree-sitter-python", "tree-sitter-python.wasm"),
     commentNodeTypes: ["comment"],
@@ -57,6 +56,34 @@ const LANGUAGE_MAP: Record<string, LanguageConfig> = {
   rs: {
     wasmPath: wasmResolver("tree-sitter-rust", "tree-sitter-rust.wasm"),
     commentNodeTypes: ["line_comment", "block_comment"],
+  },
+  rb: {
+    wasmPath: wasmResolver("tree-sitter-ruby", "tree-sitter-ruby.wasm"),
+    commentNodeTypes: ["comment"],
+  },
+  java: {
+    wasmPath: wasmResolver("tree-sitter-java", "tree-sitter-java.wasm"),
+    commentNodeTypes: ["line_comment", "block_comment"],
+  },
+  sh: {
+    wasmPath: wasmResolver("tree-sitter-bash", "tree-sitter-bash.wasm"),
+    commentNodeTypes: ["comment"],
+  },
+  bash: {
+    wasmPath: wasmResolver("tree-sitter-bash", "tree-sitter-bash.wasm"),
+    commentNodeTypes: ["comment"],
+  },
+  c: {
+    wasmPath: wasmResolver("tree-sitter-c", "tree-sitter-c.wasm"),
+    commentNodeTypes: ["comment"],
+  },
+  h: {
+    wasmPath: wasmResolver("tree-sitter-c", "tree-sitter-c.wasm"),
+    commentNodeTypes: ["comment"],
+  },
+  css: {
+    wasmPath: wasmResolver("tree-sitter-css", "tree-sitter-css.wasm"),
+    commentNodeTypes: ["comment"],
   },
 };
 

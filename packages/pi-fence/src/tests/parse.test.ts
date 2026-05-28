@@ -91,3 +91,84 @@ describe("extractComments — Rust", () => {
     expect(nodes[0].text).toBe("// ---- helpers ----");
   });
 });
+
+describe("extractComments — TypeScript (.cts/.mts)", () => {
+  it("finds comments in .cts files", async () => {
+    const src = `// ---- section ----\nconst x = 1;`;
+    const nodes = await extractComments(src, "lib/utils.cts");
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0].text).toBe("// ---- section ----");
+  });
+
+  it("finds comments in .mts files", async () => {
+    const src = `// ---- section ----\nexport const x = 1;`;
+    const nodes = await extractComments(src, "lib/utils.mts");
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0].text).toBe("// ---- section ----");
+  });
+});
+
+describe("extractComments — Ruby", () => {
+  it("finds hash comments", async () => {
+    const src = `# ---- helpers ----\ndef foo\nend`;
+    const nodes = await extractComments(src, "lib/utils.rb");
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0].text).toBe("# ---- helpers ----");
+  });
+});
+
+describe("extractComments — Java", () => {
+  it("finds line comments", async () => {
+    const src = `// ---- helpers ----\nclass Foo {}`;
+    const nodes = await extractComments(src, "src/Foo.java");
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0].text).toBe("// ---- helpers ----");
+  });
+
+  it("finds block comments", async () => {
+    const src = `/* ===== section ===== */\nclass Foo {}`;
+    const nodes = await extractComments(src, "src/Foo.java");
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0].text).toBe("/* ===== section ===== */");
+  });
+});
+
+describe("extractComments — Bash", () => {
+  it("finds hash comments in .sh files", async () => {
+    const src = `#!/bin/bash\n# ---- helpers ----\necho hello`;
+    const nodes = await extractComments(src, "deploy.sh");
+    expect(nodes.map((n) => n.text)).toContain("# ---- helpers ----");
+  });
+
+  it("finds hash comments in .bash files", async () => {
+    const src = `# ---- section ----\necho hello`;
+    const nodes = await extractComments(src, "run.bash");
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0].text).toBe("# ---- section ----");
+  });
+});
+
+describe("extractComments — C", () => {
+  it("finds comments in .c files", async () => {
+    const src = `// ---- helpers ----\nint main() { return 0; }`;
+    const nodes = await extractComments(src, "main.c");
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0].text).toBe("// ---- helpers ----");
+  });
+
+  it("finds comments in .h files", async () => {
+    const src = `/* ===== section ===== */\nvoid foo(void);`;
+    const nodes = await extractComments(src, "include/foo.h");
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0].text).toBe("/* ===== section ===== */");
+  });
+});
+
+describe("extractComments — CSS", () => {
+  it("finds block comments in .css files", async () => {
+    const src = `/* ===== section ===== */\n.foo { color: red; }`;
+    const nodes = await extractComments(src, "styles.css");
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0].text).toBe("/* ===== section ===== */");
+  });
+});
