@@ -11,7 +11,9 @@ export interface CommentNode {
   endCol: number;
 }
 
-export interface Finding {
-  relativePath: string;
+export interface FencesFinding {
+  /** Relative path to the file containing the fences. */
+  path: string;
+  /** Fences found in the file. */
   fences: CommentNode[];
 }

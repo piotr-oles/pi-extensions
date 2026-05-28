@@ -6,10 +6,10 @@ import {
   isToolCallEventType,
   isWriteToolResult,
 } from "@earendil-works/pi-coding-agent";
-import { getCommentHash, getExistingFences, isFenceComment, removeFenceComments } from "./fence.js";
+import { getFenceComments, removeFenceComments } from "./fence.js";
 import { getLanguageDefinition } from "./languages/index.js";
 import { buildBlockReason, buildRemoveText, buildWarnText } from "./messages.js";
-import type { CommentNode, Finding } from "./types.js";
+import type { CommentNode, FencesFinding } from "./types.js";
 
 const PROMPT_INSTRUCTIONS = `
 Do not insert decorative fence or divider comments like:
@@ -22,9 +22,14 @@ Use named functions, classes, or blank lines to separate code sections instead.
 
 type FenceMode = "warn" | "block" | "remove";
 
-function resolveMode(flag: boolean | string | undefined): FenceMode {
+function getMode(pi: ExtensionAPI): FenceMode {
+  const flag = pi.getFlag("pi-fence-mode");
   if (flag === "block" || flag === "warn" || flag === "remove") {
     return flag;
+  }
+  // alias for remove
+  if (flag === "delete") {
+    return "remove";
   }
   return "warn";
 }
@@ -43,7 +48,7 @@ export default function piFence(pi: ExtensionAPI) {
   // Findings detected in tool_call (before the write), keyed by toolCallId.
   // Consumed in tool_result (after the write) to append the warning inline.
   // Reset on turn_start to guard against aborted turns leaking state.
-  const pendingFindings = new Map<string, Finding>();
+  const pendingFindings = new Map<string, FencesFinding>();
 
   pi.on("turn_start", () => {
     pendingFindings.clear();
@@ -51,49 +56,39 @@ export default function piFence(pi: ExtensionAPI) {
 
   pi.on("tool_call", async (event, ctx) => {
     const { signal } = ctx;
-    const mode = resolveMode(pi.getFlag("pi-fence-mode"));
+    const mode = getMode(pi);
 
     if (isToolCallEventType("write", event)) {
-      const { path: relativePath, content: newContent } = event.input;
-      const def = getLanguageDefinition(relativePath);
+      const { path, content: newContent } = event.input;
+      const def = getLanguageDefinition(path);
       if (!def) {
         return undefined;
       }
-
-      const absolutePath = resolve(ctx.cwd, relativePath);
-      const existingFences = await getExistingFences(absolutePath, def, signal);
-      if (signal?.aborted) {
-        return undefined;
-      }
-      const fences = (await def.extractCommentNodes(newContent, signal)).filter(
-        (c) => isFenceComment(c.text) && !existingFences.has(getCommentHash(c)),
-      );
-
+      const fences = await getFenceComments(newContent, def, signal);
       if (fences.length === 0) {
         return undefined;
       }
       if (mode === "remove") {
         event.input.content = removeFenceComments(event.input.content, fences);
-        pendingFindings.set(event.toolCallId, { relativePath, fences });
+        pendingFindings.set(event.toolCallId, { path: path, fences });
         return undefined;
       }
       if (mode === "block") {
-        return { block: true, reason: buildBlockReason([{ relativePath, fences }]) };
+        return { block: true, reason: buildBlockReason([{ path, fences }]) };
       }
 
-      pendingFindings.set(event.toolCallId, { relativePath, fences });
+      pendingFindings.set(event.toolCallId, { path: path, fences });
       return undefined;
     }
 
     if (isToolCallEventType("edit", event)) {
-      const { path: relativePath, edits } = event.input;
-      const def = getLanguageDefinition(relativePath);
+      const { path, edits } = event.input;
+      const def = getLanguageDefinition(path);
       if (!def) {
         return undefined;
       }
 
-      const absolutePath = resolve(ctx.cwd, relativePath);
-      const oldContent = await readExisting(absolutePath, signal);
+      const oldContent = await readExisting(resolve(ctx.cwd, path), signal);
       if (signal?.aborted) {
         return undefined;
       }
@@ -104,11 +99,7 @@ export default function piFence(pi: ExtensionAPI) {
         if (signal?.aborted) {
           return undefined;
         }
-        const newComments = await def.extractCommentNodes(edit.newText, signal);
-        const oldTexts = new Set(
-          (await def.extractCommentNodes(edit.oldText, signal)).map((c) => c.text),
-        );
-        const fences = newComments.filter((c) => !oldTexts.has(c.text) && isFenceComment(c.text));
+        const fences = await getFenceComments(edit.newText, def, signal);
         if (fences.length > 0) {
           perEdit.push({ edit, fences });
         }
@@ -119,31 +110,25 @@ export default function piFence(pi: ExtensionAPI) {
       }
 
       // Flatten fences with file-level line offsets for all modes.
-      const allFences: CommentNode[] = [];
-      for (const { edit, fences } of perEdit) {
+      const allFences = perEdit.flatMap(({ fences, edit }) => {
         const lineOffset = oldContent ? findStartLine(oldContent, edit.oldText) - 1 : 0;
-        for (const c of fences) {
-          allFences.push({ ...c, startLine: c.startLine + lineOffset });
-        }
-      }
+        return fences.map((c) => ({ ...c, startLine: c.startLine + lineOffset }));
+      });
 
-      if (mode === "remove") {
-        for (const { edit, fences } of perEdit) {
-          edit.newText = removeFenceComments(edit.newText, fences);
-        }
-        pendingFindings.set(event.toolCallId, { relativePath, fences: allFences });
-        return undefined;
+      switch (mode) {
+        case "warn":
+          pendingFindings.set(event.toolCallId, { path, fences: allFences });
+          return undefined;
+        case "block":
+          return { block: true, reason: buildBlockReason([{ path, fences: allFences }]) };
+        case "remove":
+          for (const { edit, fences } of perEdit) {
+            edit.newText = removeFenceComments(edit.newText, fences);
+          }
+          pendingFindings.set(event.toolCallId, { path, fences: allFences });
+          return undefined;
       }
-
-      if (mode === "block") {
-        return { block: true, reason: buildBlockReason([{ relativePath, fences: allFences }]) };
-      }
-
-      pendingFindings.set(event.toolCallId, { relativePath, fences: allFences });
-      return undefined;
     }
-
-    return undefined;
   });
 
   pi.on("tool_result", async (event) => {
@@ -160,13 +145,15 @@ export default function piFence(pi: ExtensionAPI) {
 
     // Append the warning to the tool result content so the model sees it
     // inline, alongside the write confirmation, without a separate turn.
-    const mode = resolveMode(pi.getFlag("pi-fence-mode"));
-    const text = mode === "remove" ? buildRemoveText([finding]) : buildWarnText([finding]);
-    const warning: { type: "text"; text: string } = {
-      type: "text",
-      text,
-    };
-    return { content: [...event.content, warning] };
+    const mode = getMode(pi);
+    switch (mode) {
+      case "remove":
+        return { content: [...event.content, { type: "text", text: buildRemoveText([finding]) }] };
+      case "warn":
+        return { content: [...event.content, { type: "text", text: buildWarnText([finding]) }] };
+      case "block":
+        return undefined;
+    }
   });
 }
 

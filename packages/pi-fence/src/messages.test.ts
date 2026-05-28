@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { buildBlockReason, buildFindingLines, buildRemoveText, buildWarnText } from "./messages.js";
-import type { CommentNode, Finding } from "./types.js";
+import type { CommentNode, FencesFinding } from "./types.js";
 
 function node(text: string, startLine: number, startCol = 0): CommentNode {
   return { text, startLine, startCol, endLine: startLine, endCol: startCol + text.length };
 }
 
-function finding(relativePath: string, fences: CommentNode[]): Finding {
-  return { relativePath, fences };
+function finding(path: string, fences: CommentNode[]): FencesFinding {
+  return { path, fences };
 }
 
 describe("buildFindingLines", () => {

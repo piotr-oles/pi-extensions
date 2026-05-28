@@ -24,7 +24,6 @@
  *   // fix the off-by-one error          ← single dashes in words
  */
 
-import { readFile } from "node:fs/promises";
 import type { LanguageDefinition } from "./languages/index.js";
 import type { CommentNode } from "./types.js";
 
@@ -62,43 +61,16 @@ export function isFenceComment(rawText: string): boolean {
   return FENCE_SEQUENCE_RE.test(stripMarkers(rawText));
 }
 
-/**
- * Remove the given comment nodes from `content` and return the cleaned string.
- *
- * - Standalone comments (only whitespace before them on their line) → whole
- *   line(s) removed.
- * - Inline comments (code precedes them on the same line) → comment stripped,
- *   code kept with trailing whitespace trimmed.
- *
- * Nodes are processed in reverse start-position order so that earlier splice
- * operations don't invalidate later indices.
- */
-/** Stable key for a comment node: combines text and line so moved/copied fences are treated as new. */
-export function getCommentHash(c: CommentNode): string {
-  return `${c.text}:${c.startLine}`;
-}
-
-/**
- * Read `absolutePath` and return the set of fence-comment hashes already
- * present in that file.  Returns an empty set when the file does not exist,
- * cannot be read, or the signal is aborted.
- */
-export async function getExistingFences(
-  absolutePath: string,
+export async function getFenceComments(
+  content: string,
   def: LanguageDefinition,
   signal?: AbortSignal,
-): Promise<Set<string>> {
-  let content: string;
-  try {
-    content = await readFile(absolutePath, { encoding: "utf8", signal });
-  } catch {
-    return new Set();
-  }
+): Promise<CommentNode[]> {
   if (signal?.aborted) {
-    return new Set();
+    return [];
   }
   const nodes = await def.extractCommentNodes(content, signal);
-  return new Set(nodes.filter((c) => isFenceComment(c.text)).map(getCommentHash));
+  return nodes.filter((c) => isFenceComment(c.text));
 }
 
 export function removeFenceComments(content: string, nodes: CommentNode[]): string {
