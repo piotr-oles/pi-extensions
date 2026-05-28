@@ -2,6 +2,11 @@
   "name": "pi-fence",
   "version": "0.1.0",
   "description": "Pi Agent extension: block or warn on fence/divider comments in written code",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/piotr-oles/pi-extensions.git",
+    "directory": "packages/pi-fence"
+  },
   "keywords": [
     "pi-package"
   ],
