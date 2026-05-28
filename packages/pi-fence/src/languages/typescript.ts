@@ -1,4 +1,8 @@
-import { extractTreeSitterNodes, loadParser, resolveTreeSitterWasm } from "../parse.js";
+import {
+  extractTreeSitterNodes,
+  loadTreeSitterParser,
+  resolveTreeSitterWasm,
+} from "../tree-sitter.js";
 import type { LanguageDefinition } from "./index.js";
 
 const tsWasmPath = resolveTreeSitterWasm("tree-sitter-typescript", "tree-sitter-typescript.wasm");
@@ -7,7 +11,7 @@ const tsxWasmPath = resolveTreeSitterWasm("tree-sitter-typescript", "tree-sitter
 export const typescript: LanguageDefinition = {
   supportedExtensions: ["ts", "cts", "mts"],
   async extractCommentNodes(content, signal) {
-    const parser = await loadParser(tsWasmPath, signal);
+    const parser = await loadTreeSitterParser(tsWasmPath, signal);
     if (!parser) {
       return [];
     }
@@ -18,7 +22,7 @@ export const typescript: LanguageDefinition = {
 export const typescriptTsx: LanguageDefinition = {
   supportedExtensions: ["tsx"],
   async extractCommentNodes(content, signal) {
-    const parser = await loadParser(tsxWasmPath, signal);
+    const parser = await loadTreeSitterParser(tsxWasmPath, signal);
     if (!parser) {
       return [];
     }

@@ -1,4 +1,8 @@
-import { extractTreeSitterNodes, loadParser, resolveTreeSitterWasm } from "../parse.js";
+import {
+  extractTreeSitterNodes,
+  loadTreeSitterParser,
+  resolveTreeSitterWasm,
+} from "../tree-sitter.js";
 import type { LanguageDefinition } from "./index.js";
 
 const wasmPath = resolveTreeSitterWasm("tree-sitter-rust", "tree-sitter-rust.wasm");
@@ -6,7 +10,7 @@ const wasmPath = resolveTreeSitterWasm("tree-sitter-rust", "tree-sitter-rust.was
 export const rust: LanguageDefinition = {
   supportedExtensions: ["rs"],
   async extractCommentNodes(content, signal) {
-    const parser = await loadParser(wasmPath, signal);
+    const parser = await loadTreeSitterParser(wasmPath, signal);
     if (!parser) {
       return [];
     }
