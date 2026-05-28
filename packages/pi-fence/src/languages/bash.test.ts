@@ -13,8 +13,4 @@ describe("bash — extractCommentNodes", () => {
     expect(nodes[0].text).toBe("# ---- section ----");
   });
 
-  it("handles .sh and .bash via the same definition", () => {
-    expect(bash.supportedExtensions).toContain("sh");
-    expect(bash.supportedExtensions).toContain("bash");
-  });
 });

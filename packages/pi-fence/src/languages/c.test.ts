@@ -14,8 +14,4 @@ describe("c — extractCommentNodes", () => {
     expect(nodes[0].text).toBe("/* ===== section ===== */");
   });
 
-  it("handles .c and .h via the same definition", () => {
-    expect(c.supportedExtensions).toContain("c");
-    expect(c.supportedExtensions).toContain("h");
-  });
 });

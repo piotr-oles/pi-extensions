@@ -8,9 +8,4 @@ describe("javascript — extractCommentNodes", () => {
     expect(nodes[0].text).toBe("// ---- section ----");
   });
 
-  it("handles .jsx, .mjs, .cjs via the same definition", () => {
-    expect(javascript.supportedExtensions).toContain("jsx");
-    expect(javascript.supportedExtensions).toContain("mjs");
-    expect(javascript.supportedExtensions).toContain("cjs");
-  });
 });

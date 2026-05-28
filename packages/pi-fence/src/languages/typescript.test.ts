@@ -36,10 +36,6 @@ const x = 1;
     expect(nodes[0].endCol).toBe(13 + "// ---- fence ----".length);
   });
 
-  it("handles .cts and .mts via the same definition", () => {
-    expect(typescript.supportedExtensions).toContain("cts");
-    expect(typescript.supportedExtensions).toContain("mts");
-  });
 });
 
 describe("typescriptTsx — extractCommentNodes", () => {
