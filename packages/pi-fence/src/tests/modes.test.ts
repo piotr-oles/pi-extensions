@@ -1,3 +1,6 @@
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import {
   calls,
   createTestSession,
@@ -5,7 +8,7 @@ import {
   type TestSession,
   when,
 } from "@marcfargas/pi-test-harness";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import piFence from "../index.js";
 
 type FenceMode = "warn" | "block" | "remove";
@@ -29,6 +32,14 @@ const CONTENT_WITH_FENCE = [
 ].join("\n");
 
 const CONTENT_CLEAN = ["function greet() {", '  return "hello";', "}", ""].join("\n");
+
+const CONTENT_WITH_FENCE_LINE3 = [
+  "function greet() {",
+  '  return "hello";',
+  "// ---- helpers ----",
+  "}",
+  "",
+].join("\n");
 
 describe("pi-fence modes", { timeout: 30_000 }, () => {
   let t: TestSession;
@@ -92,6 +103,60 @@ describe("pi-fence modes", { timeout: 30_000 }, () => {
       const [result] = t.events.toolResultsFor("write");
       expect(result.text).not.toContain("pi-fence");
       expect(t.events.blockedCalls()).toHaveLength(0);
+    });
+  });
+
+  describe("deduplication (write)", () => {
+    const BASENAME = "greet.ts";
+    let tmpDir: string;
+
+    beforeEach(async () => {
+      tmpDir = await mkdtemp(join(tmpdir(), "pi-fence-dedup-"));
+    });
+
+    afterEach(async () => {
+      await rm(tmpDir, { recursive: true, force: true });
+    });
+
+    it("re-reports a fence moved to a different line", async () => {
+      await writeFile(join(tmpDir, BASENAME), CONTENT_WITH_FENCE);
+
+      t = await createTestSession({
+        extensionFactories: [fenceExtension("warn")],
+        mockTools: { write: "Written." },
+        cwd: tmpDir,
+      });
+
+      // The fence text is the same but now lives on line 3 instead of line 2.
+      await t.run(
+        when("Rewrite a file moving the fence", [
+          calls("write", { path: BASENAME, content: CONTENT_WITH_FENCE_LINE3 }),
+          says("Done."),
+        ]),
+      );
+
+      const [result] = t.events.toolResultsFor("write");
+      expect(result.text).toContain("⚠ pi-fence: fence/divider comments detected in added code:");
+    });
+
+    it("does not re-report a fence that stayed on the same line", async () => {
+      await writeFile(join(tmpDir, BASENAME), CONTENT_WITH_FENCE);
+
+      t = await createTestSession({
+        extensionFactories: [fenceExtension("warn")],
+        mockTools: { write: "Written." },
+        cwd: tmpDir,
+      });
+
+      await t.run(
+        when("Rewrite the file without changing fences", [
+          calls("write", { path: BASENAME, content: CONTENT_WITH_FENCE }),
+          says("Done."),
+        ]),
+      );
+
+      const [result] = t.events.toolResultsFor("write");
+      expect(result.text).not.toContain("pi-fence");
     });
   });
 

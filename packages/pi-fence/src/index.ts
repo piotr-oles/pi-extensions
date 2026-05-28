@@ -61,14 +61,22 @@ export default function piFence(pi: ExtensionAPI) {
         return undefined;
       }
 
-      const existingTexts = new Set(
-        oldContent ? (await extractComments(oldContent, relativePath, signal)).map((c) => c.text) : [],
+      // Key existing fences by "text:::line" so that a fence copied or moved
+      // to a different line is treated as newly introduced.  Pure text matching
+      // would silently ignore any fence whose text already appeared anywhere in
+      // the old file, even at a completely different location.
+      const existingKeys = new Set(
+        oldContent
+          ? (await extractComments(oldContent, relativePath, signal)).map(
+              (c) => `${c.text}:::${c.startLine}`,
+            )
+          : [],
       );
       if (signal?.aborted) {
         return undefined;
       }
       const fences = (await extractComments(newContent, relativePath, signal)).filter(
-        (c) => !existingTexts.has(c.text) && isFenceComment(c.text),
+        (c) => !existingKeys.has(`${c.text}:::${c.startLine}`) && isFenceComment(c.text),
       );
 
       if (fences.length === 0) {
