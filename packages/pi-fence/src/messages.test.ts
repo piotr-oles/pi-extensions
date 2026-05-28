@@ -18,7 +18,7 @@ describe("buildFindingLines", () => {
   it("formats a single file with one fence", () => {
     expect(buildFindingLines([finding("src/foo.ts", [node("// ----", 1)])])).toMatchInlineSnapshot(`
       [
-        "  src/foo.ts:2:1: // ----",
+        "  src/foo.ts:2: // ----",
       ]
     `);
   });
@@ -29,8 +29,8 @@ describe("buildFindingLines", () => {
     ).toMatchInlineSnapshot(`
       [
         "  src/bar.ts:",
-        "    1:1: // ====",
-        "    5:1: // ####",
+        "    1: // ====",
+        "    5: // ####",
       ]
     `);
   });
@@ -43,8 +43,8 @@ describe("buildFindingLines", () => {
       ]),
     ).toMatchInlineSnapshot(`
       [
-        "  a.ts:1:1: // ---",
-        "  b.ts:3:1: // ===",
+        "  a.ts:1: // ---",
+        "  b.ts:3: // ===",
       ]
     `);
   });
@@ -53,8 +53,8 @@ describe("buildFindingLines", () => {
 describe("buildBlockReason", () => {
   it("formats the full message", () => {
     expect(buildBlockReason([finding("src/x.ts", [node("// ----", 6)])])).toMatchInlineSnapshot(`
-      "Write blocked — fence/divider comments in added code:
-        src/x.ts:7:1: // ----
+      "Write blocked — fence comments in added code:
+        src/x.ts:7: // ----
       Remove these comments and retry."
     `);
   });
@@ -63,8 +63,8 @@ describe("buildBlockReason", () => {
 describe("buildWarnText", () => {
   it("formats the full message", () => {
     expect(buildWarnText([finding("src/y.ts", [node("// ===", 1)])])).toMatchInlineSnapshot(`
-      "⚠ pi-fence: fence/divider comments detected in added code:
-        src/y.ts:2:1: // ===
+      "Fence comments detected in added code:
+        src/y.ts:2: // ===
       Please remove them."
     `);
   });
@@ -73,8 +73,8 @@ describe("buildWarnText", () => {
 describe("buildRemoveText", () => {
   it("formats the full message", () => {
     expect(buildRemoveText([finding("src/z.ts", [node("// ***", 3)])])).toMatchInlineSnapshot(`
-      "ℹ pi-fence: fence/divider comments were automatically removed:
-        src/z.ts:4:1: // ***
+      "Fence comments were automatically removed:
+        src/z.ts:4: // ***
       Do not add them back."
     `);
   });
@@ -86,11 +86,11 @@ describe("buildRemoveText", () => {
         finding("b.ts", [node("// ###", 9)]),
       ]),
     ).toMatchInlineSnapshot(`
-      "ℹ pi-fence: fence/divider comments were automatically removed:
+      "Fence comments were automatically removed:
         a.ts:
-          1:1: // ---
-          3:1: // ===
-        b.ts:10:1: // ###
+          1: // ---
+          3: // ===
+        b.ts:10: // ###
       Do not add them back."
     `);
   });
