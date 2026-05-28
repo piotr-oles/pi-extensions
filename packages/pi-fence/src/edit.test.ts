@@ -82,9 +82,7 @@ describe("applyEdits", () => {
 
   describe("editRanges", () => {
     it("returns one range per edit, defaulting to { startLine: 0, endLine: 0 } for unmatched", () => {
-      const { editRanges } = applyEdits("hello\n", [
-        { oldText: "missing", newText: "x" },
-      ]);
+      const { editRanges } = applyEdits("hello\n", [{ oldText: "missing", newText: "x" }]);
       expect(editRanges).toHaveLength(1);
       expect(editRanges[0]).toEqual({ startLine: 0, endLine: 0 });
     });

@@ -280,7 +280,9 @@ describe("pi-fence modes", { timeout: 30_000 }, () => {
 // literal in the actual file, tree-sitter mis-classifies fence-pattern text as
 // a comment (false positive). These tests assert correct behaviour (no false
 // positive) and currently FAIL, proving the bug is present.
-describe("edit tool - false positive for fence-pattern text inside string context (bug)", { timeout: 30_000 }, () => {
+describe("edit tool - false positive for fence-pattern text inside string context (bug)", {
+  timeout: 30_000,
+}, () => {
   let t: TestSession;
   afterEach(() => t?.dispose());
 
@@ -301,12 +303,7 @@ describe("edit tool - false positive for fence-pattern text inside string contex
     fs.mkdirSync(fileDir, { recursive: true });
     fs.writeFileSync(
       path.join(fileDir, "example.ts"),
-      [
-        "export const readme = `",
-        "Some initial content.",
-        "\`;",
-        "",
-      ].join("\n"),
+      ["export const readme = `", "Some initial content.", "`;", ""].join("\n"),
     );
 
     await t.run(
@@ -343,17 +340,19 @@ describe("edit tool - false positive for fence-pattern text inside string contex
     fs.mkdirSync(fileDir, { recursive: true });
     fs.writeFileSync(
       path.join(fileDir, "example.ts"),
-      ["export const readme = `", "Some initial content.", "\`;", ""].join("\n"),
+      ["export const readme = `", "Some initial content.", "`;", ""].join("\n"),
     );
 
     await t.run(
       when("Edit a file", [
         calls("edit", {
           path: "src/example.ts",
-          edits: [{
-            oldText: "Some initial content.",
-            newText: "Some initial content.\n// ---- section ----\nMore content.",
-          }],
+          edits: [
+            {
+              oldText: "Some initial content.",
+              newText: "Some initial content.\n// ---- section ----\nMore content.",
+            },
+          ],
         }),
         says("Done."),
       ]),
@@ -382,17 +381,19 @@ describe("edit tool - false positive for fence-pattern text inside string contex
     fs.mkdirSync(fileDir, { recursive: true });
     fs.writeFileSync(
       path.join(fileDir, "example.ts"),
-      ["export const readme = `", "Some initial content.", "\`;", ""].join("\n"),
+      ["export const readme = `", "Some initial content.", "`;", ""].join("\n"),
     );
 
     await t.run(
       when("Edit a file", [
         calls("edit", {
           path: "src/example.ts",
-          edits: [{
-            oldText: "Some initial content.",
-            newText: "Some initial content.\n// ---- section ----\nMore content.",
-          }],
+          edits: [
+            {
+              oldText: "Some initial content.",
+              newText: "Some initial content.\n// ---- section ----\nMore content.",
+            },
+          ],
         }),
         says("Done."),
       ]),
@@ -402,5 +403,4 @@ describe("edit tool - false positive for fence-pattern text inside string contex
     expect(capturedNewText).toContain("// ---- section ----");
     expect(t.events.uiCallsFor("notify")).toHaveLength(0);
   });
-
 });

@@ -24,7 +24,9 @@ export function applyEdits(
   const matched = edits
     .map((edit, i) => {
       const charIdx = base.indexOf(edit.oldText);
-      if (charIdx === -1) return null;
+      if (charIdx === -1) {
+        return null;
+      }
       const lineIdx = base.slice(0, charIdx).split("\n").length - 1;
       return { i, charIdx, lineIdx, edit };
     })
@@ -47,7 +49,8 @@ export function applyEdits(
   let content = base;
   for (let k = matched.length - 1; k >= 0; k--) {
     const { charIdx, edit } = matched[k];
-    content = content.slice(0, charIdx) + edit.newText + content.slice(charIdx + edit.oldText.length);
+    content =
+      content.slice(0, charIdx) + edit.newText + content.slice(charIdx + edit.oldText.length);
   }
 
   return { content, editRanges };
