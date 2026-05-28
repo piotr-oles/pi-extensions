@@ -28,10 +28,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check src/",
-    "lint:fix": "biome check --write src/",
-    "format": "biome format --write src/",
-    "check": "biome ci src/"
+    "check": "biome ci src/",
+    "fix": "biome check --write src/"
   },
   "dependencies": {
     "web-tree-sitter": "^0.26.9",

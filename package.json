@@ -10,10 +10,8 @@
   "scripts": {
     "test": "pnpm -r run test",
     "typecheck": "pnpm -r run typecheck",
-    "lint": "biome check packages/",
-    "lint:fix": "biome check --write packages/",
-    "format": "biome format --write packages/",
-    "check": "biome ci packages/",
+    "check": "pnpm -r run check",
+    "fix": "pnpm -r run fix",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "pnpm install --frozen-lockfile && changeset publish"

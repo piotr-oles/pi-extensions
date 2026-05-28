@@ -194,5 +194,3 @@ async function readExisting(absolutePath: string, signal?: AbortSignal): Promise
     return null;
   }
 }
-
-
