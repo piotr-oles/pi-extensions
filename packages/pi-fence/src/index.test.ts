@@ -56,6 +56,10 @@ describe("pi-fence modes", { timeout: 30_000 }, () => {
       expect(result.text).toContain("⚠ pi-fence: fence/divider comments detected in added code:");
       expect(result.text).toContain("src/greet.ts:2:1: // ---- helpers ----");
       expect(t.events.blockedCalls()).toHaveLength(0);
+
+      const [notification] = t.events.uiCallsFor("notify");
+      expect(notification.args[0]).toBe("pi-fence: model tried to insert 1 fence comment");
+      expect(notification.args[1]).toBe("warning");
     });
 
     it("appends warning to tool result when fence is added via edit", async () => {
@@ -78,6 +82,10 @@ describe("pi-fence modes", { timeout: 30_000 }, () => {
       expect(result.text).toContain("⚠ pi-fence: fence/divider comments detected in added code:");
       expect(result.text).toContain("src/greet.ts:2:1: // ---- helpers ----");
       expect(t.events.blockedCalls()).toHaveLength(0);
+
+      const [notification] = t.events.uiCallsFor("notify");
+      expect(notification.args[0]).toBe("pi-fence: model tried to insert 1 fence comment");
+      expect(notification.args[1]).toBe("warning");
     });
 
     it("passes through cleanly when no fences are present", async () => {
@@ -96,6 +104,7 @@ describe("pi-fence modes", { timeout: 30_000 }, () => {
       const [result] = t.events.toolResultsFor("write");
       expect(result.text).not.toContain("pi-fence");
       expect(t.events.blockedCalls()).toHaveLength(0);
+      expect(t.events.uiCallsFor("notify")).toHaveLength(0);
     });
   });
 
@@ -168,6 +177,10 @@ describe("pi-fence modes", { timeout: 30_000 }, () => {
       );
       expect(result.text).toContain("src/greet.ts:2:1: // ---- helpers ----");
       expect(t.events.blockedCalls()).toHaveLength(0);
+
+      const [notification] = t.events.uiCallsFor("notify");
+      expect(notification.args[0]).toBe("pi-fence: 1 fence comment were auto-removed");
+      expect(notification.args[1]).toBe("info");
     });
 
     it("strips fence comments from edit newText and appends removal notice", async () => {
@@ -201,6 +214,10 @@ describe("pi-fence modes", { timeout: 30_000 }, () => {
       );
       expect(result.text).toContain("src/greet.ts:2:1: // ---- helpers ----");
       expect(t.events.blockedCalls()).toHaveLength(0);
+
+      const [notification] = t.events.uiCallsFor("notify");
+      expect(notification.args[0]).toBe("pi-fence: 1 fence comment were auto-removed");
+      expect(notification.args[1]).toBe("info");
     });
   });
 
