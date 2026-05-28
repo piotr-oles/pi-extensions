@@ -135,12 +135,18 @@ export default function piFence(pi: ExtensionAPI) {
     switch (mode) {
       case "remove": {
         const n = finding.fences.length;
-        ctx.ui.notify(`pi-fence: ${n} fence ${n === 1 ? "comment" : "comments"} were auto-removed`, "info");
+        ctx.ui.notify(
+          `pi-fence: ${n} fence ${n === 1 ? "comment" : "comments"} were auto-removed`,
+          "info",
+        );
         return { content: [...event.content, { type: "text", text: buildRemoveText([finding]) }] };
       }
       case "warn": {
         const n = finding.fences.length;
-        ctx.ui.notify(`pi-fence: model tried to insert ${n} fence ${n === 1 ? "comment" : "comments"}`, "warning");
+        ctx.ui.notify(
+          `pi-fence: model tried to insert ${n} fence ${n === 1 ? "comment" : "comments"}`,
+          "warning",
+        );
         return { content: [...event.content, { type: "text", text: buildWarnText([finding]) }] };
       }
       case "block":
