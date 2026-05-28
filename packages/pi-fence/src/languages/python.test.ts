@@ -6,7 +6,7 @@ describe("python — extractCommentNodes", () => {
     const nodes = await python.extractCommentNodes(`# ---- helpers ----\ndef foo():\n    pass`);
     expect(nodes).toHaveLength(1);
     expect(nodes[0].text).toBe("# ---- helpers ----");
-    expect(nodes[0].startLine).toBe(1);
+    expect(nodes[0].startLine).toBe(0);
   });
 
   it("does not extract # inside a string", async () => {

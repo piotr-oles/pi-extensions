@@ -104,13 +104,13 @@ describe("removeFenceComments", () => {
   it("removes a standalone fence line", () => {
     expect(
       removeFenceComments("// ---- section ----\nconst x = 1;\n", [
-        node("// ---- section ----", 1),
+        node("// ---- section ----", 0),
       ]),
     ).toBe("const x = 1;\n");
   });
 
   it("removes a standalone fence between code lines", () => {
-    expect(removeFenceComments("const a = 1;\n// ===\nconst b = 2;\n", [node("// ===", 2)])).toBe(
+    expect(removeFenceComments("const a = 1;\n// ===\nconst b = 2;\n", [node("// ===", 1)])).toBe(
       "const a = 1;\nconst b = 2;\n",
     );
   });
@@ -118,8 +118,8 @@ describe("removeFenceComments", () => {
   it("removes multiple standalone fences", () => {
     expect(
       removeFenceComments("// ---- a ----\nconst x = 1;\n// ---- b ----\nconst y = 2;\n", [
-        node("// ---- a ----", 1),
-        node("// ---- b ----", 3),
+        node("// ---- a ----", 0),
+        node("// ---- b ----", 2),
       ]),
     ).toBe("const x = 1;\nconst y = 2;\n");
   });
@@ -127,7 +127,7 @@ describe("removeFenceComments", () => {
   it("strips an inline fence comment, keeps the code", () => {
     expect(
       removeFenceComments("const x = 1; // ---- section ----\n", [
-        node("// ---- section ----", 1, 13),
+        node("// ---- section ----", 0, 13),
       ]),
     ).toBe("const x = 1;\n");
   });
@@ -135,7 +135,7 @@ describe("removeFenceComments", () => {
   it("handles an indented standalone fence", () => {
     expect(
       removeFenceComments("  // ---- section ----\nconst x = 1;\n", [
-        node("// ---- section ----", 1, 2),
+        node("// ---- section ----", 0, 2),
       ]),
     ).toBe("const x = 1;\n");
   });

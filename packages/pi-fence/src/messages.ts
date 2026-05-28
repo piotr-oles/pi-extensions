@@ -2,7 +2,7 @@ import type { CommentNode, FencesFinding } from "./types.js";
 
 export function buildFindingLines(findings: FencesFinding[]): string[] {
   function formatFinding({ startLine, startCol, text }: CommentNode): string {
-    return `${startLine}:${startCol + 1}: ${text.trimEnd()}`;
+    return `${startLine + 1}:${startCol + 1}: ${text.trimEnd()}`;
   }
 
   const lines: string[] = [];

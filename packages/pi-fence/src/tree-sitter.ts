@@ -99,9 +99,9 @@ function collectNodes(
   if (commentTypes.includes(node.type)) {
     out.push({
       text: node.text,
-      startLine: node.startPosition.row + 1, // tree-sitter is 0-based; we use 1-based
+      startLine: node.startPosition.row,
       startCol: node.startPosition.column,
-      endLine: node.endPosition.row + 1,
+      endLine: node.endPosition.row,
       endCol: node.endPosition.column,
     });
     return; // comments never nest

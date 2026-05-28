@@ -11,11 +11,11 @@ const x = 1;
     const nodes = await typescript.extractCommentNodes(src);
     expect(nodes).toHaveLength(2);
     expect(nodes[0].text).toBe("// ---- helpers ----");
-    expect(nodes[0].startLine).toBe(1);
-    expect(nodes[0].endLine).toBe(1);
+    expect(nodes[0].startLine).toBe(0);
+    expect(nodes[0].endLine).toBe(0);
     expect(nodes[0].endCol).toBe(20);
     expect(nodes[1].text).toBe("// regular comment");
-    expect(nodes[1].startLine).toBe(3);
+    expect(nodes[1].startLine).toBe(2);
   });
 
   it("does not extract // inside a string literal", async () => {

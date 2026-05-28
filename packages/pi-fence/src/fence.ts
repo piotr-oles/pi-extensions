@@ -85,8 +85,8 @@ export function removeFenceComments(content: string, nodes: CommentNode[]): stri
   const sorted = [...nodes].sort((a, b) => b.startLine - a.startLine || b.startCol - a.startCol);
 
   for (const node of sorted) {
-    const startIdx = node.startLine - 1;
-    const endIdx = node.endLine - 1;
+    const startIdx = node.startLine;
+    const endIdx = node.endLine;
     if (startIdx < 0 || startIdx >= lines.length) {
       continue;
     }

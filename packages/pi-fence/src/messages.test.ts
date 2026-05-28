@@ -16,7 +16,7 @@ describe("buildFindingLines", () => {
   });
 
   it("formats a single file with one fence", () => {
-    expect(buildFindingLines([finding("src/foo.ts", [node("// ----", 2)])])).toMatchInlineSnapshot(`
+    expect(buildFindingLines([finding("src/foo.ts", [node("// ----", 1)])])).toMatchInlineSnapshot(`
       [
         "  src/foo.ts:2:1: // ----",
       ]
@@ -25,7 +25,7 @@ describe("buildFindingLines", () => {
 
   it("formats multiple fences in one file", () => {
     expect(
-      buildFindingLines([finding("src/bar.ts", [node("// ====", 1), node("// ####", 5)])]),
+      buildFindingLines([finding("src/bar.ts", [node("// ====", 0), node("// ####", 4)])]),
     ).toMatchInlineSnapshot(`
       [
         "  src/bar.ts:",
@@ -38,8 +38,8 @@ describe("buildFindingLines", () => {
   it("formats multiple files", () => {
     expect(
       buildFindingLines([
-        finding("a.ts", [node("// ---", 1)]),
-        finding("b.ts", [node("// ===", 3)]),
+        finding("a.ts", [node("// ---", 0)]),
+        finding("b.ts", [node("// ===", 2)]),
       ]),
     ).toMatchInlineSnapshot(`
       [
@@ -52,7 +52,7 @@ describe("buildFindingLines", () => {
 
 describe("buildBlockReason", () => {
   it("formats the full message", () => {
-    expect(buildBlockReason([finding("src/x.ts", [node("// ----", 7)])])).toMatchInlineSnapshot(`
+    expect(buildBlockReason([finding("src/x.ts", [node("// ----", 6)])])).toMatchInlineSnapshot(`
       "Write blocked — fence/divider comments in added code:
         src/x.ts:7:1: // ----
       Remove these comments and retry."
@@ -62,7 +62,7 @@ describe("buildBlockReason", () => {
 
 describe("buildWarnText", () => {
   it("formats the full message", () => {
-    expect(buildWarnText([finding("src/y.ts", [node("// ===", 2)])])).toMatchInlineSnapshot(`
+    expect(buildWarnText([finding("src/y.ts", [node("// ===", 1)])])).toMatchInlineSnapshot(`
       "⚠ pi-fence: fence/divider comments detected in added code:
         src/y.ts:2:1: // ===
       Please remove them."
@@ -72,7 +72,7 @@ describe("buildWarnText", () => {
 
 describe("buildRemoveText", () => {
   it("formats the full message", () => {
-    expect(buildRemoveText([finding("src/z.ts", [node("// ***", 4)])])).toMatchInlineSnapshot(`
+    expect(buildRemoveText([finding("src/z.ts", [node("// ***", 3)])])).toMatchInlineSnapshot(`
       "ℹ pi-fence: fence/divider comments were automatically removed:
         src/z.ts:4:1: // ***
       Do not add them back."
@@ -82,8 +82,8 @@ describe("buildRemoveText", () => {
   it("formats multiple files", () => {
     expect(
       buildRemoveText([
-        finding("a.ts", [node("// ---", 1), node("// ===", 3)]),
-        finding("b.ts", [node("// ###", 10)]),
+        finding("a.ts", [node("// ---", 0), node("// ===", 2)]),
+        finding("b.ts", [node("// ###", 9)]),
       ]),
     ).toMatchInlineSnapshot(`
       "ℹ pi-fence: fence/divider comments were automatically removed:
