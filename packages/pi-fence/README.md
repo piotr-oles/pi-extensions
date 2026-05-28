@@ -36,20 +36,8 @@ Files with other extensions are passed through without inspection.
 
 ## Install
 
-Add to your pi config (`~/.pi/config.json` or project-local `.pi/config.json`):
-
-```json
-{
-  "pi": {
-    "extensions": ["pi-fence"]
-  }
-}
-```
-
-Or install globally via npm first, then reference by package name:
-
 ```bash
-npm install -g pi-fence
+pi install npm:pi-fence
 ```
 
 ## Modes
