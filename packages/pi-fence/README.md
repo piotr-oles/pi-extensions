@@ -73,3 +73,9 @@ pnpm test
 pnpm typecheck
 pnpm check
 ```
+
+To test changes manually, pass the source entry point directly to pi with the `-e` flag:
+
+```bash
+pi -e src/index.ts
+```
