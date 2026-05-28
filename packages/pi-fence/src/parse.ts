@@ -2,14 +2,8 @@ import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { Language, Parser, type Node as SyntaxNode } from "web-tree-sitter";
-import { getLanguageConfig } from "./languages.js";
 
 const _require = createRequire(import.meta.url);
-
-/** Stable key for a comment node: combines text and line so moved/copied fences are treated as new. */
-export function getCommentHash(c: CommentNode): string {
-  return `${c.text}:::${c.startLine}`;
-}
 
 export interface CommentNode {
   /** Raw comment text including markers (e.g. `// ---- section ----`). */
@@ -22,6 +16,23 @@ export interface CommentNode {
   endLine: number;
   /** 0-indexed end column (exclusive — first column after the comment). */
   endCol: number;
+}
+
+/** Stable key for a comment node: combines text and line so moved/copied fences are treated as new. */
+export function getCommentHash(c: CommentNode): string {
+  return `${c.text}:::${c.startLine}`;
+}
+
+/**
+ * Resolve a grammar .wasm file by locating the package's package.json and
+ * joining the filename.  More robust than require.resolve() on non-JS files
+ * across all Node versions.
+ */
+export function wasmResolver(packageName: string, wasmFile: string): () => string {
+  return () => {
+    const pkgJson = _require.resolve(`${packageName}/package.json`);
+    return join(dirname(pkgJson), wasmFile);
+  };
 }
 
 let parserReady: Promise<void> | null = null;
@@ -51,11 +62,12 @@ const parserCache = new Map<string, Parser>();
  * parsers are safe to reuse: concurrent callers complete their await points
  * before reaching the synchronous parse call, never racing on the same instance.
  */
-async function loadParser(wasmPath: string): Promise<Parser> {
+export async function loadParser(wasmPath: string): Promise<Parser> {
   const cached = parserCache.get(wasmPath);
   if (cached) {
     return cached;
   }
+  await ensureInitialized();
   const bytes = new Uint8Array(await readFile(wasmPath));
   const lang = await Language.load(bytes);
   const parser = new Parser();
@@ -64,7 +76,26 @@ async function loadParser(wasmPath: string): Promise<Parser> {
   return parser;
 }
 
-function collectComments(
+/**
+ * Walk `parser`'s parse tree for `content` and return every node whose type
+ * is listed in `commentNodeTypes`.
+ */
+export function extractTreeSitterNodes(
+  content: string,
+  parser: Parser,
+  commentNodeTypes: ReadonlyArray<string>,
+): CommentNode[] {
+  const tree = parser.parse(content);
+  if (!tree) {
+    return [];
+  }
+  const results: CommentNode[] = [];
+  collectNodes(tree.rootNode, commentNodeTypes, results);
+  tree.delete();
+  return results;
+}
+
+function collectNodes(
   node: SyntaxNode,
   commentTypes: ReadonlyArray<string>,
   out: CommentNode[],
@@ -82,45 +113,7 @@ function collectComments(
   for (let i = 0; i < node.childCount; i++) {
     const child = node.child(i);
     if (child) {
-      collectComments(child, commentTypes, out);
+      collectNodes(child, commentTypes, out);
     }
   }
-}
-
-/**
- * Parse `content` as source code belonging to `filePath` and return every
- * comment node found.  Returns [] for unsupported file extensions.
- *
- * Pass an `AbortSignal` to skip the parse when the parent turn has been
- * cancelled.  Because Parser.parse() is synchronous it cannot be interrupted
- * mid-run, so the signal is checked only before parsing begins.
- */
-export async function extractComments(
-  content: string,
-  filePath: string,
-  signal?: AbortSignal,
-): Promise<CommentNode[]> {
-  const config = getLanguageConfig(filePath);
-  if (!config) {
-    return [];
-  }
-
-  await ensureInitialized();
-  if (signal?.aborted) {
-    return [];
-  }
-
-  const parser = await loadParser(config.wasmPath());
-  if (signal?.aborted) {
-    return [];
-  }
-  const tree = parser.parse(content);
-  if (!tree) {
-    return [];
-  }
-
-  const results: CommentNode[] = [];
-  collectComments(tree.rootNode, config.commentNodeTypes, results);
-  tree.delete();
-  return results;
 }

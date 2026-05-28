@@ -7,8 +7,9 @@ import {
   isWriteToolResult,
 } from "@earendil-works/pi-coding-agent";
 import { isFenceComment, removeFenceComments } from "./fence.js";
+import { getLanguageDefinition } from "./languages/index.js";
 import { buildBlockReason, buildRemoveText, buildWarnText } from "./messages.js";
-import { type CommentNode, extractComments, getCommentHash } from "./parse.js";
+import { type CommentNode, getCommentHash } from "./parse.js";
 import type { Finding } from "./types.js";
 
 const PROMPT_INSTRUCTIONS = `
@@ -55,6 +56,11 @@ export default function piFence(pi: ExtensionAPI) {
 
     if (isToolCallEventType("write", event)) {
       const { path: relativePath, content: newContent } = event.input;
+      const def = getLanguageDefinition(relativePath);
+      if (!def) {
+        return undefined;
+      }
+
       const absolutePath = resolve(ctx.cwd, relativePath);
       const oldContent = await readExisting(absolutePath, signal);
       if (signal?.aborted) {
@@ -66,14 +72,12 @@ export default function piFence(pi: ExtensionAPI) {
       // would silently ignore any fence whose text already appeared anywhere in
       // the old file, even at a completely different location.
       const existingKeys = new Set(
-        oldContent
-          ? (await extractComments(oldContent, relativePath, signal)).map(getCommentHash)
-          : [],
+        oldContent ? (await def.extractCommentNodes(oldContent, signal)).map(getCommentHash) : [],
       );
       if (signal?.aborted) {
         return undefined;
       }
-      const fences = (await extractComments(newContent, relativePath, signal)).filter(
+      const fences = (await def.extractCommentNodes(newContent, signal)).filter(
         (c) => !existingKeys.has(getCommentHash(c)) && isFenceComment(c.text),
       );
 
@@ -95,6 +99,11 @@ export default function piFence(pi: ExtensionAPI) {
 
     if (isToolCallEventType("edit", event)) {
       const { path: relativePath, edits } = event.input;
+      const def = getLanguageDefinition(relativePath);
+      if (!def) {
+        return undefined;
+      }
+
       const absolutePath = resolve(ctx.cwd, relativePath);
       const oldContent = await readExisting(absolutePath, signal);
       if (signal?.aborted) {
@@ -107,9 +116,9 @@ export default function piFence(pi: ExtensionAPI) {
         if (signal?.aborted) {
           return undefined;
         }
-        const newComments = await extractComments(edit.newText, relativePath, signal);
+        const newComments = await def.extractCommentNodes(edit.newText, signal);
         const oldTexts = new Set(
-          (await extractComments(edit.oldText, relativePath, signal)).map((c) => c.text),
+          (await def.extractCommentNodes(edit.oldText, signal)).map((c) => c.text),
         );
         const fences = newComments.filter((c) => !oldTexts.has(c.text) && isFenceComment(c.text));
         if (fences.length > 0) {
