@@ -13,7 +13,8 @@
   "type": "module",
   "files": [
     "src",
-    "!src/tests"
+    "!src/tests",
+    "media"
   ],
   "publishConfig": {
     "access": "public"
@@ -21,7 +22,8 @@
   "pi": {
     "extensions": [
       "./src/index.ts"
-    ]
+    ],
+    "image": "https://raw.githubusercontent.com/piotr-oles/pi-extensions/main/packages/pi-fence/media/screenshot.jpeg"
   },
   "scripts": {
     "test": "vitest run",

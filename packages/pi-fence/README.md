@@ -2,6 +2,8 @@
 
 A [pi coding agent](https://github.com/earendil-works/pi) extension that detects decorative fence/divider comments in code written by the model and warns, blocks, or removes them automatically.
 
+![pi-fence screenshot](media/screenshot.jpeg)
+
 ## What it catches
 
 Comments whose inner text (after stripping `//`, `#`, `/* */` markers) contains a sequence of 3 or more separator characters:
