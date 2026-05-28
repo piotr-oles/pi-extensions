@@ -4,7 +4,6 @@ import {
   buildFindingLines,
   buildRemoveText,
   buildWarnText,
-  formatFinding,
 } from "../messages.js";
 import type { CommentNode } from "../parse.js";
 import type { Finding } from "../types.js";
@@ -17,26 +16,6 @@ function finding(relativePath: string, fences: CommentNode[]): Finding {
   return { relativePath, fences };
 }
 
-describe("formatFinding", () => {
-  it("formats line and col (1-indexed) with trimmed text", () => {
-    expect(formatFinding(node("// ---- section ----", 3, 0))).toMatchInlineSnapshot(
-      `"    line 3, col 1: // ---- section ----"`,
-    );
-  });
-
-  it("adjusts col to 1-indexed", () => {
-    expect(formatFinding(node("// ===", 10, 4))).toMatchInlineSnapshot(
-      `"    line 10, col 5: // ==="`,
-    );
-  });
-
-  it("trims surrounding whitespace from the comment text", () => {
-    expect(formatFinding(node("  // --- trim me ---  ", 1))).toMatchInlineSnapshot(
-      `"    line 1, col 1: // --- trim me ---"`,
-    );
-  });
-});
-
 describe("buildFindingLines", () => {
   it("returns empty array for empty findings", () => {
     expect(buildFindingLines([])).toMatchInlineSnapshot(`[]`);
@@ -45,8 +24,7 @@ describe("buildFindingLines", () => {
   it("formats a single file with one fence", () => {
     expect(buildFindingLines([finding("src/foo.ts", [node("// ----", 2)])])).toMatchInlineSnapshot(`
       [
-        "  src/foo.ts:",
-        "    line 2, col 1: // ----",
+        "  src/foo.ts:2:1: // ----",
       ]
     `);
   });
@@ -57,8 +35,8 @@ describe("buildFindingLines", () => {
     ).toMatchInlineSnapshot(`
       [
         "  src/bar.ts:",
-        "    line 1, col 1: // ====",
-        "    line 5, col 1: // ####",
+        "    1:1: // ====",
+        "    5:1: // ####",
       ]
     `);
   });
@@ -71,10 +49,8 @@ describe("buildFindingLines", () => {
       ]),
     ).toMatchInlineSnapshot(`
       [
-        "  a.ts:",
-        "    line 1, col 1: // ---",
-        "  b.ts:",
-        "    line 3, col 1: // ===",
+        "  a.ts:1:1: // ---",
+        "  b.ts:3:1: // ===",
       ]
     `);
   });
@@ -84,8 +60,7 @@ describe("buildBlockReason", () => {
   it("formats the full message", () => {
     expect(buildBlockReason([finding("src/x.ts", [node("// ----", 7)])])).toMatchInlineSnapshot(`
       "Write blocked — fence/divider comments in added code:
-        src/x.ts:
-          line 7, col 1: // ----
+        src/x.ts:7:1: // ----
       Remove these comments and retry."
     `);
   });
@@ -95,8 +70,7 @@ describe("buildWarnText", () => {
   it("formats the full message", () => {
     expect(buildWarnText([finding("src/y.ts", [node("// ===", 2)])])).toMatchInlineSnapshot(`
       "⚠ pi-fence: fence/divider comments detected in added code:
-        src/y.ts:
-          line 2, col 1: // ===
+        src/y.ts:2:1: // ===
       Please remove them."
     `);
   });
@@ -106,8 +80,7 @@ describe("buildRemoveText", () => {
   it("formats the full message", () => {
     expect(buildRemoveText([finding("src/z.ts", [node("// ***", 4)])])).toMatchInlineSnapshot(`
       "ℹ pi-fence: fence/divider comments were automatically removed:
-        src/z.ts:
-          line 4, col 1: // ***
+        src/z.ts:4:1: // ***
       Do not add them back."
     `);
   });
@@ -121,10 +94,9 @@ describe("buildRemoveText", () => {
     ).toMatchInlineSnapshot(`
       "ℹ pi-fence: fence/divider comments were automatically removed:
         a.ts:
-          line 1, col 1: // ---
-          line 3, col 1: // ===
-        b.ts:
-          line 10, col 1: // ###
+          1:1: // ---
+          3:1: // ===
+        b.ts:10:1: // ###
       Do not add them back."
     `);
   });

@@ -1,15 +1,19 @@
 import type { CommentNode } from "./parse.js";
 import type { Finding } from "./types.js";
 
-export function formatFinding(f: CommentNode): string {
-  return `    line ${f.startLine}, col ${f.startCol + 1}: ${f.text.trim()}`;
-}
-
 export function buildFindingLines(findings: Finding[]): string[] {
+  function formatFinding({ startLine, startCol, text }: CommentNode): string {
+    return `${startLine}:${startCol + 1}: ${text.trimEnd()}`;
+  }
+
   const lines: string[] = [];
   for (const { relativePath, fences } of findings) {
-    lines.push(`  ${relativePath}:`);
-    lines.push(...fences.map(formatFinding));
+    if (fences.length === 1) {
+      lines.push(`${relativePath.padStart(2)}:${formatFinding(fences[0])}`);
+    } else {
+      lines.push(`${relativePath.padStart(2)}:`);
+      lines.push(...fences.map((f) => formatFinding(f).padStart(4)));
+    }
   }
   return lines;
 }
