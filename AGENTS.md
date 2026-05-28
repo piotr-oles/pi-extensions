@@ -35,16 +35,7 @@ Wraps the [`sem`](https://github.com/piotr-oles/sem) CLI as four pi tools: `sem_
 pnpm install                  # install workspace deps
 pnpm test                     # run all tests across packages
 pnpm typecheck                # tsc --noEmit across packages
-pnpm check                    # biome ci (lint + format check)
-pnpm lint:fix                 # auto-fix lint
-pnpm format                   # auto-format
-```
-
-Per-package (from `packages/<name>/`):
-
-```bash
-pnpm test:watch               # vitest watch mode
-pnpm test:coverage            # coverage report
+pnpm fix                      # check and auto-fix
 ```
 
 ## Conventions
@@ -99,7 +90,7 @@ Tests live in `src/tests/` inside each package. Vitest is the test runner.
 2. `packages/<name>/package.json` — include:
    - `"type": "module"`
    - `"pi": { "extensions": ["./src/index.ts"] }`
-   - scripts: `test`, `typecheck`, `check`, `lint:fix`, `format`
+   - scripts: `test`, `typecheck`, `check`, `fix`
 3. `packages/<name>/tsconfig.json` — extend `../../tsconfig.base.json`
 4. `packages/<name>/src/index.ts` — default-export a function `(pi: ExtensionAPI) => void`
 5. CI picks it up automatically via `pnpm -r`

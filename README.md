@@ -25,19 +25,22 @@ Each package has its own `README.md` with installation and usage instructions.
 ## Adding a new extension
 
 1. `mkdir packages/<name>`
-2. Add a `package.json` with a `"pi": { "extensions": ["./src/index.ts"] }` field and the standard scripts (`test`, `typecheck`, `check`)
+2. Add a `package.json` with `"type": "module"`, a `"pi": { "extensions": ["./src/index.ts"] }` field, and scripts: `test`, `typecheck`, `check`, `lint:fix`, `format`
 3. Add a `tsconfig.json` extending `../../tsconfig.base.json`
-4. CI picks it up automatically via `pnpm -r`
+4. Add `src/index.ts` with a default-exported function `(pi: ExtensionAPI) => void`
+5. CI picks it up automatically via `pnpm -r`
+
+For publishable packages add `"publishConfig": { "access": "public" }` and a `"files"` list. Private packages set `"private": true`.
 
 ## Releases
 
 Published packages are released via [Changesets](https://github.com/changesets/changesets). To cut a release:
 
 ```bash
-pnpm changeset       # describe your change
-pnpm version         # bump versions + update changelogs
-# merge the Version Packages PR → CI publishes to npm automatically
+pnpm changeset   # describe your change, then commit the generated file
 ```
+
+Once the changeset is merged to `main`, CI opens a **Version Packages** PR that bumps versions and updates changelogs. Merging that PR triggers the publish to npm automatically.
 
 ## License
 

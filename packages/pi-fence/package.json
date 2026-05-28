@@ -13,7 +13,8 @@
   "type": "module",
   "files": [
     "src",
-    "!src/tests"
+    "!src/tests",
+    "media"
   ],
   "publishConfig": {
     "access": "public"
@@ -21,17 +22,16 @@
   "pi": {
     "extensions": [
       "./src/index.ts"
-    ]
+    ],
+    "image": "https://raw.githubusercontent.com/piotr-oles/pi-extensions/main/packages/pi-fence/media/screenshot.jpeg"
   },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check src/",
-    "lint:fix": "biome check --write src/",
-    "format": "biome format --write src/",
-    "check": "biome ci src/"
+    "check": "biome ci src/",
+    "fix": "biome check --write src/"
   },
   "dependencies": {
     "web-tree-sitter": "^0.26.9",

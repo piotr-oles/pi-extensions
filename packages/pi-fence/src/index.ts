@@ -6,6 +6,7 @@ import {
   isToolCallEventType,
   isWriteToolResult,
 } from "@earendil-works/pi-coding-agent";
+import { applyEdits } from "./edit.js";
 import { getFenceComments, removeFenceComments } from "./fence.js";
 import { getLanguageDefinition } from "./languages/index.js";
 import { buildBlockReason, buildRemoveText, buildWarnText } from "./messages.js";
@@ -79,27 +80,56 @@ export default function piFence(pi: ExtensionAPI) {
         return undefined;
       }
 
-      // One pass: compute per-edit fence findings (lines relative to each fragment).
-      const perEdit: { edit: (typeof edits)[number]; fences: CommentNode[] }[] = [];
-      for (const edit of edits) {
+      // Detect fence comments per edit. When the file exists we parse the
+      // full patched content so tree-sitter has complete surrounding context
+      // (string literals, template literals, block comments), preventing
+      // false positives from fragments that only look like comments in
+      // isolation. When the file cannot be read we fall back to parsing each
+      // newText fragment individually.
+      //
+      // perEditFences[i] holds fences whose line numbers are 0-indexed
+      // relative to the start of edits[i].newText.
+      // fileLineOffset[i] is the 0-indexed line in the file where newText starts,
+      // used to build the file-level positions shown in messages.
+      const perEditFences: CommentNode[][] = edits.map(() => []);
+      const fileLineOffset: number[] = edits.map(() => 0);
+
+      if (oldContent !== null) {
+        const { content: patchedContent, editRanges } = applyEdits(oldContent, edits);
+
+        const allFencesInPatched = await getFenceComments(patchedContent, def, signal);
         if (signal?.aborted) {
           return undefined;
         }
-        const fences = await getFenceComments(edit.newText, def, signal);
-        if (fences.length > 0) {
-          perEdit.push({ edit, fences });
+
+        for (let i = 0; i < edits.length; i++) {
+          const r = editRanges[i];
+          fileLineOffset[i] = r.startLine;
+          perEditFences[i] = allFencesInPatched
+            .filter((f) => f.startLine >= r.startLine && f.startLine <= r.endLine)
+            .map((f) => ({
+              ...f,
+              startLine: f.startLine - r.startLine,
+              endLine: f.endLine - r.startLine,
+            }));
+        }
+      } else {
+        for (let i = 0; i < edits.length; i++) {
+          if (signal?.aborted) {
+            return undefined;
+          }
+          perEditFences[i] = await getFenceComments(edits[i].newText, def, signal);
         }
       }
 
-      if (perEdit.length === 0) {
+      if (perEditFences.every((fences) => fences.length === 0)) {
         return undefined;
       }
 
-      // Flatten fences with file-level line offsets for all modes.
-      const allFences = perEdit.flatMap(({ fences, edit }) => {
-        const lineOffset = oldContent ? findStartLine(oldContent, edit.oldText) - 1 : 0;
-        return fences.map((c) => ({ ...c, startLine: c.startLine + lineOffset }));
-      });
+      // Lift per-edit fences to file-level positions for reporting.
+      const allFences = edits.flatMap((_, i) =>
+        perEditFences[i].map((f) => ({ ...f, startLine: f.startLine + fileLineOffset[i] })),
+      );
 
       switch (mode) {
         case "warn":
@@ -108,8 +138,10 @@ export default function piFence(pi: ExtensionAPI) {
         case "block":
           return { block: true, reason: buildBlockReason([{ path, fences: allFences }]) };
         case "remove":
-          for (const { edit, fences } of perEdit) {
-            edit.newText = removeFenceComments(edit.newText, fences);
+          for (let i = 0; i < edits.length; i++) {
+            if (perEditFences[i].length > 0) {
+              edits[i].newText = removeFenceComments(edits[i].newText, perEditFences[i]);
+            }
           }
           pendingFindings.set(event.toolCallId, { path, fences: allFences });
           return undefined;
@@ -161,13 +193,4 @@ async function readExisting(absolutePath: string, signal?: AbortSignal): Promise
   } catch {
     return null;
   }
-}
-
-/** Line number (1-indexed) where `needle` first appears in `haystack`. */
-function findStartLine(haystack: string, needle: string): number {
-  const idx = haystack.indexOf(needle);
-  if (idx === -1) {
-    return 1;
-  }
-  return haystack.slice(0, idx).split("\n").length;
 }
