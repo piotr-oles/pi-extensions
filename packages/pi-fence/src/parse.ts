@@ -37,6 +37,7 @@ function ensureInitialized(): Promise<void> {
 }
 
 const grammarCache = new Map<string, Language>();
+const parserCache = new Map<Language, Parser>();
 
 async function loadGrammar(wasmPath: string): Promise<Language> {
   const cached = grammarCache.get(wasmPath);
@@ -47,6 +48,27 @@ async function loadGrammar(wasmPath: string): Promise<Language> {
   const lang = await Language.load(bytes);
   grammarCache.set(wasmPath, lang);
   return lang;
+}
+
+/**
+ * Return a Parser already configured for `lang`, creating one on first use.
+ *
+ * Parser construction and setLanguage() have non-trivial overhead — especially
+ * with the WASM backend — so we keep one instance per Language object and
+ * reuse it across calls.  This is safe because Parser.parse() is synchronous
+ * in web-tree-sitter: after the two await points above (ensureInitialized +
+ * loadGrammar), the hot path runs without yielding, so concurrent callers
+ * never race on the same Parser instance.
+ */
+function getParser(lang: Language): Parser {
+  const cached = parserCache.get(lang);
+  if (cached) {
+    return cached;
+  }
+  const parser = new Parser();
+  parser.setLanguage(lang);
+  parserCache.set(lang, parser);
+  return parser;
 }
 
 function collectComments(
@@ -85,8 +107,7 @@ export async function extractComments(content: string, filePath: string): Promis
   await ensureInitialized();
   const lang = await loadGrammar(config.wasmPath());
 
-  const parser = new Parser();
-  parser.setLanguage(lang);
+  const parser = getParser(lang);
   const tree = parser.parse(content);
   if (!tree) {
     return [];
@@ -95,6 +116,5 @@ export async function extractComments(content: string, filePath: string): Promis
   const results: CommentNode[] = [];
   collectComments(tree.rootNode, config.commentNodeTypes, results);
   tree.delete();
-  parser.delete();
   return results;
 }
