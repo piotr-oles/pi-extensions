@@ -41,38 +41,26 @@ function ensureInitialized(): Promise<void> {
   return parserReady;
 }
 
-const grammarCache = new Map<string, Language>();
-const parserCache = new Map<Language, Parser>();
+const parserCache = new Map<string, Parser>();
 
-async function loadGrammar(wasmPath: string): Promise<Language> {
-  const cached = grammarCache.get(wasmPath);
+/**
+ * Load (or return a cached) Parser for the given grammar WASM path.
+ *
+ * Combines grammar loading and parser construction into a single step keyed
+ * by wasmPath.  Parser.parse() is synchronous in web-tree-sitter, so cached
+ * parsers are safe to reuse: concurrent callers complete their await points
+ * before reaching the synchronous parse call, never racing on the same instance.
+ */
+async function loadParser(wasmPath: string): Promise<Parser> {
+  const cached = parserCache.get(wasmPath);
   if (cached) {
     return cached;
   }
   const bytes = new Uint8Array(await readFile(wasmPath));
   const lang = await Language.load(bytes);
-  grammarCache.set(wasmPath, lang);
-  return lang;
-}
-
-/**
- * Return a Parser already configured for `lang`, creating one on first use.
- *
- * Parser construction and setLanguage() have non-trivial overhead — especially
- * with the WASM backend — so we keep one instance per Language object and
- * reuse it across calls.  This is safe because Parser.parse() is synchronous
- * in web-tree-sitter: after the two await points above (ensureInitialized +
- * loadGrammar), the hot path runs without yielding, so concurrent callers
- * never race on the same Parser instance.
- */
-function getParser(lang: Language): Parser {
-  const cached = parserCache.get(lang);
-  if (cached) {
-    return cached;
-  }
   const parser = new Parser();
   parser.setLanguage(lang);
-  parserCache.set(lang, parser);
+  parserCache.set(wasmPath, parser);
   return parser;
 }
 
@@ -122,12 +110,10 @@ export async function extractComments(
     return [];
   }
 
-  const lang = await loadGrammar(config.wasmPath());
+  const parser = await loadParser(config.wasmPath());
   if (signal?.aborted) {
     return [];
   }
-
-  const parser = getParser(lang);
   const tree = parser.parse(content);
   if (!tree) {
     return [];
