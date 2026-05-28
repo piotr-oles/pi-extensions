@@ -1,9 +1,9 @@
 import {
-  createTestSession,
-  when,
   calls,
+  createTestSession,
   says,
   type TestSession,
+  when,
 } from "@marcfargas/pi-test-harness";
 import { afterEach, describe, expect, it } from "vitest";
 import piFence from "../index.js";
@@ -13,8 +13,7 @@ type FenceMode = "warn" | "block" | "remove";
 function fenceExtension(mode: FenceMode) {
   return (pi: any) => {
     const orig = pi.getFlag.bind(pi);
-    pi.getFlag = (name: string) =>
-      name === "pi-fence-mode" ? mode : orig(name);
+    pi.getFlag = (name: string) => (name === "pi-fence-mode" ? mode : orig(name));
     piFence(pi);
   };
 }
@@ -29,12 +28,7 @@ const CONTENT_WITH_FENCE = [
   "",
 ].join("\n");
 
-const CONTENT_CLEAN = [
-  "function greet() {",
-  '  return "hello";',
-  "}",
-  "",
-].join("\n");
+const CONTENT_CLEAN = ["function greet() {", '  return "hello";', "}", ""].join("\n");
 
 describe("pi-fence modes", { timeout: 30_000 }, () => {
   let t: TestSession;
