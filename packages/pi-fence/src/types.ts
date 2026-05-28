@@ -11,6 +11,8 @@ export interface CommentNode {
   endCol: number;
 }
 
+export type FenceMode = "warn" | "block" | "remove";
+
 export interface FencesFinding {
   /** Relative path to the file containing the fences. */
   path: string;

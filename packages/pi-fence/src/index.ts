@@ -9,6 +9,7 @@ import {
 import { getFenceComments, removeFenceComments } from "./fence.js";
 import { getLanguageDefinition } from "./languages/index.js";
 import { buildBlockReason, buildRemoveText, buildWarnText } from "./messages.js";
+import { getMode } from "./mode.js";
 import type { CommentNode, FencesFinding } from "./types.js";
 
 const PROMPT_INSTRUCTIONS = `
@@ -19,27 +20,6 @@ Do not insert decorative fence or divider comments like:
   # ################
 Use named functions, classes, or blank lines to separate code sections instead.
 `.trim();
-
-type FenceMode = "warn" | "block" | "remove";
-
-function parseFenceMode(value: string | undefined): FenceMode | null {
-  if (value === "block" || value === "warn" || value === "remove") {
-    return value;
-  }
-  if (value === "delete") {
-    return "remove";
-  }
-  return null;
-}
-
-function getMode(pi: ExtensionAPI): FenceMode {
-  const flag = pi.getFlag("pi-fence-mode");
-  return (
-    parseFenceMode(typeof flag === "string" ? flag : undefined) ??
-    parseFenceMode(process.env.PI_FENCE_MODE) ??
-    "warn"
-  );
-}
 
 export default function piFence(pi: ExtensionAPI) {
   pi.registerFlag("pi-fence-mode", {
