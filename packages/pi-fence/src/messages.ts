@@ -9,10 +9,10 @@ export function buildFindingLines(findings: Finding[]): string[] {
   const lines: string[] = [];
   for (const { relativePath, fences } of findings) {
     if (fences.length === 1) {
-      lines.push(`${relativePath.padStart(2)}:${formatFinding(fences[0])}`);
+      lines.push(`  ${relativePath}:${formatFinding(fences[0])}`);
     } else {
-      lines.push(`${relativePath.padStart(2)}:`);
-      lines.push(...fences.map((f) => formatFinding(f).padStart(4)));
+      lines.push(`  ${relativePath}:`);
+      lines.push(...fences.map((f) => `    ${formatFinding(f)}`));
     }
   }
   return lines;
