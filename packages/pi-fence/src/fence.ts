@@ -24,7 +24,8 @@
  *   // fix the off-by-one error          ← single dashes in words
  */
 
-import type { CommentNode } from "./parse.js";
+import type { LanguageDefinition } from "./languages/index.js";
+import type { CommentNode } from "./types.js";
 
 // ASCII separators + Unicode box-drawing block (U+2500–U+257F: ─ ━ │ ═ ║ ┌ ┐ └ ┘ …)
 const FENCE_SEQUENCE_RE = /[-=*#~_^+|\u2500-\u257F]{3,}/u;
@@ -60,17 +61,18 @@ export function isFenceComment(rawText: string): boolean {
   return FENCE_SEQUENCE_RE.test(stripMarkers(rawText));
 }
 
-/**
- * Remove the given comment nodes from `content` and return the cleaned string.
- *
- * - Standalone comments (only whitespace before them on their line) → whole
- *   line(s) removed.
- * - Inline comments (code precedes them on the same line) → comment stripped,
- *   code kept with trailing whitespace trimmed.
- *
- * Nodes are processed in reverse start-position order so that earlier splice
- * operations don't invalidate later indices.
- */
+export async function getFenceComments(
+  content: string,
+  def: LanguageDefinition,
+  signal?: AbortSignal,
+): Promise<CommentNode[]> {
+  if (signal?.aborted) {
+    return [];
+  }
+  const nodes = await def.extractCommentNodes(content, signal);
+  return nodes.filter((c) => isFenceComment(c.text));
+}
+
 export function removeFenceComments(content: string, nodes: CommentNode[]): string {
   if (nodes.length === 0) {
     return content;
@@ -83,8 +85,8 @@ export function removeFenceComments(content: string, nodes: CommentNode[]): stri
   const sorted = [...nodes].sort((a, b) => b.startLine - a.startLine || b.startCol - a.startCol);
 
   for (const node of sorted) {
-    const startIdx = node.startLine - 1;
-    const endIdx = node.endLine - 1;
+    const startIdx = node.startLine;
+    const endIdx = node.endLine;
     if (startIdx < 0 || startIdx >= lines.length) {
       continue;
     }
