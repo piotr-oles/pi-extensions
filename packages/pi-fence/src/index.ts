@@ -50,17 +50,24 @@ export default function piFence(pi: ExtensionAPI) {
   });
 
   pi.on("tool_call", async (event, ctx) => {
+    const { signal } = ctx;
     const mode = resolveMode(pi.getFlag("pi-fence-mode"));
 
     if (isToolCallEventType("write", event)) {
       const { path: relativePath, content: newContent } = event.input;
       const absolutePath = resolve(ctx.cwd, relativePath);
-      const oldContent = await readExisting(absolutePath);
+      const oldContent = await readExisting(absolutePath, signal);
+      if (signal?.aborted) {
+        return undefined;
+      }
 
       const existingTexts = new Set(
-        oldContent ? (await extractComments(oldContent, relativePath)).map((c) => c.text) : [],
+        oldContent ? (await extractComments(oldContent, relativePath, signal)).map((c) => c.text) : [],
       );
-      const fences = (await extractComments(newContent, relativePath)).filter(
+      if (signal?.aborted) {
+        return undefined;
+      }
+      const fences = (await extractComments(newContent, relativePath, signal)).filter(
         (c) => !existingTexts.has(c.text) && isFenceComment(c.text),
       );
 
@@ -83,14 +90,20 @@ export default function piFence(pi: ExtensionAPI) {
     if (isToolCallEventType("edit", event)) {
       const { path: relativePath, edits } = event.input;
       const absolutePath = resolve(ctx.cwd, relativePath);
-      const oldContent = await readExisting(absolutePath);
+      const oldContent = await readExisting(absolutePath, signal);
+      if (signal?.aborted) {
+        return undefined;
+      }
 
       // One pass: compute per-edit fence findings (lines relative to each fragment).
       const perEdit: { edit: (typeof edits)[number]; fences: CommentNode[] }[] = [];
       for (const edit of edits) {
-        const newComments = await extractComments(edit.newText, relativePath);
+        if (signal?.aborted) {
+          return undefined;
+        }
+        const newComments = await extractComments(edit.newText, relativePath, signal);
         const oldTexts = new Set(
-          (await extractComments(edit.oldText, relativePath)).map((c) => c.text),
+          (await extractComments(edit.oldText, relativePath, signal)).map((c) => c.text),
         );
         const fences = newComments.filter((c) => !oldTexts.has(c.text) && isFenceComment(c.text));
         if (fences.length > 0) {
@@ -154,9 +167,9 @@ export default function piFence(pi: ExtensionAPI) {
   });
 }
 
-async function readExisting(absolutePath: string): Promise<string | null> {
+async function readExisting(absolutePath: string, signal?: AbortSignal): Promise<string | null> {
   try {
-    return await readFile(absolutePath, "utf8");
+    return await readFile(absolutePath, { encoding: "utf8", signal });
   } catch {
     return null;
   }

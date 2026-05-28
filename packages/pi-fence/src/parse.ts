@@ -97,15 +97,30 @@ function collectComments(
 /**
  * Parse `content` as source code belonging to `filePath` and return every
  * comment node found.  Returns [] for unsupported file extensions.
+ *
+ * Pass an `AbortSignal` to skip the parse when the parent turn has been
+ * cancelled.  Because Parser.parse() is synchronous it cannot be interrupted
+ * mid-run, so the signal is checked only before parsing begins.
  */
-export async function extractComments(content: string, filePath: string): Promise<CommentNode[]> {
+export async function extractComments(
+  content: string,
+  filePath: string,
+  signal?: AbortSignal,
+): Promise<CommentNode[]> {
   const config = getLanguageConfig(filePath);
   if (!config) {
     return [];
   }
 
   await ensureInitialized();
+  if (signal?.aborted) {
+    return [];
+  }
+
   const lang = await loadGrammar(config.wasmPath());
+  if (signal?.aborted) {
+    return [];
+  }
 
   const parser = getParser(lang);
   const tree = parser.parse(content);
