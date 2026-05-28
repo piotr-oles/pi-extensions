@@ -6,10 +6,9 @@ import {
   isToolCallEventType,
   isWriteToolResult,
 } from "@earendil-works/pi-coding-agent";
-import { isFenceComment, removeFenceComments } from "./fence.js";
+import { getCommentHash, getExistingFences, isFenceComment, removeFenceComments } from "./fence.js";
 import { getLanguageDefinition } from "./languages/index.js";
 import { buildBlockReason, buildRemoveText, buildWarnText } from "./messages.js";
-import { getCommentHash } from "./parse.js";
 import type { CommentNode, Finding } from "./types.js";
 
 const PROMPT_INSTRUCTIONS = `
@@ -62,23 +61,12 @@ export default function piFence(pi: ExtensionAPI) {
       }
 
       const absolutePath = resolve(ctx.cwd, relativePath);
-      const oldContent = await readExisting(absolutePath, signal);
-      if (signal?.aborted) {
-        return undefined;
-      }
-
-      // Key existing fences by "text:::line" so that a fence copied or moved
-      // to a different line is treated as newly introduced.  Pure text matching
-      // would silently ignore any fence whose text already appeared anywhere in
-      // the old file, even at a completely different location.
-      const existingKeys = new Set(
-        oldContent ? (await def.extractCommentNodes(oldContent, signal)).map(getCommentHash) : [],
-      );
+      const existingFences = await getExistingFences(absolutePath, def, signal);
       if (signal?.aborted) {
         return undefined;
       }
       const fences = (await def.extractCommentNodes(newContent, signal)).filter(
-        (c) => !existingKeys.has(getCommentHash(c)) && isFenceComment(c.text),
+        (c) => isFenceComment(c.text) && !existingFences.has(getCommentHash(c)),
       );
 
       if (fences.length === 0) {

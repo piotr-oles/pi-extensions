@@ -16,13 +16,13 @@ export function resolveTreeSitterWasm(packageName: string, wasmFile: string): st
   return join(dirname(pkgJson), wasmFile);
 }
 
-let parserReady: Promise<void> | null = null;
+let runtimeReady: Promise<void> | null = null;
 
-function ensureInitialized(): Promise<void> {
-  if (parserReady) {
-    return parserReady;
+function ensureTreeSitterRuntimeInitialized(): Promise<void> {
+  if (runtimeReady) {
+    return runtimeReady;
   }
-  parserReady = (async () => {
+  runtimeReady = (async () => {
     // web-tree-sitter blocks './package.json' in exports, so resolve the
     // main JS entry and derive the WASM path from its directory.
     const jsPath = _require.resolve("web-tree-sitter");
@@ -30,7 +30,7 @@ function ensureInitialized(): Promise<void> {
     const wasmBinary = await readFile(wasmPath);
     await Parser.init({ wasmBinary });
   })();
-  return parserReady;
+  return runtimeReady;
 }
 
 const parserCache = new Map<string, Parser>();
@@ -54,7 +54,7 @@ export async function loadTreeSitterParser(
   if (cached) {
     return cached;
   }
-  await ensureInitialized();
+  await ensureTreeSitterRuntimeInitialized();
   if (signal?.aborted) {
     return null;
   }

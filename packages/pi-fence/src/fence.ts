@@ -24,6 +24,8 @@
  *   // fix the off-by-one error          ← single dashes in words
  */
 
+import { readFile } from "node:fs/promises";
+import type { LanguageDefinition } from "./languages/index.js";
 import type { CommentNode } from "./types.js";
 
 // ASCII separators + Unicode box-drawing block (U+2500–U+257F: ─ ━ │ ═ ║ ┌ ┐ └ ┘ …)
@@ -71,6 +73,34 @@ export function isFenceComment(rawText: string): boolean {
  * Nodes are processed in reverse start-position order so that earlier splice
  * operations don't invalidate later indices.
  */
+/** Stable key for a comment node: combines text and line so moved/copied fences are treated as new. */
+export function getCommentHash(c: CommentNode): string {
+  return `${c.text}:${c.startLine}`;
+}
+
+/**
+ * Read `absolutePath` and return the set of fence-comment hashes already
+ * present in that file.  Returns an empty set when the file does not exist,
+ * cannot be read, or the signal is aborted.
+ */
+export async function getExistingFences(
+  absolutePath: string,
+  def: LanguageDefinition,
+  signal?: AbortSignal,
+): Promise<Set<string>> {
+  let content: string;
+  try {
+    content = await readFile(absolutePath, { encoding: "utf8", signal });
+  } catch {
+    return new Set();
+  }
+  if (signal?.aborted) {
+    return new Set();
+  }
+  const nodes = await def.extractCommentNodes(content, signal);
+  return new Set(nodes.filter((c) => isFenceComment(c.text)).map(getCommentHash));
+}
+
 export function removeFenceComments(content: string, nodes: CommentNode[]): string {
   if (nodes.length === 0) {
     return content;
