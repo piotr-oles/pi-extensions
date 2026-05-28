@@ -2,7 +2,8 @@
 
 A [pi coding agent](https://github.com/earendil-works/pi) extension that detects decorative fence/divider comments in code written by the model and warns, blocks, or removes them automatically.
 
-![pi-fence screenshot](media/screenshot.jpeg)
+<img src="media/screenshot.jpeg" alt="pi-fence screenshot" width="600">
+
 
 ## What it catches
 
