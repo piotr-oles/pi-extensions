@@ -6,11 +6,8 @@ const wasmPath = wasmResolver("tree-sitter-javascript", "tree-sitter-javascript.
 export const javascript: LanguageDefinition = {
   supportedExtensions: ["js", "jsx", "mjs", "cjs"],
   async extractCommentNodes(content, signal) {
-    if (signal?.aborted) {
-      return [];
-    }
-    const parser = await loadParser(wasmPath());
-    if (signal?.aborted) {
+    const parser = await loadParser(wasmPath(), signal);
+    if (!parser) {
       return [];
     }
     return extractTreeSitterNodes(content, parser, ["comment"]);

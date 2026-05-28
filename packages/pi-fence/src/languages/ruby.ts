@@ -6,11 +6,8 @@ const wasmPath = wasmResolver("tree-sitter-ruby", "tree-sitter-ruby.wasm");
 export const ruby: LanguageDefinition = {
   supportedExtensions: ["rb"],
   async extractCommentNodes(content, signal) {
-    if (signal?.aborted) {
-      return [];
-    }
-    const parser = await loadParser(wasmPath());
-    if (signal?.aborted) {
+    const parser = await loadParser(wasmPath(), signal);
+    if (!parser) {
       return [];
     }
     return extractTreeSitterNodes(content, parser, ["comment"]);

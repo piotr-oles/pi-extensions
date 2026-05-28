@@ -6,11 +6,8 @@ const wasmPath = wasmResolver("tree-sitter-bash", "tree-sitter-bash.wasm");
 export const bash: LanguageDefinition = {
   supportedExtensions: ["sh", "bash"],
   async extractCommentNodes(content, signal) {
-    if (signal?.aborted) {
-      return [];
-    }
-    const parser = await loadParser(wasmPath());
-    if (signal?.aborted) {
+    const parser = await loadParser(wasmPath(), signal);
+    if (!parser) {
       return [];
     }
     return extractTreeSitterNodes(content, parser, ["comment"]);

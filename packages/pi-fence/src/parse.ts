@@ -61,15 +61,27 @@ const parserCache = new Map<string, Parser>();
  * by wasmPath.  Parser.parse() is synchronous in web-tree-sitter, so cached
  * parsers are safe to reuse: concurrent callers complete their await points
  * before reaching the synchronous parse call, never racing on the same instance.
+ *
+ * Returns `null` if the signal is aborted at any point during loading.
+ * Cache hits are returned immediately without a signal check.
  */
-export async function loadParser(wasmPath: string): Promise<Parser> {
+export async function loadParser(wasmPath: string, signal?: AbortSignal): Promise<Parser | null> {
   const cached = parserCache.get(wasmPath);
   if (cached) {
     return cached;
   }
   await ensureInitialized();
+  if (signal?.aborted) {
+    return null;
+  }
   const bytes = new Uint8Array(await readFile(wasmPath));
+  if (signal?.aborted) {
+    return null;
+  }
   const lang = await Language.load(bytes);
+  if (signal?.aborted) {
+    return null;
+  }
   const parser = new Parser();
   parser.setLanguage(lang);
   parserCache.set(wasmPath, parser);

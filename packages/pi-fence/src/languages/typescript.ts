@@ -7,11 +7,8 @@ const tsxWasmPath = wasmResolver("tree-sitter-typescript", "tree-sitter-tsx.wasm
 export const typescript: LanguageDefinition = {
   supportedExtensions: ["ts", "cts", "mts"],
   async extractCommentNodes(content, signal) {
-    if (signal?.aborted) {
-      return [];
-    }
-    const parser = await loadParser(tsWasmPath());
-    if (signal?.aborted) {
+    const parser = await loadParser(tsWasmPath(), signal);
+    if (!parser) {
       return [];
     }
     return extractTreeSitterNodes(content, parser, ["comment"]);
@@ -21,11 +18,8 @@ export const typescript: LanguageDefinition = {
 export const typescriptTsx: LanguageDefinition = {
   supportedExtensions: ["tsx"],
   async extractCommentNodes(content, signal) {
-    if (signal?.aborted) {
-      return [];
-    }
-    const parser = await loadParser(tsxWasmPath());
-    if (signal?.aborted) {
+    const parser = await loadParser(tsxWasmPath(), signal);
+    if (!parser) {
       return [];
     }
     return extractTreeSitterNodes(content, parser, ["comment"]);
