@@ -24,15 +24,13 @@ export function getCommentHash(c: CommentNode): string {
 }
 
 /**
- * Resolve a grammar .wasm file by locating the package's package.json and
- * joining the filename.  More robust than require.resolve() on non-JS files
- * across all Node versions.
+ * Resolve the absolute path to a tree-sitter grammar's .wasm file by locating
+ * the package's package.json and joining the filename.  More robust than
+ * require.resolve() on non-JS files across all Node versions.
  */
-export function wasmResolver(packageName: string, wasmFile: string): () => string {
-  return () => {
-    const pkgJson = _require.resolve(`${packageName}/package.json`);
-    return join(dirname(pkgJson), wasmFile);
-  };
+export function resolveTreeSitterWasm(packageName: string, wasmFile: string): string {
+  const pkgJson = _require.resolve(`${packageName}/package.json`);
+  return join(dirname(pkgJson), wasmFile);
 }
 
 let parserReady: Promise<void> | null = null;
