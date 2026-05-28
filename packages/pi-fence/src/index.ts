@@ -13,12 +13,12 @@ import { getMode } from "./mode.js";
 import type { CommentNode, FencesFinding } from "./types.js";
 
 const PROMPT_INSTRUCTIONS = `
-Do not insert decorative fence or divider comments like:
+Do not insert decorative fence comments like:
   // ---- section ----
   // ===== Title =====
   // *** helpers ***
   # ################
-Use named functions, classes, or blank lines to separate code sections instead.
+Code-smell, if needed, extract to function or file instead. 
 `.trim();
 
 export default function piFence(pi: ExtensionAPI) {
@@ -136,7 +136,7 @@ export default function piFence(pi: ExtensionAPI) {
       case "remove": {
         const n = finding.fences.length;
         ctx.ui.notify(
-          `pi-fence: ${n} fence ${n === 1 ? "comment" : "comments"} were auto-removed`,
+          `Removed ${n} fence ${n === 1 ? "comment" : "comments"}, agent notified.`,
           "info",
         );
         return { content: [...event.content, { type: "text", text: buildRemoveText([finding]) }] };
@@ -144,8 +144,8 @@ export default function piFence(pi: ExtensionAPI) {
       case "warn": {
         const n = finding.fences.length;
         ctx.ui.notify(
-          `pi-fence: model tried to insert ${n} fence ${n === 1 ? "comment" : "comments"}`,
-          "warning",
+          `Detected ${n} fence ${n === 1 ? "comment" : "comments"}, agent asked to remove.`,
+          "info",
         );
         return { content: [...event.content, { type: "text", text: buildWarnText([finding]) }] };
       }

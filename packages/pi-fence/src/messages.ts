@@ -1,8 +1,8 @@
 import type { CommentNode, FencesFinding } from "./types.js";
 
 export function buildFindingLines(findings: FencesFinding[]): string[] {
-  function formatFinding({ startLine, startCol, text }: CommentNode): string {
-    return `${startLine + 1}:${startCol + 1}: ${text.trimEnd()}`;
+  function formatFinding({ startLine, text }: CommentNode): string {
+    return `${startLine + 1}: ${text.trimEnd()}`;
   }
 
   const lines: string[] = [];
@@ -19,7 +19,7 @@ export function buildFindingLines(findings: FencesFinding[]): string[] {
 
 export function buildBlockReason(findings: FencesFinding[]): string {
   return [
-    "Write blocked — fence/divider comments in added code:",
+    "Write blocked — fence comments in added code:",
     ...buildFindingLines(findings),
     "Remove these comments and retry.",
   ].join("\n");
@@ -27,7 +27,7 @@ export function buildBlockReason(findings: FencesFinding[]): string {
 
 export function buildWarnText(findings: FencesFinding[]): string {
   return [
-    "⚠ pi-fence: fence/divider comments detected in added code:",
+    "Fence comments detected in added code:",
     ...buildFindingLines(findings),
     "Please remove them.",
   ].join("\n");
@@ -35,7 +35,7 @@ export function buildWarnText(findings: FencesFinding[]): string {
 
 export function buildRemoveText(findings: FencesFinding[]): string {
   return [
-    "ℹ pi-fence: fence/divider comments were automatically removed:",
+    "Fence comments were automatically removed:",
     ...buildFindingLines(findings),
     "Do not add them back.",
   ].join("\n");

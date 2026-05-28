@@ -77,5 +77,7 @@ pnpm check
 To test changes manually, pass the source entry point directly to pi with the `-e` flag:
 
 ```bash
-pi -e src/index.ts
+pi -ne -e src/index.ts
+pi -ne -e src/index.ts --pi-fence-mode block
+pi -ne -e src/index.ts --pi-fence-mode remove
 ```
