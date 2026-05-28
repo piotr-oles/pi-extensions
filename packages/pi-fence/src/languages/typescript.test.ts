@@ -35,7 +35,6 @@ const x = 1;
     expect(nodes[0].startCol).toBe(13);
     expect(nodes[0].endCol).toBe(13 + "// ---- fence ----".length);
   });
-
 });
 
 describe("typescriptTsx — extractCommentNodes", () => {

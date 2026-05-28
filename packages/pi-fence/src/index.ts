@@ -9,8 +9,8 @@ import {
 import { isFenceComment, removeFenceComments } from "./fence.js";
 import { getLanguageDefinition } from "./languages/index.js";
 import { buildBlockReason, buildRemoveText, buildWarnText } from "./messages.js";
-import { type CommentNode, getCommentHash } from "./parse.js";
-import type { Finding } from "./types.js";
+import { getCommentHash } from "./parse.js";
+import type { CommentNode, Finding } from "./types.js";
 
 const PROMPT_INSTRUCTIONS = `
 Do not insert decorative fence or divider comments like:

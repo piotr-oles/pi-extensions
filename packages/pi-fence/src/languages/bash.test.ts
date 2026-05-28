@@ -12,5 +12,4 @@ describe("bash — extractCommentNodes", () => {
     expect(nodes).toHaveLength(1);
     expect(nodes[0].text).toBe("# ---- section ----");
   });
-
 });

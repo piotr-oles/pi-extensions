@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { Language, Parser, type Node as SyntaxNode } from "web-tree-sitter";
-import type { CommentNode } from "./parse.js";
+import type { CommentNode } from "./types.js";
 
 const _require = createRequire(import.meta.url);
 

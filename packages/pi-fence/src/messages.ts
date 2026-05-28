@@ -1,5 +1,4 @@
-import type { CommentNode } from "./parse.js";
-import type { Finding } from "./types.js";
+import type { CommentNode, Finding } from "./types.js";
 
 export function buildFindingLines(findings: Finding[]): string[] {
   function formatFinding({ startLine, startCol, text }: CommentNode): string {

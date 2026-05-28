@@ -24,7 +24,7 @@
  *   // fix the off-by-one error          ← single dashes in words
  */
 
-import type { CommentNode } from "./parse.js";
+import type { CommentNode } from "./types.js";
 
 // ASCII separators + Unicode box-drawing block (U+2500–U+257F: ─ ━ │ ═ ║ ┌ ┐ └ ┘ …)
 const FENCE_SEQUENCE_RE = /[-=*#~_^+|\u2500-\u257F]{3,}/u;

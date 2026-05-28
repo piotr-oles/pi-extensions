@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildBlockReason, buildFindingLines, buildRemoveText, buildWarnText } from "./messages.js";
-import type { CommentNode } from "./parse.js";
-import type { Finding } from "./types.js";
+import type { CommentNode, Finding } from "./types.js";
 
 function node(text: string, startLine: number, startCol = 0): CommentNode {
   return { text, startLine, startCol, endLine: startLine, endCol: startCol + text.length };

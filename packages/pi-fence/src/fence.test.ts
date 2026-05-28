@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isFenceComment, removeFenceComments, stripMarkers } from "./fence.js";
-import type { CommentNode } from "./parse.js";
+import type { CommentNode } from "./types.js";
 
 // Helper: build a minimal CommentNode from a single-line comment string.
 function node(text: string, startLine: number, startCol = 0): CommentNode {

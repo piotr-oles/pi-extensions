@@ -1,5 +1,5 @@
 import { extname } from "node:path";
-import type { CommentNode } from "../parse.js";
+import type { CommentNode } from "../types.js";
 import { bash } from "./bash.js";
 import { c } from "./c.js";
 import { css } from "./css.js";
