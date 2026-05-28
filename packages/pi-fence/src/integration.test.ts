@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
  */
 describe("pi-fence smoke (sandbox install)", { timeout: 120_000 }, () => {
   it("packs and installs cleanly; extension registers without errors", async () => {
-    const packageDir = path.resolve(import.meta.dirname, "../..");
+    const packageDir = path.resolve(import.meta.dirname, "..");
     const result = await verifySandboxInstall({
       packageDir,
       expect: {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getLanguageDefinition } from "../languages/index.js";
+import { getLanguageDefinition } from "./index.js";
 
 describe("getLanguageDefinition", () => {
   it("returns undefined for unsupported extensions", () => {

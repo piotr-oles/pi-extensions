@@ -9,7 +9,7 @@ import {
   when,
 } from "@marcfargas/pi-test-harness";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import piFence from "../index.js";
+import piFence from "./index.js";
 
 type FenceMode = "warn" | "block" | "remove";
 
