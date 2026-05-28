@@ -6,6 +6,11 @@ import { getLanguageConfig } from "./languages.js";
 
 const _require = createRequire(import.meta.url);
 
+/** Stable key for a comment node: combines text and line so moved/copied fences are treated as new. */
+export function getCommentHash(c: CommentNode): string {
+  return `${c.text}:::${c.startLine}`;
+}
+
 export interface CommentNode {
   /** Raw comment text including markers (e.g. `// ---- section ----`). */
   text: string;

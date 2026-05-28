@@ -8,7 +8,7 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import { isFenceComment, removeFenceComments } from "./fence.js";
 import { buildBlockReason, buildRemoveText, buildWarnText } from "./messages.js";
-import { type CommentNode, extractComments } from "./parse.js";
+import { type CommentNode, extractComments, getCommentHash } from "./parse.js";
 import type { Finding } from "./types.js";
 
 const PROMPT_INSTRUCTIONS = `
@@ -67,16 +67,14 @@ export default function piFence(pi: ExtensionAPI) {
       // the old file, even at a completely different location.
       const existingKeys = new Set(
         oldContent
-          ? (await extractComments(oldContent, relativePath, signal)).map(
-              (c) => `${c.text}:::${c.startLine}`,
-            )
+          ? (await extractComments(oldContent, relativePath, signal)).map(getCommentHash)
           : [],
       );
       if (signal?.aborted) {
         return undefined;
       }
       const fences = (await extractComments(newContent, relativePath, signal)).filter(
-        (c) => !existingKeys.has(`${c.text}:::${c.startLine}`) && isFenceComment(c.text),
+        (c) => !existingKeys.has(getCommentHash(c)) && isFenceComment(c.text),
       );
 
       if (fences.length === 0) {
