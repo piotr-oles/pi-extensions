@@ -22,23 +22,29 @@ Use named functions, classes, or blank lines to separate code sections instead.
 
 type FenceMode = "warn" | "block" | "remove";
 
-function getMode(pi: ExtensionAPI): FenceMode {
-  const flag = pi.getFlag("pi-fence-mode");
-  if (flag === "block" || flag === "warn" || flag === "remove") {
-    return flag;
+function parseFenceMode(value: string | undefined): FenceMode | null {
+  if (value === "block" || value === "warn" || value === "remove") {
+    return value;
   }
-  // alias for remove
-  if (flag === "delete") {
+  if (value === "delete") {
     return "remove";
   }
-  return "warn";
+  return null;
+}
+
+function getMode(pi: ExtensionAPI): FenceMode {
+  const flag = pi.getFlag("pi-fence-mode");
+  return (
+    parseFenceMode(typeof flag === "string" ? flag : undefined) ??
+    parseFenceMode(process.env.PI_FENCE_MODE) ??
+    "warn"
+  );
 }
 
 export default function piFence(pi: ExtensionAPI) {
   pi.registerFlag("pi-fence-mode", {
     type: "string",
     description: "How to handle fence/divider comments: warn (default), block, or remove",
-    default: "warn",
   });
 
   pi.on("before_agent_start", async (event) => ({

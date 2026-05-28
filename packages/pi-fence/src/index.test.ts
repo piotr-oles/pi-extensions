@@ -18,6 +18,10 @@ function fenceExtension(mode: FenceMode) {
   };
 }
 
+function defaultFenceExtension() {
+  return (pi: any) => piFence(pi);
+}
+
 const FILE = "src/greet.ts";
 
 const CONTENT_WITH_FENCE = [
@@ -197,6 +201,63 @@ describe("pi-fence modes", { timeout: 30_000 }, () => {
       );
       expect(result.text).toContain("src/greet.ts:2:1: // ---- helpers ----");
       expect(t.events.blockedCalls()).toHaveLength(0);
+    });
+  });
+
+  describe("PI_FENCE_MODE env variable", () => {
+    let originalEnv: string | undefined;
+
+    beforeEach(() => {
+      originalEnv = process.env.PI_FENCE_MODE;
+    });
+
+    afterEach(() => {
+      if (originalEnv === undefined) {
+        delete process.env.PI_FENCE_MODE;
+      } else {
+        process.env.PI_FENCE_MODE = originalEnv;
+      }
+    });
+
+    it("uses env variable when no flag is set", async () => {
+      process.env.PI_FENCE_MODE = "block";
+
+      t = await createTestSession({
+        extensionFactories: [defaultFenceExtension()],
+        mockTools: { write: "Written." },
+        propagateErrors: false,
+      });
+
+      await t.run(
+        when("Write a file", [
+          calls("write", { path: FILE, content: CONTENT_WITH_FENCE }),
+          says("I'll remove the fence comments."),
+        ]),
+      );
+
+      const [blocked] = t.events.blockedCalls();
+      expect(blocked.toolName).toBe("write");
+      expect(blocked.blockReason).toContain("Write blocked");
+    });
+
+    it("flag takes precedence over env variable", async () => {
+      process.env.PI_FENCE_MODE = "block";
+
+      t = await createTestSession({
+        extensionFactories: [fenceExtension("warn")],
+        mockTools: { write: "Written." },
+      });
+
+      await t.run(
+        when("Write a file", [
+          calls("write", { path: FILE, content: CONTENT_WITH_FENCE }),
+          says("Done."),
+        ]),
+      );
+
+      expect(t.events.blockedCalls()).toHaveLength(0);
+      const [result] = t.events.toolResultsFor("write");
+      expect(result.text).toContain("⚠ pi-fence");
     });
   });
 });
