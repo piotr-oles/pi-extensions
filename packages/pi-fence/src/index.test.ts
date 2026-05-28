@@ -332,4 +332,75 @@ describe("edit tool - false positive for fence-pattern text inside string contex
     expect(t.events.uiCallsFor("notify")).toHaveLength(0);
   });
 
+  it("block mode: does not block an edit whose fence-pattern text is inside a template literal", async () => {
+    t = await createTestSession({
+      extensionFactories: [fenceExtension("block")],
+      mockTools: { edit: "Edited." },
+      propagateErrors: false,
+    });
+
+    const fileDir = path.join(t.cwd, "src");
+    fs.mkdirSync(fileDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(fileDir, "example.ts"),
+      ["export const readme = `", "Some initial content.", "\`;", ""].join("\n"),
+    );
+
+    await t.run(
+      when("Edit a file", [
+        calls("edit", {
+          path: "src/example.ts",
+          edits: [{
+            oldText: "Some initial content.",
+            newText: "Some initial content.\n// ---- section ----\nMore content.",
+          }],
+        }),
+        says("Done."),
+      ]),
+    );
+
+    // Must not be blocked: the pattern is inside a template literal.
+    expect(t.events.blockedCalls()).toHaveLength(0);
+    expect(t.events.toolResultsFor("edit")).toHaveLength(1);
+  });
+
+  it("remove mode: does not strip fence-pattern text that is inside a template literal", async () => {
+    let capturedNewText = "";
+
+    t = await createTestSession({
+      extensionFactories: [fenceExtension("remove")],
+      mockTools: {
+        edit: (params) => {
+          const edits = params.edits as Array<{ oldText: string; newText: string }>;
+          capturedNewText = edits[0].newText;
+          return "Edited.";
+        },
+      },
+    });
+
+    const fileDir = path.join(t.cwd, "src");
+    fs.mkdirSync(fileDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(fileDir, "example.ts"),
+      ["export const readme = `", "Some initial content.", "\`;", ""].join("\n"),
+    );
+
+    await t.run(
+      when("Edit a file", [
+        calls("edit", {
+          path: "src/example.ts",
+          edits: [{
+            oldText: "Some initial content.",
+            newText: "Some initial content.\n// ---- section ----\nMore content.",
+          }],
+        }),
+        says("Done."),
+      ]),
+    );
+
+    // Template-literal content must not be mutated.
+    expect(capturedNewText).toContain("// ---- section ----");
+    expect(t.events.uiCallsFor("notify")).toHaveLength(0);
+  });
+
 });
