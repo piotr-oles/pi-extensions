@@ -1,11 +1,11 @@
 import {
   extractTreeSitterNodes,
   loadTreeSitterParser,
-  resolveTreeSitterWasm,
+  resolveVendoredWasm,
 } from "../tree-sitter.js";
 import type { LanguageDefinition } from "./index.js";
 
-const wasmPath = resolveTreeSitterWasm("tree-sitter-bash", "tree-sitter-bash.wasm");
+const wasmPath = resolveVendoredWasm("tree-sitter-bash.wasm");
 
 export const bash: LanguageDefinition = {
   supportedExtensions: ["sh", "bash"],

@@ -1,11 +1,11 @@
 import {
   extractTreeSitterNodes,
   loadTreeSitterParser,
-  resolveTreeSitterWasm,
+  resolveVendoredWasm,
 } from "../tree-sitter.js";
 import type { LanguageDefinition } from "./index.js";
 
-const wasmPath = resolveTreeSitterWasm("tree-sitter-rust", "tree-sitter-rust.wasm");
+const wasmPath = resolveVendoredWasm("tree-sitter-rust.wasm");
 
 export const rust: LanguageDefinition = {
   supportedExtensions: ["rs"],

@@ -1,11 +1,11 @@
 import {
   extractTreeSitterNodes,
   loadTreeSitterParser,
-  resolveTreeSitterWasm,
+  resolveVendoredWasm,
 } from "../tree-sitter.js";
 import type { LanguageDefinition } from "./index.js";
 
-const wasmPath = resolveTreeSitterWasm("tree-sitter-javascript", "tree-sitter-javascript.wasm");
+const wasmPath = resolveVendoredWasm("tree-sitter-javascript.wasm");
 
 export const javascript: LanguageDefinition = {
   supportedExtensions: ["js", "jsx", "mjs", "cjs"],

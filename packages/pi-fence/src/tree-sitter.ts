@@ -1,19 +1,13 @@
 import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Language, Parser, type Node as SyntaxNode } from "web-tree-sitter";
 import type { CommentNode } from "./types.js";
 
-const _require = createRequire(import.meta.url);
+const vendorDir = join(dirname(fileURLToPath(import.meta.url)), "../vendor");
 
-/**
- * Resolve the absolute path to a tree-sitter grammar's .wasm file by locating
- * the package's package.json and joining the filename.  More robust than
- * require.resolve() on non-JS files across all Node versions.
- */
-export function resolveTreeSitterWasm(packageName: string, wasmFile: string): string {
-  const pkgJson = _require.resolve(`${packageName}/package.json`);
-  return join(dirname(pkgJson), wasmFile);
+export function resolveVendoredWasm(filename: string): string {
+  return join(vendorDir, filename);
 }
 
 let runtimeReady: Promise<void> | null = null;
@@ -23,11 +17,7 @@ function ensureTreeSitterRuntimeInitialized(): Promise<void> {
     return runtimeReady;
   }
   runtimeReady = (async () => {
-    // web-tree-sitter blocks './package.json' in exports, so resolve the
-    // main JS entry and derive the WASM path from its directory.
-    const jsPath = _require.resolve("web-tree-sitter");
-    const wasmPath = join(dirname(jsPath), "web-tree-sitter.wasm");
-    const wasmBinary = await readFile(wasmPath);
+    const wasmBinary = await readFile(join(vendorDir, "web-tree-sitter.wasm"));
     await Parser.init({ wasmBinary });
   })();
   return runtimeReady;

@@ -1,12 +1,12 @@
 import {
   extractTreeSitterNodes,
   loadTreeSitterParser,
-  resolveTreeSitterWasm,
+  resolveVendoredWasm,
 } from "../tree-sitter.js";
 import type { LanguageDefinition } from "./index.js";
 
-const tsWasmPath = resolveTreeSitterWasm("tree-sitter-typescript", "tree-sitter-typescript.wasm");
-const tsxWasmPath = resolveTreeSitterWasm("tree-sitter-typescript", "tree-sitter-tsx.wasm");
+const tsWasmPath = resolveVendoredWasm("tree-sitter-typescript.wasm");
+const tsxWasmPath = resolveVendoredWasm("tree-sitter-tsx.wasm");
 
 export const typescript: LanguageDefinition = {
   supportedExtensions: ["ts", "cts", "mts"],

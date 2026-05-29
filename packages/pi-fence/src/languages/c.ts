@@ -1,11 +1,11 @@
 import {
   extractTreeSitterNodes,
   loadTreeSitterParser,
-  resolveTreeSitterWasm,
+  resolveVendoredWasm,
 } from "../tree-sitter.js";
 import type { LanguageDefinition } from "./index.js";
 
-const wasmPath = resolveTreeSitterWasm("tree-sitter-c", "tree-sitter-c.wasm");
+const wasmPath = resolveVendoredWasm("tree-sitter-c.wasm");
 
 export const c: LanguageDefinition = {
   supportedExtensions: ["c", "h"],
