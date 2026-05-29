@@ -1,11 +1,11 @@
 import {
   extractTreeSitterNodes,
   loadTreeSitterParser,
-  resolveTreeSitterWasm,
+  resolveVendoredWasm,
 } from "../tree-sitter.js";
 import type { LanguageDefinition } from "./index.js";
 
-const wasmPath = resolveTreeSitterWasm("tree-sitter-css", "tree-sitter-css.wasm");
+const wasmPath = resolveVendoredWasm("tree-sitter-css.wasm");
 
 export const css: LanguageDefinition = {
   supportedExtensions: ["css"],

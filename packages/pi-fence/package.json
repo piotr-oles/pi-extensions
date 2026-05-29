@@ -14,7 +14,8 @@
   "files": [
     "src",
     "!src/tests",
-    "media"
+    "media",
+    "vendor"
   ],
   "publishConfig": {
     "access": "public"
@@ -34,17 +35,7 @@
     "fix": "biome check --write src/"
   },
   "dependencies": {
-    "web-tree-sitter": "^0.26.9",
-    "tree-sitter-javascript": "^0.23.1",
-    "tree-sitter-typescript": "^0.23.2",
-    "tree-sitter-python": "^0.25.0",
-    "tree-sitter-go": "^0.25.0",
-    "tree-sitter-rust": "^0.24.0",
-    "tree-sitter-ruby": "^0.23.1",
-    "tree-sitter-java": "^0.23.5",
-    "tree-sitter-bash": "^0.25.1",
-    "tree-sitter-c": "^0.24.1",
-    "tree-sitter-css": "^0.25.0"
+    "web-tree-sitter": "^0.26.9"
   },
   "peerDependencies": {
     "@earendil-works/pi-agent-core": "*",

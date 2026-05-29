@@ -1,11 +1,11 @@
 import {
   extractTreeSitterNodes,
   loadTreeSitterParser,
-  resolveTreeSitterWasm,
+  resolveVendoredWasm,
 } from "../tree-sitter.js";
 import type { LanguageDefinition } from "./index.js";
 
-const wasmPath = resolveTreeSitterWasm("tree-sitter-go", "tree-sitter-go.wasm");
+const wasmPath = resolveVendoredWasm("tree-sitter-go.wasm");
 
 export const go: LanguageDefinition = {
   supportedExtensions: ["go"],

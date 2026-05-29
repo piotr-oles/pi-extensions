@@ -1,11 +1,11 @@
 import {
   extractTreeSitterNodes,
   loadTreeSitterParser,
-  resolveTreeSitterWasm,
+  resolveVendoredWasm,
 } from "../tree-sitter.js";
 import type { LanguageDefinition } from "./index.js";
 
-const wasmPath = resolveTreeSitterWasm("tree-sitter-ruby", "tree-sitter-ruby.wasm");
+const wasmPath = resolveVendoredWasm("tree-sitter-ruby.wasm");
 
 export const ruby: LanguageDefinition = {
   supportedExtensions: ["rb"],
