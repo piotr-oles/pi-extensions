@@ -1,5 +1,11 @@
 # pi-fence
 
+## 0.2.1
+
+### Patch Changes
+
+- 1b3faeb: vendor in tree-sitter wasm binaries to remove postinstall issues
+
 ## 0.2.0
 
 ### Minor Changes
