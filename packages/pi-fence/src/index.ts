@@ -7,7 +7,7 @@ import {
   isWriteToolResult,
 } from "@earendil-works/pi-coding-agent";
 import { applyEdits } from "./edit.js";
-import { getFenceComments, removeFenceComments } from "./fence.js";
+import { getFenceComments, hasFenceCandidate, removeFenceComments } from "./fence.js";
 import { getLanguageDefinition } from "./languages/index.js";
 import { buildBlockReason, buildRemoveText, buildWarnText } from "./messages.js";
 import { getMode } from "./mode.js";
@@ -48,7 +48,7 @@ export default function piFence(pi: ExtensionAPI) {
     if (isToolCallEventType("write", event)) {
       const { path, content: newContent } = event.input;
       const def = getLanguageDefinition(path);
-      if (!def) {
+      if (!def || !hasFenceCandidate(newContent)) {
         return undefined;
       }
       const fences = await getFenceComments(newContent, def, signal);
@@ -71,7 +71,7 @@ export default function piFence(pi: ExtensionAPI) {
     if (isToolCallEventType("edit", event)) {
       const { path, edits } = event.input;
       const def = getLanguageDefinition(path);
-      if (!def) {
+      if (!def || !edits.some((e) => hasFenceCandidate(e.newText))) {
         return undefined;
       }
 
@@ -118,7 +118,9 @@ export default function piFence(pi: ExtensionAPI) {
           if (signal?.aborted) {
             return undefined;
           }
-          perEditFences[i] = await getFenceComments(edits[i].newText, def, signal);
+          if (hasFenceCandidate(edits[i].newText)) {
+            perEditFences[i] = await getFenceComments(edits[i].newText, def, signal);
+          }
         }
       }
 

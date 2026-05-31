@@ -1,11 +1,64 @@
 import { describe, expect, it } from "vitest";
-import { isFenceComment, removeFenceComments, stripMarkers } from "./fence.js";
+import { hasFenceCandidate, isFenceComment, removeFenceComments, stripMarkers } from "./fence.js";
 import type { CommentNode } from "./types.js";
 
 // Helper: build a minimal CommentNode from a single-line comment string.
 function node(text: string, startLine: number, startCol = 0): CommentNode {
   return { text, startLine, startCol, endLine: startLine, endCol: startCol + text.length };
 }
+
+describe("hasFenceCandidate", () => {
+  it("returns false for empty string", () => {
+    expect(hasFenceCandidate("")).toBe(false);
+  });
+
+  it("returns false for plain prose", () => {
+    expect(hasFenceCandidate("const x = hello + world;")).toBe(false);
+  });
+
+  it("returns false for single-dash words", () => {
+    expect(hasFenceCandidate("some-value or off-by-one")).toBe(false);
+  });
+
+  it("returns false for a URL with hyphens", () => {
+    expect(hasFenceCandidate("// https://example.com/some-path")).toBe(false);
+  });
+
+  it("returns false for two consecutive separator chars (below threshold)", () => {
+    expect(hasFenceCandidate("// ==")).toBe(false);
+  });
+
+  it("returns true for a line with a fence sequence", () => {
+    expect(hasFenceCandidate("// ---- section ----")).toBe(true);
+  });
+
+  it("returns true for === alone", () => {
+    expect(hasFenceCandidate("===")).toBe(true);
+  });
+
+  it("returns true for hash fence", () => {
+    expect(hasFenceCandidate("# ################")).toBe(true);
+  });
+
+  it("returns true for Unicode box-drawing sequence", () => {
+    expect(hasFenceCandidate("// ─────────────────────")).toBe(true);
+  });
+
+  it("returns true when fence sequence is buried in a large file", () => {
+    const content = "const a = 1;\nconst b = 2;\n// ---- helpers ----\nconst c = 3;\n";
+    expect(hasFenceCandidate(content)).toBe(true);
+  });
+
+  it("returns false for a large file with no fence sequences", () => {
+    const content = "const a = 1;\n// TODO: fix\nconst b = 2;\n".repeat(100);
+    expect(hasFenceCandidate(content)).toBe(false);
+  });
+
+  it("returns true even when fence sequence is inside a string literal (over-approximation)", () => {
+    // The full parser would correctly reject this; hasFenceCandidate is intentionally conservative.
+    expect(hasFenceCandidate('const s = "---- not a comment ----";')).toBe(true);
+  });
+});
 
 describe("stripMarkers", () => {
   it("strips // prefix", () => {
