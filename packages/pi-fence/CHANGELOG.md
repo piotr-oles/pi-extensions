@@ -1,5 +1,11 @@
 # pi-fence
 
+## 0.2.2
+
+### Patch Changes
+
+- f1ca56b: improve performance by running parsing path only when fence comment was detected with regexp
+
 ## 0.2.1
 
 ### Patch Changes
