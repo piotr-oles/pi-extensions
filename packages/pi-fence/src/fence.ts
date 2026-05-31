@@ -53,6 +53,17 @@ export function stripMarkers(raw: string): string {
 }
 
 /**
+ * Fast pre-check: returns true when `text` contains any sequence of 3+
+ * separator characters, meaning it *could* contain a fence comment.
+ * Apply this directly to raw (un-stripped) text before running tree-sitter.
+ * A false return guarantees no fence comments exist; a true return requires
+ * the full parser pass to confirm.
+ */
+export function hasFenceCandidate(text: string): boolean {
+  return FENCE_SEQUENCE_RE.test(text);
+}
+
+/**
  * Returns true if the raw comment text is a decorative fence/divider comment.
  * The rawText should be the full text of the comment node as returned by tree-sitter
  * (including comment markers like `//`, `#`, `/* ... * /`).
