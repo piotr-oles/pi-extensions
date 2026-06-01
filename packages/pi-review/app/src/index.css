@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import "highlight.js/styles/github.css" layer(base);
+@import "highlight.js/styles/github-dark.css" layer(base) (prefers-color-scheme: dark);
+
+@plugin "@tailwindcss/typography";
+
+:root {
+  --selection-color: rgba(59, 130, 246, 0.25);
+  --highlight-color: rgba(253, 224, 71, 0.4);
+  --highlight-active: rgba(253, 224, 71, 0.65);
+}

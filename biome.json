@@ -27,6 +27,11 @@
 			"semicolons": "always"
 		}
 	},
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		}
+	},
 	"assist": {
 		"enabled": true,
 		"actions": {
@@ -37,7 +42,11 @@
 	},
 	"overrides": [
 		{
-			"includes": ["packages/*/src/**/*.test.ts"],
+			"includes": [
+			"packages/*/src/**/*.test.ts",
+			"packages/*/app/src/**/*.test.ts",
+			"packages/*/app/src/**/*.test.tsx"
+		],
 			"linter": {
 				"rules": {
 					"suspicious": {
