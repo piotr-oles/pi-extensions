@@ -15,7 +15,7 @@ export default function piCaveman(pi: ExtensionAPI) {
   pi.on("session_start", async (_event, ctx) => {
     const level = getLevel(pi);
     if (level !== "off") {
-      ctx.ui.setStatus("pi-caveman", `🪨 ${level}`);
+      ctx.ui.notify(`Caveman mode: ${ctx.ui.theme.bold(level)}`, "info");
     }
   });
 
