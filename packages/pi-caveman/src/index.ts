@@ -12,6 +12,13 @@ const instructions = {
 };
 
 export default function piCaveman(pi: ExtensionAPI) {
+  pi.on("session_start", async (_event, ctx) => {
+    const level = getLevel(pi);
+    if (level !== "off") {
+      ctx.ui.setStatus("pi-caveman", `🪨 ${level}`);
+    }
+  });
+
   pi.registerFlag("pi-caveman", {
     type: "string",
     description: "Caveman mode level: lite, full (default), or ultra. Set to off to disable.",
