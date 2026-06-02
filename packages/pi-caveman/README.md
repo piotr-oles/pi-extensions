@@ -12,23 +12,24 @@ pi install npm:pi-caveman
 
 ## Usage
 
-Toggle caveman mode with the `/caveman` command or by typing a trigger phrase:
+Control via the `--pi-caveman` CLI flag (takes precedence) or the `PI_CAVEMAN` environment variable:
 
+```bash
+pi --pi-caveman full     # default: drop articles, fragments ok
+pi --pi-caveman lite     # drop filler, keep grammar (professional)
+pi --pi-caveman ultra    # maximum compression, telegraphic
+pi --pi-caveman off      # disable
+
+PI_CAVEMAN=full pi       # same, via env variable
 ```
-/caveman          — toggle on/off (default: full)
-/caveman lite     — drop filler, keep grammar
-/caveman full     — drop articles, fragments ok
-/caveman ultra    — maximum compression, telegraphic
-/caveman off      — disable
+
+Default level when flag is not set: **full**.
+
+For always-on behavior, add to your shell profile:
+
+```bash
+export PI_CAVEMAN=full
 ```
-
-Trigger phrases also activate caveman mode automatically:
-
-> "use caveman mode", "talk like caveman", "less tokens", "be brief", "fewer tokens"
-
-To deactivate:
-
-> "stop caveman", "normal mode"
 
 ## Levels
 
@@ -40,7 +41,7 @@ To deactivate:
 
 ## How it works
 
-On each conversation turn, injects the level's instruction file into the system prompt. Instructions are imperative directives telling the agent exactly how to respond.
+Injects the level's instruction file into the system prompt at session start. Instructions are imperative directives telling the agent exactly how to respond. Level is immutable for the entire session.
 
 Code blocks, error messages, and technical terms are always written normally regardless of level.
 
