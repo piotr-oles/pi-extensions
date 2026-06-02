@@ -1,5 +1,5 @@
 {
-  "name": "pi-fence",
+  "name": "@oles/pi-fence",
   "version": "0.2.2",
   "description": "Pi Agent extension: block or warn on fence/divider comments in written code",
   "repository": {
