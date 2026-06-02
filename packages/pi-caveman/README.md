@@ -7,7 +7,7 @@ Inspired by [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman).
 ## Install
 
 ```bash
-pi install npm:pi-caveman
+pi install npm:@oles/pi-caveman
 ```
 
 ## Usage
@@ -25,12 +25,6 @@ PI_CAVEMAN=full pi       # same, via env variable
 
 Default level when flag is not set: **full**.
 
-For always-on behavior, add to your shell profile:
-
-```bash
-export PI_CAVEMAN=full
-```
-
 ## Levels
 
 | Level | Behavior | Example |
@@ -44,6 +38,8 @@ export PI_CAVEMAN=full
 Injects the level's instruction file into the system prompt at session start. Instructions are imperative directives telling the agent exactly how to respond. Level is immutable for the entire session.
 
 Code blocks, error messages, and technical terms are always written normally regardless of level.
+
+This extension is very lite on context - adds only a few lines of text to the system prompt.
 
 ## Development
 
