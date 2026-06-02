@@ -7,7 +7,7 @@ Inspired by [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman).
 ## Install
 
 ```bash
-pi install npm:@oles/pi-caveman
+pi install npm:@piotr-oles/pi-caveman
 ```
 
 ## Usage

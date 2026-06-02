@@ -40,7 +40,7 @@ Files with other extensions are passed through without inspection.
 ## Install
 
 ```bash
-pi install npm:pi-fence
+pi install npm:@piotr-oles/pi-fence
 ```
 
 ## Modes
