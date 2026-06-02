@@ -15,6 +15,24 @@ importers:
         specifier: ^2.31.0
         version: 2.31.0(@types/node@25.9.1)
 
+  packages/pi-caveman:
+    devDependencies:
+      '@earendil-works/pi-agent-core':
+        specifier: ^0.75.5
+        version: 0.75.5(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-coding-agent':
+        specifier: ^0.75.5
+        version: 0.75.5(ws@8.21.0)(zod@4.4.3)
+      '@marcfargas/pi-test-harness':
+        specifier: ^0.6.1
+        version: 0.6.1(@earendil-works/pi-agent-core@0.75.5(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.75.5(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.75.5(ws@8.21.0)(zod@4.4.3))
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.1
+        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
+
   packages/pi-fence:
     dependencies:
       web-tree-sitter:
