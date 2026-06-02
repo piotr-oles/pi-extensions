@@ -1,5 +1,5 @@
 {
-  "name": "@oles/pi-caveman",
+  "name": "@piotr-oles/pi-caveman",
   "version": "0.2.0",
   "description": "Pi Agent extension: respond in caveman mode — cut ~75% output tokens while keeping full technical accuracy",
   "repository": {
