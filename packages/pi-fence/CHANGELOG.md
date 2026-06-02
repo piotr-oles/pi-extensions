@@ -1,5 +1,11 @@
 # pi-fence
 
+## 0.1.0
+
+### Minor Changes
+
+- e88181e: initial release
+
 ## 0.3.0
 
 ### Minor Changes
