@@ -1,11 +1,11 @@
 {
-  "name": "@piotr-oles/pi-fence",
-  "version": "0.1.0",
-  "description": "Pi Agent extension: block or warn on fence/divider comments in written code",
+  "name": "@piotr-oles/pi-plan",
+  "version": "0.0.0",
+  "description": "Pi Agent extension: save named markdown plans to disk, open in Zed, and ask user to confirm before executing",
   "repository": {
     "type": "git",
     "url": "https://github.com/piotr-oles/pi-extensions.git",
-    "directory": "packages/pi-fence"
+    "directory": "packages/pi-plan"
   },
   "keywords": [
     "pi-package"
@@ -13,9 +13,7 @@
   "type": "module",
   "files": [
     "src",
-    "!src/*.test.ts",
-    "media",
-    "vendor"
+    "!src/*.test.ts"
   ],
   "publishConfig": {
     "access": "public"
@@ -23,29 +21,30 @@
   "pi": {
     "extensions": [
       "./src/index.ts"
-    ],
-    "image": "https://raw.githubusercontent.com/piotr-oles/pi-extensions/main/packages/pi-fence/media/screenshot.jpeg"
+    ]
   },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "check": "biome ci src/",
     "fix": "biome check --write src/"
   },
-  "dependencies": {
-    "web-tree-sitter": "^0.26.9"
-  },
   "peerDependencies": {
     "@earendil-works/pi-agent-core": "*",
-    "@earendil-works/pi-coding-agent": "*"
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
   },
   "devDependencies": {
     "@earendil-works/pi-agent-core": "^0.75.5",
     "@earendil-works/pi-coding-agent": "^0.75.5",
+    "@earendil-works/pi-tui": "^0.75.5",
     "@marcfargas/pi-test-harness": "^0.6.1",
+    "typebox": "^1.1.38",
     "typescript": "^5.8.3",
     "vitest": "^3.2.1"
+  },
+  "dependencies": {
+    "fast-myers-diff": "^3.2.0"
   }
 }

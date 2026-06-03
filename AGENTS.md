@@ -17,6 +17,12 @@ Hooks into pi's `tool_call` / `tool_result` events to detect decorative fence/di
 
 Uses [tree-sitter](https://tree-sitter.github.io/) to parse comment nodes. Supports JS/TS, Python, Go, and Rust.
 
+### `pi-caveman` (`packages/pi-caveman`)
+Makes the agent respond in caveman mode — cuts ~75% of output tokens while keeping full technical accuracy. Injects a level-specific instruction file into the system prompt at session start. Level is controlled by the `pi-caveman` flag (`lite`, `full`, `ultra`, or `off`; default: `full`).
+
+### `pi-plan` (`packages/pi-plan`)
+Adds a `review-plan` tool that writes a named markdown plan to `~/.pi/plan/<repo>/<name>.md`, opens it in Zed, commits it to a git repo inside `~/.pi/plan/`, and shows an interactive terminal widget so the user can confirm, request changes, or reply freely before the agent proceeds.
+
 ### `pi-sem` (`packages/pi-sem`) — private
 Wraps the [`sem`](https://github.com/piotr-oles/sem) CLI as four pi tools: `sem_context`, `sem_entities`, `sem_impact`, `sem_diff`. Gives the model semantic understanding of code structure without reading entire files.
 
@@ -27,7 +33,7 @@ Wraps the [`sem`](https://github.com/piotr-oles/sem) CLI as four pi tools: `sem_
 - **Package manager**: pnpm 10 with workspaces
 - **Linter/formatter**: Biome
 - **Tests**: Vitest
-- **Releases**: Changesets (only `pi-fence` is published; `pi-sem` is private)
+- **Releases**: Changesets (`pi-fence`, `pi-caveman`, and `pi-plan` are published; `pi-sem` is private)
 
 ## Development commands
 
@@ -75,14 +81,16 @@ This is what pi loads from the `"pi": { "extensions": [...] }` field in `package
 
 ## Testing approach
 
-Tests live in `src/tests/` inside each package. Vitest is the test runner.
+Tests live in `src/` (or `src/tests/` for `pi-sem`) inside each package. Vitest is the test runner.
+
+`pi-fence` uses the [`@marcfargas/pi-test-harness`](https://www.npmjs.com/package/@marcfargas/pi-test-harness) package to simulate pi events against the extension.
+
+`pi-caveman` uses simple unit tests that verify instruction files load correctly and contain the expected directives.
 
 `pi-sem` uses three layers:
 - **Unit** — tool logic with `exec` mocked via `vi.fn()`
 - **Integration** — real pi runtime + mocked `sem` subprocess
 - **Smoke** — `npm pack` → install → load in real pi
-
-`pi-fence` uses the [`@marcfargas/pi-test-harness`](https://www.npmjs.com/package/@marcfargas/pi-test-harness) package to simulate pi events against the extension.
 
 ## Adding a new package
 
