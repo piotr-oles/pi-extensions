@@ -1,6 +1,6 @@
 {
   "name": "@piotr-oles/pi-plan",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pi Agent extension: save named markdown plans to disk, open in Zed, and ask user to confirm before executing",
   "repository": {
     "type": "git",
