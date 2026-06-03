@@ -10,12 +10,10 @@ import { toTildePath } from "./utils.js";
 
 type ExecFn = ExtensionAPI["exec"];
 
-const ReviewPlanParams = Type.Object({
-  planPath: Type.String({
-    description:
-      "Path to the plan file relative to ~/.pi/plan/ (e.g. 'my-repo/auth-refactor.md'). " +
-      "Write the file first via the write tool, then call review-plan.",
-  }),
+const ReviewPlanParams = Type.String({
+  description:
+    "Path to the plan file relative to ~/.pi/plan/ (e.g. 'my-repo/auth-refactor.md'). " +
+    "Write the file first via the write tool, then call review-plan.",
 });
 
 export type PlanReviewToolDetails =
@@ -40,7 +38,7 @@ export function createReviewPlanTool(
     ],
     parameters: ReviewPlanParams,
 
-    async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+    async execute(_toolCallId, relativePlanPath, _signal, _onUpdate, ctx) {
       if (!ctx.hasUI) {
         return {
           content: [{ type: "text", text: "Error: UI not available in non-interactive mode." }],
@@ -48,11 +46,10 @@ export function createReviewPlanTool(
         };
       }
 
-      const planPath = join(plansDir, params.planPath);
+      const planPath = join(plansDir, relativePlanPath);
       const planName = basename(planPath);
-      const relPath = params.planPath;
       await ensureGitRepo(exec, plansDir);
-      await commitFile(exec, plansDir, relPath, `create: ${planName}`);
+      await commitFile(exec, plansDir, relativePlanPath, `create: ${planName}`);
 
       ctx.ui.setWorkingVisible(false);
 
@@ -81,8 +78,8 @@ export function createReviewPlanTool(
       }
 
       if (result.type === "approve") {
-        const confirmed = await commitFile(exec, plansDir, relPath, `approve: ${planName}`);
-        const diff = confirmed ? await computeGitDiff(exec, plansDir, relPath) : "";
+        const confirmed = await commitFile(exec, plansDir, relativePlanPath, `approve: ${planName}`);
+        const diff = confirmed ? await computeGitDiff(exec, plansDir, relativePlanPath) : "";
 
         if (diff !== "") {
           return {
@@ -111,8 +108,8 @@ export function createReviewPlanTool(
       }
 
       if (result.type === "request-changes") {
-        const changed = await commitFile(exec, plansDir, relPath, `request-changes: ${planName}`);
-        const diff = changed ? await computeGitDiff(exec, plansDir, relPath) : "";
+        const changed = await commitFile(exec, plansDir, relativePlanPath, `request-changes: ${planName}`);
+        const diff = changed ? await computeGitDiff(exec, plansDir, relativePlanPath) : "";
 
         if (diff !== "") {
           return {
@@ -148,8 +145,8 @@ export function createReviewPlanTool(
       };
     },
 
-    renderCall(args, theme): Component {
-      return new PlanReviewCall(theme, plansDir, args.planPath);
+    renderCall(relativePlanPath, theme): Component {
+      return new PlanReviewCall(theme, plansDir, relativePlanPath);
     },
 
     renderResult(result, _options, theme): Component {

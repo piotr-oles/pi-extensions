@@ -59,7 +59,7 @@ describe("createReviewPlanTool - no UI", () => {
 
     const result = await tool.execute(
       "id",
-      { planPath: "repo/plan.md" },
+      "repo/plan.md",
       AbortSignal.timeout(5000),
       undefined,
       ctx as any,
@@ -90,7 +90,7 @@ describe("createReviewPlanTool - execute with UI", () => {
 
     const result = await tool.execute(
       "id",
-      { planPath: "my-repo/plan.md" },
+      "my-repo/plan.md",
       AbortSignal.timeout(5000),
       undefined,
       ctx as any,
@@ -106,7 +106,7 @@ describe("createReviewPlanTool - execute with UI", () => {
 
     const result = await tool.execute(
       "id",
-      { planPath: "my-repo/plan.md" },
+      "my-repo/plan.md",
       AbortSignal.timeout(5000),
       undefined,
       ctx as any,
@@ -122,7 +122,7 @@ describe("createReviewPlanTool - execute with UI", () => {
 
     const result = await tool.execute(
       "id",
-      { planPath: "my-repo/plan.md" },
+      "my-repo/plan.md",
       AbortSignal.timeout(5000),
       undefined,
       ctx as any,
@@ -139,7 +139,7 @@ describe("createReviewPlanTool - execute with UI", () => {
 
     const result = await tool.execute(
       "id",
-      { planPath: "my-repo/plan.md" },
+      "my-repo/plan.md",
       AbortSignal.timeout(5000),
       undefined,
       ctx as any,
@@ -163,7 +163,7 @@ describe("createReviewPlanTool - execute with UI", () => {
     const tool = createReviewPlanTool(testExec, plansDir);
     const result = await tool.execute(
       "id",
-      { planPath: "my-repo/plan.md" },
+      "my-repo/plan.md",
       AbortSignal.timeout(5000),
       undefined,
       ctx as any,
@@ -188,7 +188,7 @@ describe("createReviewPlanTool - execute with UI", () => {
     const tool = createReviewPlanTool(testExec, plansDir);
     const result = await tool.execute(
       "id",
-      { planPath: "my-repo/plan.md" },
+      "my-repo/plan.md",
       AbortSignal.timeout(5000),
       undefined,
       ctx as any,
@@ -207,7 +207,7 @@ describe("createReviewPlanTool - execute with UI", () => {
 
     const result = await tool.execute(
       "id",
-      { planPath: "my-repo/plan.md" },
+      "my-repo/plan.md",
       AbortSignal.timeout(5000),
       undefined,
       ctx as any,
@@ -225,7 +225,7 @@ describe("createReviewPlanTool - execute with UI", () => {
 
     await tool.execute(
       "id",
-      { planPath: "my-repo/plan.md" },
+      "my-repo/plan.md",
       AbortSignal.timeout(5000),
       undefined,
       ctx as any,
@@ -247,7 +247,7 @@ describe("createReviewPlanTool - execute with UI", () => {
 
     await tool.execute(
       "id",
-      { planPath: "my-repo/plan.md" },
+      "my-repo/plan.md",
       AbortSignal.timeout(5000),
       undefined,
       ctx as any,
