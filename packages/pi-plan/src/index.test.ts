@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import piPlan from "./index.js";
 
 describe("piPlan extension", () => {
-  it("registers the review-plan tool", () => {
+  it("registers the review_plan tool", () => {
     const registerTool = vi.fn();
     const pi = { registerTool, exec: vi.fn() };
 
@@ -10,7 +10,7 @@ describe("piPlan extension", () => {
 
     expect(registerTool).toHaveBeenCalledOnce();
     const [tool] = registerTool.mock.calls[0];
-    expect(tool.name).toBe("review-plan");
+    expect(tool.name).toBe("review_plan");
   });
 
   it("binds exec to pi instance", () => {

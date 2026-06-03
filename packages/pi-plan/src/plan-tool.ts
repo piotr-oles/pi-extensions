@@ -14,7 +14,7 @@ const ReviewPlanParams = Type.Object({
   planPath: Type.String({
     description:
       "Path to the plan file relative to ~/.pi/plan/ (e.g. 'my-repo/auth-refactor.md'). " +
-      "Write the file first via the write tool, then call review-plan.",
+      "Write the file first via the write tool, then call review_plan.",
   }),
 });
 
@@ -31,12 +31,12 @@ export function createReviewPlanTool(
   plansDir = PLANS_DIR,
 ): ToolDefinition<typeof ReviewPlanParams, PlanReviewToolDetails> {
   return {
-    name: "review-plan",
+    name: "review_plan",
     label: "Review Plan",
     description:
       "Open an existing plan file for user review. Write the file first, then call this tool.",
     promptGuidelines: [
-      "Write the plan file to ~/.pi/plan/<repo>/<name>.md first, then call review-plan with the relative path.",
+      "For planning, write the plan file to ~/.pi/plan/<repo>/<name>.md first, then call review_plan with the <repo>/<name>.md path. Never execute plan without explicit approval.",
     ],
     parameters: ReviewPlanParams,
 
@@ -122,7 +122,7 @@ export function createReviewPlanTool(
                 text:
                   `User edited the "${planName}" plan:\n\n${diff}\n\n` +
                   "The changes mentioned above has been already saved in the plan file.\n" +
-                  "Address user comments, fixup the plan, then call review-plan again.",
+                  "Address user comments, fixup the plan, then call review_plan again.",
               },
             ],
             details: { result: "request-changes", planPath, diff },
@@ -207,7 +207,7 @@ class PlanReviewResult implements Component {
       }
       case "question": {
         this.container.addChild(
-          new Text(theme.fg("accent", `Question: ${details.message ?? ""}`), 0, 0),
+          new Text(theme.fg("accent", `Question: `) + `${details.message ?? ""}`, 0, 0),
         );
         break;
       }

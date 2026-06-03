@@ -198,7 +198,7 @@ describe("createReviewPlanTool - execute with UI", () => {
     expect((result.details as any).diff).not.toBe("");
     expect((result.details as any).diff).toMatch(/\+.*NEEDS CHANGE/);
     expect(textContent(result)).toContain("Address user comments");
-    expect(textContent(result)).toContain("call review-plan again");
+    expect(textContent(result)).toContain("call review_plan again");
   });
 
   it("returns request-changes with empty diff when user requests changes without editing", async () => {
