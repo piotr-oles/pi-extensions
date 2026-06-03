@@ -55,6 +55,34 @@ importers:
         specifier: ^3.2.1
         version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
 
+  packages/pi-plan:
+    dependencies:
+      fast-myers-diff:
+        specifier: ^3.2.0
+        version: 3.2.0
+    devDependencies:
+      '@earendil-works/pi-agent-core':
+        specifier: ^0.75.5
+        version: 0.75.5(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-coding-agent':
+        specifier: ^0.75.5
+        version: 0.75.5(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-tui':
+        specifier: ^0.75.5
+        version: 0.75.5
+      '@marcfargas/pi-test-harness':
+        specifier: ^0.6.1
+        version: 0.6.1(@earendil-works/pi-agent-core@0.75.5(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.75.5(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.75.5(ws@8.21.0)(zod@4.4.3))
+      typebox:
+        specifier: ^1.1.38
+        version: 1.1.38
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.1
+        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
+
   packages/pi-sem:
     devDependencies:
       '@earendil-works/pi-agent-core':
@@ -1000,6 +1028,9 @@ packages:
   fast-glob@3.3.3:
     resolution: {integrity: sha512-7MptL8U0cqcFdzIzwOTHoilX9x5BrNqye7Z/LuC7kCMRio1EMSyqRK3BEAUD7sXRq4iT4AzTVuZdhgQ2TCvYLg==}
     engines: {node: '>=8.6.0'}
+
+  fast-myers-diff@3.2.0:
+    resolution: {integrity: sha512-DxNm4a3gnV35AluvqjeAV3Zx3CAySs0tsaDjnex5JhnJAa2rxEUVCwmaL2gpz42ea1B+IJorlo7XLThXUaTQog==}
 
   fast-xml-builder@1.2.0:
     resolution: {integrity: sha512-00aAWieqff+ZJhsXA4g1g7M8k+7AYoMUUHF+/zFb5U6Uv/P0Vl4QZo84/IcufzYalLuEj9928bXN9PbbFzMF0Q==}
@@ -2616,6 +2647,8 @@ snapshots:
       glob-parent: 5.1.2
       merge2: 1.4.1
       micromatch: 4.0.8
+
+  fast-myers-diff@3.2.0: {}
 
   fast-xml-builder@1.2.0:
     dependencies:
