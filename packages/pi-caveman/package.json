@@ -13,7 +13,7 @@
   "type": "module",
   "files": [
     "src",
-    "!src/tests",
+    "!src/*.test.ts",
     "instructions"
   ],
   "publishConfig": {
