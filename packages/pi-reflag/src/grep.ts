@@ -71,9 +71,10 @@ const LONG_TO_SHORT: ReadonlyMap<string, string | null> = new Map([
   ["--recursive", null],
 ]);
 
-export function translateGrepArgs(args: string[]): string[] {
+export function translateGrepArgs(args: string[]): { args: string[]; unknownFlags: string[] } {
   const fixedStrings = hasFixedStringsFlag(args);
   const result: string[] = [];
+  const unknownFlags: string[] = [];
   let i = 0;
   let patternSeen = false;
 
@@ -135,6 +136,11 @@ export function translateGrepArgs(args: string[]): string[] {
     }
 
     if (arg.startsWith("--")) {
+      if (arg === "--") {
+        result.push(arg);
+        i++;
+        continue;
+      }
       if (DROP_LONG.has(arg)) {
         i++;
         continue;
@@ -147,7 +153,12 @@ export function translateGrepArgs(args: string[]): string[] {
         i++;
         continue;
       }
-      result.push(arg);
+      if (PASSTHROUGH_NO_ARG.has(arg)) {
+        result.push(arg);
+        i++;
+        continue;
+      }
+      unknownFlags.push(arg);
       i++;
       continue;
     }
@@ -155,14 +166,10 @@ export function translateGrepArgs(args: string[]): string[] {
     if (arg.startsWith("-") && arg.length > 2 && !/^-\d/.test(arg)) {
       for (const c of arg.slice(1)) {
         const flag = `-${c}`;
-        if (DROP_SHORT.has(flag)) {
-          continue;
-        }
-        if (flag === "-s") {
-          result.push("--no-messages");
-          continue;
-        }
-        result.push(flag);
+        if (DROP_SHORT.has(flag)) continue;
+        if (flag === "-s") { result.push("--no-messages"); continue; }
+        if (PASSTHROUGH_NO_ARG.has(flag)) { result.push(flag); continue; }
+        unknownFlags.push(flag);
       }
       i++;
       continue;
@@ -194,6 +201,12 @@ export function translateGrepArgs(args: string[]): string[] {
       continue;
     }
 
+    if (arg.startsWith("-") && arg.length > 1) {
+      unknownFlags.push(arg);
+      i++;
+      continue;
+    }
+
     if (!patternSeen) {
       result.push(fixedStrings ? arg : convertBreToEre(arg));
       patternSeen = true;
@@ -203,5 +216,5 @@ export function translateGrepArgs(args: string[]): string[] {
     i++;
   }
 
-  return result;
+  return { args: result, unknownFlags };
 }

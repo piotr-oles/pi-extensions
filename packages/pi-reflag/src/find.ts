@@ -18,8 +18,9 @@ function translateMins(val: string): string[] {
   return ["--changed-within", `${val}min`];
 }
 
-export function translateFindArgs(args: string[]): string[] {
+export function translateFindArgs(args: string[]): { args: string[]; unknownFlags: string[] } {
   const result: string[] = [];
+  const unknownFlags: string[] = [];
   const paths: string[] = [];
   const globPatterns: string[] = [];
   let regexPattern: string | null = null;
@@ -211,7 +212,10 @@ export function translateFindArgs(args: string[]): string[] {
     if (arg === "-quit") { result.push("-1"); i++; continue; }
     if (arg === "-prune" || arg === "-depth" || arg === "-daystart" || arg === "-delete") { i++; continue; }
 
-    // unknown: skip
+    // unknown expression
+    if (arg.startsWith("-")) {
+      unknownFlags.push(arg);
+    }
     i++;
   }
 
@@ -234,5 +238,5 @@ export function translateFindArgs(args: string[]): string[] {
   result.push(...paths);
   result.push(...execArgs);
 
-  return result;
+  return { args: result, unknownFlags };
 }

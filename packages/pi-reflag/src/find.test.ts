@@ -8,7 +8,11 @@ import { describe, expect, it } from "vitest";
 import { translateFindArgs } from "./find.js";
 
 function t(args: string[]): string[] {
-  return translateFindArgs(args);
+  return translateFindArgs(args).args;
+}
+
+function unknowns(args: string[]): string[] {
+  return translateFindArgs(args).unknownFlags;
 }
 
 describe("hidden files", () => {
@@ -377,6 +381,10 @@ describe("misc flags", () => {
     expect(r).not.toContain("644");
   });
 
+  it("unknown flag not forwarded to output", () => {
+    expect(t([".", "-samefile", "other.txt"])).not.toContain("-samefile");
+  });
+
   it("logical operators (, ), -o, -a dropped", () => {
     const r = t([".", "(", "-name", "*.ts", "-o", "-name", "*.tsx", ")"]);
     expect(r).not.toContain("(");
@@ -433,11 +441,69 @@ describe("combined real-world patterns", () => {
     expect(r).toContain("wc");
   });
 
+  it("find . \\( -name '*.ts' -o -name '*.tsx' \\) -type f (parens + OR)", () => {
+    const r = t([".", "(", "-name", "*.ts", "-o", "-name", "*.tsx", ")", "-type", "f"]);
+    const gIdx = r.indexOf("-g");
+    expect(gIdx).toBeGreaterThan(-1);
+    expect(r[gIdx + 1]).toBe("{*.ts,*.tsx}");
+    expect(r).toContain("-t");
+  });
+
   it("find . -type f -name '*.log' -mtime +7 (old logs)", () => {
     const r = t([".", "-type", "f", "-name", "*.log", "-mtime", "+7"]);
     expect(r).toContain("-t");
     expect(r).toContain("--changed-before");
     expect(r).toContain("7d");
     expect(r).toContain("*.log");
+  });
+});
+
+describe("unknown flags", () => {
+  it("no unknowns for common expressions", () => {
+    expect(unknowns([".", "-name", "*.ts"])).toHaveLength(0);
+    expect(unknowns([".", "-type", "f", "-maxdepth", "2"])).toHaveLength(0);
+    expect(unknowns([".", "-exec", "wc", "{}", ";"])).toHaveLength(0);
+    expect(unknowns([".", "-mtime", "-7", "-size", "+1M"])).toHaveLength(0);
+  });
+
+  it("-samefile reported as unknown", () => {
+    expect(unknowns([".", "-samefile", "other.txt"])).toContain("-samefile");
+  });
+
+  it("-inum reported as unknown", () => {
+    expect(unknowns([".", "-inum", "12345"])).toContain("-inum");
+  });
+
+  it("-links reported as unknown", () => {
+    expect(unknowns([".", "-links", "2"])).toContain("-links");
+  });
+
+  it("-nouser reported as unknown", () => {
+    expect(unknowns([".", "-nouser"])).toContain("-nouser");
+  });
+
+  it("multiple unknowns all reported", () => {
+    const u = unknowns([".", "-samefile", "f", "-inum", "123"]);
+    expect(u).toContain("-samefile");
+    expect(u).toContain("-inum");
+  });
+
+  it("unknown flag not forwarded to translated args", () => {
+    const r = t([".", "-samefile", "other.txt", "-name", "*.ts"]);
+    expect(r).not.toContain("-samefile");
+    expect(r).toContain("*.ts");
+  });
+
+  it("logical operators not flagged as unknown", () => {
+    expect(unknowns([".", "(", "-name", "*.ts", "-o", "-name", "*.tsx", ")"])).toHaveLength(0);
+    expect(unknowns([".", "-name", "*.ts", "-a", "-type", "f"])).toHaveLength(0);
+  });
+
+  it("known-but-dropped expressions not flagged (-print, -prune, -depth)", () => {
+    expect(unknowns([".", "-print"])).toHaveLength(0);
+    expect(unknowns([".", "-prune"])).toHaveLength(0);
+    expect(unknowns([".", "-depth"])).toHaveLength(0);
+    expect(unknowns([".", "-daystart"])).toHaveLength(0);
+    expect(unknowns([".", "-delete"])).toHaveLength(0);
   });
 });

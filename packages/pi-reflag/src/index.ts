@@ -24,7 +24,13 @@ export default function piReflag(pi: ExtensionAPI): void {
     }
 
     const original = event.input.command;
-    const { rewritten, changed } = rewriteCommand(original, { rewriteGrep, rewriteFind });
+    const { rewritten, changed, unknownFlags } = rewriteCommand(original, { rewriteGrep, rewriteFind });
+
+    if (unknownFlags.length > 0) {
+      const flags = unknownFlags.map((f) => `\`${f}\``).join(", ");
+      ctx.ui.notify(`pi-reflag: unknown flag ${flags} — kept original command`, "warning");
+    }
+
     if (!changed) {
       return undefined;
     }

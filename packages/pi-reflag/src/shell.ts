@@ -51,14 +51,18 @@ function rewriteSegment(
   tokens: string[],
   rewriteGrep: boolean,
   rewriteFind: boolean,
-): { tokens: string[]; changed: boolean } {
+): { tokens: string[]; changed: boolean; unknownFlags: string[] } {
   if (rewriteGrep && tokens[0] === "grep") {
-    return { tokens: ["rg", ...translateGrepArgs(tokens.slice(1))], changed: true };
+    const { args, unknownFlags } = translateGrepArgs(tokens.slice(1));
+    if (unknownFlags.length > 0) return { tokens, changed: false, unknownFlags };
+    return { tokens: ["rg", ...args], changed: true, unknownFlags: [] };
   }
   if (rewriteFind && tokens[0] === "find") {
-    return { tokens: ["fd", ...translateFindArgs(tokens.slice(1))], changed: true };
+    const { args, unknownFlags } = translateFindArgs(tokens.slice(1));
+    if (unknownFlags.length > 0) return { tokens, changed: false, unknownFlags };
+    return { tokens: ["fd", ...args], changed: true, unknownFlags: [] };
   }
-  return { tokens, changed: false };
+  return { tokens, changed: false, unknownFlags: [] };
 }
 
 function joinSegments(segments: Segment[]): string {
@@ -75,31 +79,31 @@ function joinSegments(segments: Segment[]): string {
 export function rewriteCommand(
   cmd: string,
   { rewriteGrep = true, rewriteFind = true }: { rewriteGrep?: boolean; rewriteFind?: boolean } = {},
-): { rewritten: string; changed: boolean } {
+): { rewritten: string; changed: boolean; unknownFlags: string[] } {
   let entries: ParseEntry[];
   try {
     entries = parse(cmd);
   } catch {
-    return { rewritten: cmd, changed: false };
+    return { rewritten: cmd, changed: false, unknownFlags: [] };
   }
 
   const segments = splitSegments(entries);
   if (segments === null) {
-    return { rewritten: cmd, changed: false };
+    return { rewritten: cmd, changed: false, unknownFlags: [] };
   }
 
   let anyChanged = false;
+  const allUnknownFlags: string[] = [];
   const rewritten = segments.map((seg) => {
     const result = rewriteSegment(seg.tokens, rewriteGrep, rewriteFind);
-    if (result.changed) {
-      anyChanged = true;
-    }
+    if (result.changed) anyChanged = true;
+    allUnknownFlags.push(...result.unknownFlags);
     return { tokens: result.tokens, trailingOp: seg.trailingOp };
   });
 
   if (!anyChanged) {
-    return { rewritten: cmd, changed: false };
+    return { rewritten: cmd, changed: false, unknownFlags: allUnknownFlags };
   }
 
-  return { rewritten: joinSegments(rewritten), changed: true };
+  return { rewritten: joinSegments(rewritten), changed: true, unknownFlags: allUnknownFlags };
 }
