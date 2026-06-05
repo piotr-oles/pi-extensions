@@ -24,7 +24,12 @@ Makes the agent respond in caveman mode — cuts ~75% of output tokens while kee
 Adds a `review-plan` tool that writes a named markdown plan to `~/.pi/plan/<repo>/<name>.md`, opens it in Zed, commits it to a git repo inside `~/.pi/plan/`, and shows an interactive terminal widget so the user can confirm, request changes, or reply freely before the agent proceeds.
 
 ### `pi-reflag` (`packages/pi-reflag`)
-Intercepts `bash` tool calls and rewrites `grep` commands to `rg` (ripgrep) transparently before execution. Handles flag translation (drops `-r`/`-R`/`-E`, maps long flags, converts `--include`/`--exclude` to `-g` globs, converts BRE patterns to ERE). Skips commands with subshells. Shows a user-visible toast notification on rewrite — agent never sees it. Controlled by the `pi-reflag-grep` flag (`on` by default, set to `off` to disable).
+Intercepts `bash` tool calls and rewrites `grep` → `rg` (ripgrep) and `find` → `fd` transparently before execution. Shows a user-visible toast notification on rewrite — agent never sees it.
+
+- **grep → rg**: drops `-r`/`-R`/`-E`, maps long flags, converts `--include`/`--exclude` to `-g` globs, converts BRE patterns to ERE. Controlled by `pi-reflag-grep` flag (`on` by default).
+- **find → fd**: translates `-name`/`-iname` to `-g` globs (OR patterns become brace expansion), `-type`, `-maxdepth`/`-mindepth`, `-exec`/`-execdir`, `-mtime`/`-size`/`-user`/`-group` and more. Always adds `-H` (fd excludes hidden files by default, find doesn’t). Controlled by `pi-reflag-find` flag (`on` by default).
+
+Skips commands with subshells. Both rewrites are independent — either can be disabled without affecting the other.
 
 ### `pi-sem` (`packages/pi-sem`) — private
 Wraps the [`sem`](https://github.com/piotr-oles/sem) CLI as four pi tools: `sem_context`, `sem_entities`, `sem_impact`, `sem_diff`. Gives the model semantic understanding of code structure without reading entire files.

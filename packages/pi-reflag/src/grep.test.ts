@@ -8,7 +8,11 @@ import { describe, expect, it } from "vitest";
 import { translateGrepArgs } from "./grep.js";
 
 function t(args: string[]): string[] {
-  return translateGrepArgs(args);
+  return translateGrepArgs(args).args;
+}
+
+function unknowns(args: string[]): string[] {
+  return translateGrepArgs(args).unknownFlags;
 }
 
 describe("basic patterns", () => {
@@ -261,9 +265,9 @@ describe("long options", () => {
     expect(result.join(" ")).toMatch(/-H|--with-filename/);
   });
 
-  it("unknown long option passed through", () => {
-    const result = t(["--some-unknown-flag", "hello", "file.txt"]);
-    expect(result).toContain("--some-unknown-flag");
+  it("unknown long option detected, not passed through", () => {
+    expect(unknowns(["--some-unknown-flag", "hello", "file.txt"])).toContain("--some-unknown-flag");
+    expect(t(["--some-unknown-flag", "hello", "file.txt"])).not.toContain("--some-unknown-flag");
   });
 });
 
@@ -353,5 +357,50 @@ describe("fixed strings skip BRE conversion", () => {
     const result = t(["-F", "-e", "foo\\|bar", "file.txt"]);
     expect(result).toContain("foo\\|bar");
     expect(result).not.toContain("foo|bar");
+  });
+});
+
+describe("unknown flags", () => {
+  it("no unknowns for common flags", () => {
+    expect(unknowns(["-r", "-n", "hello", "file.txt"])).toHaveLength(0);
+    expect(unknowns(["-i", "hello", "file.txt"])).toHaveLength(0);
+    expect(unknowns(["--ignore-case", "hello", "file.txt"])).toHaveLength(0);
+    expect(unknowns(["--include=*.ts", "-r", "hello", "dir/"])).toHaveLength(0);
+  });
+
+  it("unknown long option reported", () => {
+    expect(unknowns(["--binary-files=text", "hello", "file.txt"])).toContain("--binary-files=text");
+    expect(unknowns(["--context-separator=--", "hello", "file.txt"])).toContain(
+      "--context-separator=--",
+    );
+  });
+
+  it("-- end-of-options marker not flagged as unknown", () => {
+    expect(unknowns(["--", "hello", "file.txt"])).toHaveLength(0);
+  });
+
+  it("unknown standalone short flag reported", () => {
+    expect(unknowns(["-x", "hello", "file.txt"])).toContain("-x");
+    expect(unknowns(["-Z", "hello", "file.txt"])).toContain("-Z");
+  });
+
+  it("unknown char in combined short flag reported", () => {
+    expect(unknowns(["-rx", "hello", "dir/"])).toContain("-x");
+  });
+
+  it("known chars in combined flag produce no unknowns", () => {
+    expect(unknowns(["-rni", "hello", "dir/"])).toHaveLength(0);
+    expect(unknowns(["-rl", "hello", "dir/"])).toHaveLength(0);
+  });
+
+  it("multiple unknown flags all reported", () => {
+    const u = unknowns(["--foo", "--bar", "hello"]);
+    expect(u).toContain("--foo");
+    expect(u).toContain("--bar");
+  });
+
+  it("unknown flag excluded from translated args", () => {
+    expect(t(["-x", "hello", "file.txt"])).not.toContain("-x");
+    expect(t(["--foo", "hello", "file.txt"])).not.toContain("--foo");
   });
 });
