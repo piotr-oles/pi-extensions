@@ -9,6 +9,14 @@ function changed(cmd: string): boolean {
   return rewriteCommand(cmd).changed;
 }
 
+function rewrittenOpts(cmd: string, opts: { rewriteGrep?: boolean; rewriteFind?: boolean }): string {
+  return rewriteCommand(cmd, opts).rewritten;
+}
+
+function changedOpts(cmd: string, opts: { rewriteGrep?: boolean; rewriteFind?: boolean }): boolean {
+  return rewriteCommand(cmd, opts).changed;
+}
+
 describe("no grep — unchanged", () => {
   it("no grep at all", () => {
     expect(changed("echo hello")).toBe(false);
@@ -124,6 +132,99 @@ describe("passthrough — no change flag", () => {
 
   it("returns changed:false for grep in non-initial position", () => {
     expect(changed("echo grep")).toBe(false);
+  });
+});
+
+describe("no find — unchanged", () => {
+  it("no find at all", () => {
+    expect(changed("echo hello")).toBe(false);
+  });
+
+  it("find in non-initial position", () => {
+    expect(changed("echo find")).toBe(false);
+  });
+
+  it("absolute path find untouched", () => {
+    expect(changed("/usr/bin/find . -name '*.ts'")).toBe(false);
+  });
+
+  it("fd command untouched", () => {
+    expect(changed("fd '*.ts' src/")).toBe(false);
+  });
+});
+
+describe("simple find rewrites", () => {
+  it("find . -name rewrites to fd", () => {
+    const r = rewritten("find . -name '*.ts'");
+    expect(r).toContain("fd");
+    expect(r).toContain("*.ts");
+    expect(r).not.toMatch(/\bfind\b/);
+  });
+
+  it("find with path", () => {
+    const r = rewritten("find packages/ -name 'index.ts'");
+    expect(r).toContain("fd");
+    expect(r).toContain("packages/");
+    expect(r).not.toMatch(/\bfind\b/);
+  });
+
+  it("-maxdepth translated", () => {
+    const r = rewritten("find . -maxdepth 2 -name '*.json'");
+    expect(r).toContain("fd");
+    expect(r).toContain("-d");
+    expect(r).toContain("2");
+    expect(changed("find . -maxdepth 2 -name '*.json'")).toBe(true);
+  });
+
+  it("-type f kept", () => {
+    const r = rewritten("find . -type f -name '*.ts'");
+    expect(r).toContain("-t");
+    expect(r).toContain("f");
+    expect(r).not.toMatch(/\bfind\b/);
+  });
+});
+
+describe("find pipeline rewrites", () => {
+  it("find piped to another command", () => {
+    const r = rewritten("find . -name '*.ts' | xargs wc -l");
+    expect(r).toContain("fd");
+    expect(r).toContain("|");
+    expect(r).toContain("xargs");
+    expect(r).not.toMatch(/\bfind\b/);
+  });
+
+  it("grep and find both in pipeline rewritten", () => {
+    const r = rewritten("find . -name '*.ts' | grep import");
+    expect(r).toContain("fd");
+    expect(r).toContain("rg");
+    expect(r).not.toMatch(/\bfind\b/);
+    expect(r).not.toMatch(/\bgrep\b/);
+  });
+});
+
+describe("rewriteCommand options", () => {
+  it("rewriteGrep:false skips grep", () => {
+    const r = rewrittenOpts("grep hello file.txt", { rewriteGrep: false });
+    expect(r).toMatch(/\bgrep\b/);
+    expect(changedOpts("grep hello file.txt", { rewriteGrep: false })).toBe(false);
+  });
+
+  it("rewriteFind:false skips find", () => {
+    const r = rewrittenOpts("find . -name '*.ts'", { rewriteFind: false });
+    expect(r).toMatch(/\bfind\b/);
+    expect(changedOpts("find . -name '*.ts'", { rewriteFind: false })).toBe(false);
+  });
+
+  it("rewriteFind:false still rewrites grep", () => {
+    const r = rewrittenOpts("grep hello file.txt", { rewriteFind: false });
+    expect(r).toContain("rg");
+    expect(r).not.toMatch(/\bgrep\b/);
+  });
+
+  it("rewriteGrep:false still rewrites find", () => {
+    const r = rewrittenOpts("find . -name '*.ts'", { rewriteGrep: false });
+    expect(r).toContain("fd");
+    expect(r).not.toMatch(/\bfind\b/);
   });
 });
 

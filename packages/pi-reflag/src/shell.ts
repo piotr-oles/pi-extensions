@@ -1,5 +1,6 @@
 import type { ControlOperator, ParseEntry } from "shell-quote";
 import { parse, quote } from "shell-quote";
+import { translateFindArgs } from "./find.js";
 import { translateGrepArgs } from "./grep.js";
 
 type OpEntry = { op: ControlOperator } | { op: "glob"; pattern: string };
@@ -46,12 +47,18 @@ function splitSegments(entries: ParseEntry[]): Segment[] | null {
   return segments;
 }
 
-function rewriteSegment(tokens: string[]): { tokens: string[]; changed: boolean } {
-  if (tokens[0] !== "grep") {
-    return { tokens, changed: false };
+function rewriteSegment(
+  tokens: string[],
+  rewriteGrep: boolean,
+  rewriteFind: boolean,
+): { tokens: string[]; changed: boolean } {
+  if (rewriteGrep && tokens[0] === "grep") {
+    return { tokens: ["rg", ...translateGrepArgs(tokens.slice(1))], changed: true };
   }
-  const translated = translateGrepArgs(tokens.slice(1));
-  return { tokens: ["rg", ...translated], changed: true };
+  if (rewriteFind && tokens[0] === "find") {
+    return { tokens: ["fd", ...translateFindArgs(tokens.slice(1))], changed: true };
+  }
+  return { tokens, changed: false };
 }
 
 function joinSegments(segments: Segment[]): string {
@@ -65,7 +72,10 @@ function joinSegments(segments: Segment[]): string {
   return parts.join(" ");
 }
 
-export function rewriteCommand(cmd: string): { rewritten: string; changed: boolean } {
+export function rewriteCommand(
+  cmd: string,
+  { rewriteGrep = true, rewriteFind = true }: { rewriteGrep?: boolean; rewriteFind?: boolean } = {},
+): { rewritten: string; changed: boolean } {
   let entries: ParseEntry[];
   try {
     entries = parse(cmd);
@@ -80,7 +90,7 @@ export function rewriteCommand(cmd: string): { rewritten: string; changed: boole
 
   let anyChanged = false;
   const rewritten = segments.map((seg) => {
-    const result = rewriteSegment(seg.tokens);
+    const result = rewriteSegment(seg.tokens, rewriteGrep, rewriteFind);
     if (result.changed) {
       anyChanged = true;
     }

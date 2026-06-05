@@ -7,16 +7,24 @@ export default function piReflag(pi: ExtensionAPI): void {
     description: "grep → rg rewriting: on (default) or off",
   });
 
+  pi.registerFlag("pi-reflag-find", {
+    type: "string",
+    description: "find → fd rewriting: on (default) or off",
+  });
+
   pi.on("tool_call", async (event, ctx) => {
     if (!isToolCallEventType("bash", event)) {
       return undefined;
     }
-    if (pi.getFlag("pi-reflag-grep") === "off") {
+
+    const rewriteGrep = pi.getFlag("pi-reflag-grep") !== "off";
+    const rewriteFind = pi.getFlag("pi-reflag-find") !== "off";
+    if (!rewriteGrep && !rewriteFind) {
       return undefined;
     }
 
     const original = event.input.command;
-    const { rewritten, changed } = rewriteCommand(original);
+    const { rewritten, changed } = rewriteCommand(original, { rewriteGrep, rewriteFind });
     if (!changed) {
       return undefined;
     }
