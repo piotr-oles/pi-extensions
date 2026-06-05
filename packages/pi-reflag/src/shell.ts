@@ -54,12 +54,16 @@ function rewriteSegment(
 ): { tokens: string[]; changed: boolean; unknownFlags: string[] } {
   if (rewriteGrep && tokens[0] === "grep") {
     const { args, unknownFlags } = translateGrepArgs(tokens.slice(1));
-    if (unknownFlags.length > 0) return { tokens, changed: false, unknownFlags };
+    if (unknownFlags.length > 0) {
+      return { tokens, changed: false, unknownFlags };
+    }
     return { tokens: ["rg", ...args], changed: true, unknownFlags: [] };
   }
   if (rewriteFind && tokens[0] === "find") {
     const { args, unknownFlags } = translateFindArgs(tokens.slice(1));
-    if (unknownFlags.length > 0) return { tokens, changed: false, unknownFlags };
+    if (unknownFlags.length > 0) {
+      return { tokens, changed: false, unknownFlags };
+    }
     return { tokens: ["fd", ...args], changed: true, unknownFlags: [] };
   }
   return { tokens, changed: false, unknownFlags: [] };
@@ -96,7 +100,9 @@ export function rewriteCommand(
   const allUnknownFlags: string[] = [];
   const rewritten = segments.map((seg) => {
     const result = rewriteSegment(seg.tokens, rewriteGrep, rewriteFind);
-    if (result.changed) anyChanged = true;
+    if (result.changed) {
+      anyChanged = true;
+    }
     allUnknownFlags.push(...result.unknownFlags);
     return { tokens: result.tokens, trailingOp: seg.trailingOp };
   });

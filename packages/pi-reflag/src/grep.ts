@@ -166,9 +166,17 @@ export function translateGrepArgs(args: string[]): { args: string[]; unknownFlag
     if (arg.startsWith("-") && arg.length > 2 && !/^-\d/.test(arg)) {
       for (const c of arg.slice(1)) {
         const flag = `-${c}`;
-        if (DROP_SHORT.has(flag)) continue;
-        if (flag === "-s") { result.push("--no-messages"); continue; }
-        if (PASSTHROUGH_NO_ARG.has(flag)) { result.push(flag); continue; }
+        if (DROP_SHORT.has(flag)) {
+          continue;
+        }
+        if (flag === "-s") {
+          result.push("--no-messages");
+          continue;
+        }
+        if (PASSTHROUGH_NO_ARG.has(flag)) {
+          result.push(flag);
+          continue;
+        }
         unknownFlags.push(flag);
       }
       i++;

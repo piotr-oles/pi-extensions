@@ -96,7 +96,17 @@ describe("-name patterns", () => {
   });
 
   it("three -name patterns OR'd", () => {
-    const r = t([".", "-name", ".ruby-version", "-o", "-name", ".tool-versions", "-o", "-name", "mise.toml"]);
+    const r = t([
+      ".",
+      "-name",
+      ".ruby-version",
+      "-o",
+      "-name",
+      ".tool-versions",
+      "-o",
+      "-name",
+      "mise.toml",
+    ]);
     const gIdx = r.indexOf("-g");
     expect(gIdx).toBeGreaterThan(-1);
     expect(r[gIdx + 1]).toBe("{.ruby-version,.tool-versions,mise.toml}");
@@ -426,7 +436,16 @@ describe("combined real-world patterns", () => {
   });
 
   it("find /path -maxdepth 3 -name a -o -name b", () => {
-    const r = t(["/path", "-maxdepth", "3", "-name", ".ruby-version", "-o", "-name", ".tool-versions"]);
+    const r = t([
+      "/path",
+      "-maxdepth",
+      "3",
+      "-name",
+      ".ruby-version",
+      "-o",
+      "-name",
+      ".tool-versions",
+    ]);
     expect(r).toContain("/path");
     expect(r).toContain("-d");
     const gIdx = r.indexOf("-g");

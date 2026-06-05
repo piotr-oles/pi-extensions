@@ -7,14 +7,22 @@
  */
 
 function translateDays(val: string): string[] {
-  if (val.startsWith("-")) return ["--changed-within", `${val.slice(1)}d`];
-  if (val.startsWith("+")) return ["--changed-before", `${val.slice(1)}d`];
+  if (val.startsWith("-")) {
+    return ["--changed-within", `${val.slice(1)}d`];
+  }
+  if (val.startsWith("+")) {
+    return ["--changed-before", `${val.slice(1)}d`];
+  }
   return ["--changed-within", `${val}d`];
 }
 
 function translateMins(val: string): string[] {
-  if (val.startsWith("-")) return ["--changed-within", `${val.slice(1)}min`];
-  if (val.startsWith("+")) return ["--changed-before", `${val.slice(1)}min`];
+  if (val.startsWith("-")) {
+    return ["--changed-within", `${val.slice(1)}min`];
+  }
+  if (val.startsWith("+")) {
+    return ["--changed-before", `${val.slice(1)}min`];
+  }
   return ["--changed-within", `${val}min`];
 }
 
@@ -64,7 +72,14 @@ export function translateFindArgs(args: string[]): { args: string[]; unknownFlag
   while (i < args.length) {
     const arg = args[i];
 
-    if (arg === "(" || arg === ")" || arg === "-o" || arg === "-or" || arg === "-a" || arg === "-and") {
+    if (
+      arg === "(" ||
+      arg === ")" ||
+      arg === "-o" ||
+      arg === "-or" ||
+      arg === "-a" ||
+      arg === "-and"
+    ) {
       i++;
       continue;
     }
@@ -167,7 +182,9 @@ export function translateFindArgs(args: string[]): { args: string[]; unknownFlag
         const pat = args[i + 1].replace(/^\*\//, "").replace(/\/\*$/, "").replace(/\*$/, "");
         result.push("-E", pat);
         i += 3;
-        if (i < args.length && (args[i] === "-o" || args[i] === "-or")) i++;
+        if (i < args.length && (args[i] === "-o" || args[i] === "-or")) {
+          i++;
+        }
       } else {
         result.push("-p", args[i + 1]);
         i += 2;
@@ -202,15 +219,48 @@ export function translateFindArgs(args: string[]): { args: string[]; unknownFlag
       continue;
     }
 
-    if (arg === "-print0") { result.push("-0"); i++; continue; }
-    if (arg === "-print") { i++; continue; }
-    if (arg === "-L" || arg === "-follow") { result.push("-L"); i++; continue; }
-    if (arg === "-H" || arg === "-P") { i++; continue; }
-    if (arg === "-empty") { result.push("-t", "e"); i++; continue; }
-    if (arg === "-executable") { result.push("-t", "x"); i++; continue; }
-    if (arg === "-xdev" || arg === "-mount") { result.push("--one-file-system"); i++; continue; }
-    if (arg === "-quit") { result.push("-1"); i++; continue; }
-    if (arg === "-prune" || arg === "-depth" || arg === "-daystart" || arg === "-delete") { i++; continue; }
+    if (arg === "-print0") {
+      result.push("-0");
+      i++;
+      continue;
+    }
+    if (arg === "-print") {
+      i++;
+      continue;
+    }
+    if (arg === "-L" || arg === "-follow") {
+      result.push("-L");
+      i++;
+      continue;
+    }
+    if (arg === "-H" || arg === "-P") {
+      i++;
+      continue;
+    }
+    if (arg === "-empty") {
+      result.push("-t", "e");
+      i++;
+      continue;
+    }
+    if (arg === "-executable") {
+      result.push("-t", "x");
+      i++;
+      continue;
+    }
+    if (arg === "-xdev" || arg === "-mount") {
+      result.push("--one-file-system");
+      i++;
+      continue;
+    }
+    if (arg === "-quit") {
+      result.push("-1");
+      i++;
+      continue;
+    }
+    if (arg === "-prune" || arg === "-depth" || arg === "-daystart" || arg === "-delete") {
+      i++;
+      continue;
+    }
 
     // unknown expression
     if (arg.startsWith("-")) {

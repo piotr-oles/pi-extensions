@@ -370,7 +370,9 @@ describe("unknown flags", () => {
 
   it("unknown long option reported", () => {
     expect(unknowns(["--binary-files=text", "hello", "file.txt"])).toContain("--binary-files=text");
-    expect(unknowns(["--context-separator=--", "hello", "file.txt"])).toContain("--context-separator=--");
+    expect(unknowns(["--context-separator=--", "hello", "file.txt"])).toContain(
+      "--context-separator=--",
+    );
   });
 
   it("-- end-of-options marker not flagged as unknown", () => {

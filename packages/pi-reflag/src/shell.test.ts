@@ -9,7 +9,10 @@ function changed(cmd: string): boolean {
   return rewriteCommand(cmd).changed;
 }
 
-function rewrittenOpts(cmd: string, opts: { rewriteGrep?: boolean; rewriteFind?: boolean }): string {
+function rewrittenOpts(
+  cmd: string,
+  opts: { rewriteGrep?: boolean; rewriteFind?: boolean },
+): string {
   return rewriteCommand(cmd, opts).rewritten;
 }
 
@@ -235,7 +238,9 @@ describe("rewriteCommand options", () => {
 describe("unknown flag fallback", () => {
   it("unknown grep long flag → not rewritten, unknown reported", () => {
     expect(changed("grep --binary-files=text hello file.txt")).toBe(false);
-    expect(unknownFlagsOf("grep --binary-files=text hello file.txt")).toContain("--binary-files=text");
+    expect(unknownFlagsOf("grep --binary-files=text hello file.txt")).toContain(
+      "--binary-files=text",
+    );
   });
 
   it("unknown grep short flag → not rewritten, unknown reported", () => {
@@ -269,7 +274,9 @@ describe("unknown flag fallback", () => {
     expect(r).not.toMatch(/\bfind\b/);
     expect(r).toMatch(/\bgrep\b/);
     expect(r).not.toContain("rg");
-    expect(unknownFlagsOf("find . -name '*.ts' | grep --binary-files=text import")).toContain("--binary-files=text");
+    expect(unknownFlagsOf("find . -name '*.ts' | grep --binary-files=text import")).toContain(
+      "--binary-files=text",
+    );
   });
 
   it("pipeline: find unknown falls back, grep known still rewrites", () => {
