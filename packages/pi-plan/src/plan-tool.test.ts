@@ -53,20 +53,19 @@ function makeCtx(customReturnValue: unknown) {
 }
 
 describe("createReviewPlanTool - no UI", () => {
-  it("returns cancel with error message when hasUI is false", async () => {
+  it("throws when hasUI is false", async () => {
     const { ctx, custom } = makeCtx(null);
     const tool = createReviewPlanTool(testExec, "/nonexistent");
 
-    const result = await tool.execute(
-      "id",
-      { planPath: "repo/plan.md" },
-      AbortSignal.timeout(5000),
-      undefined,
-      ctx as any,
-    );
-
-    expect(textContent(result)).toContain("Error: UI not available");
-    expect(result.details.result).toBe("cancel");
+    await expect(
+      tool.execute(
+        "id",
+        { planPath: "repo/plan.md" },
+        AbortSignal.timeout(5000),
+        undefined,
+        ctx as any,
+      ),
+    ).rejects.toThrow("UI not available");
     expect(custom).not.toHaveBeenCalled();
   });
 });
@@ -82,6 +81,22 @@ describe("createReviewPlanTool - execute with UI", () => {
 
   afterEach(async () => {
     await rm(plansDir, { recursive: true, force: true });
+  });
+
+  it("throws when plan file does not exist", async () => {
+    const { ctx, custom } = makeCtx({ type: "cancel" });
+    const tool = createReviewPlanTool(testExec, plansDir);
+
+    await expect(
+      tool.execute(
+        "id",
+        { planPath: "my-repo/nonexistent.md" },
+        AbortSignal.timeout(5000),
+        undefined,
+        ctx as any,
+      ),
+    ).rejects.toThrow("Plan file not found");
+    expect(custom).not.toHaveBeenCalled();
   });
 
   it("returns cancel when user cancels", async () => {
