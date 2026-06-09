@@ -2,12 +2,14 @@ import type { Theme } from "@earendil-works/pi-coding-agent";
 import { DynamicBorder } from "@earendil-works/pi-coding-agent";
 import type { Component, Focusable, TUI } from "@earendil-works/pi-tui";
 import { Box, Container, Input, SelectList, Text } from "@earendil-works/pi-tui";
+import type { DetectedEditor } from "./editor.js";
 import { toTildePath } from "./utils.js";
 
 export type PlanWidgetAnswer =
   | { type: "request-changes" }
   | { type: "approve" }
   | { type: "cancel" }
+  | { type: "open-in-editor" }
   | { type: "question"; question: string };
 
 export class PlanWidget implements Component {
@@ -24,8 +26,10 @@ export class PlanWidget implements Component {
     private tui: TUI,
     theme: Theme,
     planPath: string,
+    editor: DetectedEditor | null = null,
+    editorOpened: boolean = false,
   ) {
-    this.select = new PlanActionSelect(tui, theme);
+    this.select = new PlanActionSelect(tui, theme, editor?.name ?? null, editorOpened);
     this.select.onSelect = (item) => {
       if (item === "question") {
         this.mode = "question";
@@ -101,30 +105,44 @@ class PlanHeader implements Component {
 class PlanActionSelect implements Component {
   private container: Container;
   private selectList: SelectList;
+  private editorJustOpened = false;
 
   onSelect: (value: PlanWidgetAnswer["type"]) => void = () => undefined;
 
   constructor(
     private tui: TUI,
     theme: Theme,
+    editorName: string | null = null,
+    editorOpened: boolean = false,
   ) {
-    this.container = new Container();
+    this.editorJustOpened = editorOpened;
 
+    this.container = new Container();
     this.container.addChild(new Text(theme.fg("accent", theme.bold("What's next?")), 1, 0));
 
+    const openInEditorItem = editorName
+      ? [
+          {
+            value: "open-in-editor" as const,
+            label: `Open in ${editorName}`,
+          },
+        ]
+      : [];
+
     const items = [
+      ...openInEditorItem,
       {
-        value: "request-changes",
+        value: "request-changes" as const,
         label: "Request changes",
         description: "Agent will update the plan.",
       },
       {
-        value: "approve",
+        value: "approve" as const,
         label: "Approve",
         description: "Agent will implement the plan.",
       },
       {
-        value: "question",
+        value: "question" as const,
         label: "Ask question",
       },
     ] satisfies Array<{ value: PlanWidgetAnswer["type"]; label: string; description?: string }>;
@@ -133,6 +151,9 @@ class PlanActionSelect implements Component {
       selectedText: (text) => {
         if (text.includes("Approve")) {
           return theme.fg("success", text.replace("→", "✓"));
+        }
+        if (text.includes("Open in") && this.editorJustOpened) {
+          return theme.fg("success", text.replace("→", "✓").replace("Open", "Opened"));
         }
         return theme.fg("accent", text);
       },
@@ -143,6 +164,11 @@ class PlanActionSelect implements Component {
 
     this.selectList.onSelect = (item) => this.onSelect(item.value as PlanWidgetAnswer["type"]);
     this.selectList.onCancel = () => this.onSelect("cancel");
+    this.selectList.onSelectionChange = () => {
+      // reset editor just opened when user changes selection
+      this.editorJustOpened = false;
+      this.selectList.invalidate();
+    };
 
     this.container.addChild(this.selectList);
     this.container.addChild(new Text(theme.fg("dim", "↑↓ navigate • enter select • esc cancel")));

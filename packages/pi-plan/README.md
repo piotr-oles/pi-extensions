@@ -29,7 +29,8 @@ When the agent calls `review-plan`:
 
 1. Ensures `~/.pi/plan/` is a git repository (initialises it on first use)
 2. Commits the plan file with message `create: <name>.md`
-3. Hides the working indicator and shows an interactive widget with three options:
+3. Hides the working indicator and shows an interactive widget with the following options:
+   - **Open in [Editor]** *(shown when running inside Zed, VS Code, Cursor, or Windsurf)* — opens the plan file in your IDE so you can edit it; the widget stays open so you can still approve or request changes afterwards
    - **Request changes** — edit the file then select this; the agent gets a diff of your edits and is told to update the plan, then call `review-plan` again
    - **Approve** — edit the file (optionally) then select this; the agent gets a diff of any edits and is told to proceed with execution
    - **Ask question** — type a free-form question; the agent receives it and can reply before you decide
@@ -40,6 +41,7 @@ When the agent calls `review-plan`:
 
 | Selection | Agent receives |
 |-----------|----------------|
+| **Open in [Editor]** | Editor opens; widget re-shows with a `✓ Opened in …` confirmation. Agent is not notified. |
 | **Approve** (no edits) | `approve` result, empty diff — told to proceed |
 | **Approve** (with edits) | `approve` result + git diff — told to address comments, fix up plan, then proceed |
 | **Request changes** (with edits) | `request-changes` result + git diff — told to address comments, update plan, call `review-plan` again |
