@@ -1,6 +1,6 @@
 {
   "name": "@piotr-oles/pi-reflag",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Pi Agent extension: transparently rewrite grep commands to rg (ripgrep) for faster searches",
   "repository": {
     "type": "git",
