@@ -7,522 +7,438 @@
 import { describe, expect, it } from "vitest";
 import { translateFindArgs } from "./find.js";
 
-function t(args: string[]): string[] {
-  return translateFindArgs(args).args;
-}
-
-function unknowns(args: string[]): string[] {
-  return translateFindArgs(args).unknownFlags;
+function t(args: string[]): string[] | undefined {
+  return translateFindArgs(args);
 }
 
 describe("hidden files", () => {
   it("always adds -H to match find default", () => {
-    expect(t([".", "-name", "*.ts"])).toContain("-H");
+    expect(t([".", "-name", "*.ts"])).toEqual(["-H", "-g", "*.ts"]);
   });
 
   it("adds -H even with no args", () => {
-    expect(t([])).toContain("-H");
+    expect(t([])).toEqual(["-H"]);
   });
 });
 
 describe("path handling", () => {
   it("skips . (fd defaults to current dir)", () => {
-    const r = t([".", "-name", "*.ts"]);
-    // Only -H itself should precede flags; no bare . in output
-    const dotPositions = r.flatMap((x, idx) => (x === "." ? [idx] : []));
-    // If . appears, it must be the match-all pattern before a path, not a duplicate
-    // Since we have a pattern via -g, there should be no bare .
-    expect(dotPositions).toHaveLength(0);
+    expect(t([".", "-name", "*.ts"])).toEqual(["-H", "-g", "*.ts"]);
   });
 
   it("passes through specific path", () => {
-    const r = t(["/some/path", "-name", "*.ts"]);
-    expect(r).toContain("/some/path");
+    expect(t(["/some/path", "-name", "*.ts"])).toEqual(["-H", "-g", "*.ts", "/some/path"]);
   });
 
   it("passes through multiple paths", () => {
-    const r = t(["/tmp", "/var/tmp", "-type", "f"]);
-    expect(r).toContain("/tmp");
-    expect(r).toContain("/var/tmp");
+    expect(t(["/tmp", "/var/tmp", "-type", "f"])).toEqual([
+      "-H",
+      "-t",
+      "f",
+      ".",
+      "/tmp",
+      "/var/tmp",
+    ]);
   });
 
   it("path comes after pattern in output", () => {
-    const r = t(["/some/path", "-name", "*.ts"]);
-    const gIdx = r.indexOf("-g");
-    const pathIdx = r.indexOf("/some/path");
-    expect(gIdx).toBeGreaterThan(-1);
-    expect(pathIdx).toBeGreaterThan(gIdx + 1);
+    expect(t(["/some/path", "-name", "*.ts"])).toEqual(["-H", "-g", "*.ts", "/some/path"]);
   });
 
   it("adds . match-all pattern when path present but no name filter", () => {
-    const r = t(["/tmp", "-type", "f"]);
-    const dotIdx = r.indexOf(".");
-    const pathIdx = r.indexOf("/tmp");
-    expect(dotIdx).toBeGreaterThan(-1);
-    expect(pathIdx).toBeGreaterThan(dotIdx);
+    expect(t(["/tmp", "-type", "f"])).toEqual(["-H", "-t", "f", ".", "/tmp"]);
   });
 
   it("no match-all . added when no explicit path and no pattern", () => {
-    const r = t([".", "-type", "f"]);
-    expect(r).not.toContain(".");
+    expect(t([".", "-type", "f"])).toEqual(["-H", "-t", "f"]);
   });
 });
 
 describe("-name patterns", () => {
   it("single -name → -g glob", () => {
-    const r = t([".", "-name", "*.ts"]);
-    const gIdx = r.indexOf("-g");
-    expect(gIdx).toBeGreaterThan(-1);
-    expect(r[gIdx + 1]).toBe("*.ts");
+    expect(t([".", "-name", "*.ts"])).toEqual(["-H", "-g", "*.ts"]);
   });
 
   it("-name exact filename", () => {
-    const r = t([".", "-name", "Makefile"]);
-    expect(r).toContain("-g");
-    expect(r).toContain("Makefile");
+    expect(t([".", "-name", "Makefile"])).toEqual(["-H", "-g", "Makefile"]);
   });
 
   it("-name compound extension", () => {
-    const r = t([".", "-name", "*.tar.gz"]);
-    expect(r).toContain("-g");
-    expect(r).toContain("*.tar.gz");
+    expect(t([".", "-name", "*.tar.gz"])).toEqual(["-H", "-g", "*.tar.gz"]);
   });
 
   it("multiple -name OR'd → brace expansion", () => {
-    const r = t([".", "-name", "*.ts", "-o", "-name", "*.tsx"]);
-    const gIdx = r.indexOf("-g");
-    expect(gIdx).toBeGreaterThan(-1);
-    expect(r[gIdx + 1]).toBe("{*.ts,*.tsx}");
+    expect(t([".", "-name", "*.ts", "-o", "-name", "*.tsx"])).toEqual(["-H", "-g", "{*.ts,*.tsx}"]);
   });
 
   it("three -name patterns OR'd", () => {
-    const r = t([
-      ".",
-      "-name",
-      ".ruby-version",
-      "-o",
-      "-name",
-      ".tool-versions",
-      "-o",
-      "-name",
-      "mise.toml",
-    ]);
-    const gIdx = r.indexOf("-g");
-    expect(gIdx).toBeGreaterThan(-1);
-    expect(r[gIdx + 1]).toBe("{.ruby-version,.tool-versions,mise.toml}");
+    expect(
+      t([
+        ".",
+        "-name",
+        ".ruby-version",
+        "-o",
+        "-name",
+        ".tool-versions",
+        "-o",
+        "-name",
+        "mise.toml",
+      ]),
+    ).toEqual(["-H", "-g", "{.ruby-version,.tool-versions,mise.toml}"]);
   });
 
   it("-iname → -i flag + -g glob", () => {
-    const r = t([".", "-iname", "*.TXT"]);
-    expect(r).toContain("-i");
-    expect(r).toContain("-g");
-    expect(r).toContain("*.TXT");
+    expect(t([".", "-iname", "*.TXT"])).toEqual(["-H", "-i", "-g", "*.TXT"]);
   });
 
   it("-iname positions -i before pattern", () => {
-    const r = t([".", "-iname", "readme*"]);
-    const iIdx = r.indexOf("-i");
-    const gIdx = r.indexOf("-g");
-    expect(iIdx).toBeGreaterThan(-1);
-    expect(gIdx).toBeGreaterThan(iIdx);
+    expect(t([".", "-iname", "readme*"])).toEqual(["-H", "-i", "-g", "readme*"]);
   });
 });
 
 describe("negation", () => {
   it("! -name PAT → -E PAT", () => {
-    const r = t([".", "!", "-name", "*.pyc"]);
-    expect(r).toContain("-E");
-    expect(r).toContain("*.pyc");
+    expect(t([".", "!", "-name", "*.pyc"])).toEqual(["-H", "-E", "*.pyc"]);
   });
 
   it("-not -name PAT → -E PAT", () => {
-    const r = t([".", "-not", "-name", "*.pyc"]);
-    expect(r).toContain("-E");
-    expect(r).toContain("*.pyc");
+    expect(t([".", "-not", "-name", "*.pyc"])).toEqual(["-H", "-E", "*.pyc"]);
   });
 });
 
 describe("type filter", () => {
   it("-type f → -t f", () => {
-    const r = t([".", "-type", "f"]);
-    expect(r).toContain("-t");
-    expect(r[r.indexOf("-t") + 1]).toBe("f");
+    expect(t([".", "-type", "f"])).toEqual(["-H", "-t", "f"]);
   });
 
   it("-type d → -t d", () => {
-    const r = t([".", "-type", "d"]);
-    expect(r).toContain("-t");
-    expect(r[r.indexOf("-t") + 1]).toBe("d");
+    expect(t([".", "-type", "d"])).toEqual(["-H", "-t", "d"]);
   });
 
   it("-type l → -t l", () => {
-    const r = t([".", "-type", "l"]);
-    expect(r).toContain("-t");
-    expect(r[r.indexOf("-t") + 1]).toBe("l");
+    expect(t([".", "-type", "l"])).toEqual(["-H", "-t", "l"]);
   });
 });
 
 describe("depth", () => {
   it("-maxdepth N → -d N", () => {
-    const r = t([".", "-maxdepth", "2"]);
-    expect(r).toContain("-d");
-    expect(r[r.indexOf("-d") + 1]).toBe("2");
+    expect(t([".", "-maxdepth", "2"])).toEqual(["-H", "-d", "2"]);
   });
 
   it("-mindepth N → --min-depth N", () => {
-    const r = t([".", "-mindepth", "1"]);
-    expect(r).toContain("--min-depth");
-    expect(r[r.indexOf("--min-depth") + 1]).toBe("1");
+    expect(t([".", "-mindepth", "1"])).toEqual(["-H", "--min-depth", "1"]);
   });
 
   it("both -mindepth and -maxdepth", () => {
-    const r = t([".", "-mindepth", "2", "-maxdepth", "4"]);
-    expect(r).toContain("--min-depth");
-    expect(r).toContain("-d");
-    expect(r[r.indexOf("--min-depth") + 1]).toBe("2");
-    expect(r[r.indexOf("-d") + 1]).toBe("4");
+    expect(t([".", "-mindepth", "2", "-maxdepth", "4"])).toEqual([
+      "-H",
+      "--min-depth",
+      "2",
+      "-d",
+      "4",
+    ]);
   });
 });
 
 describe("exec", () => {
   it("-exec cmd {} ; → -x cmd {}", () => {
-    const r = t([".", "-name", "*.py", "-exec", "wc", "-l", "{}", ";"]);
-    expect(r).toContain("-x");
-    expect(r).toContain("wc");
-    expect(r).toContain("-l");
-    expect(r).toContain("{}");
+    expect(t([".", "-name", "*.py", "-exec", "wc", "-l", "{}", ";"])).toEqual([
+      "-H",
+      "-g",
+      "*.py",
+      "-x",
+      "wc",
+      "-l",
+      "{}",
+    ]);
   });
 
   it("-exec cmd {} + → -X cmd {}", () => {
-    const r = t([".", "-type", "f", "-exec", "chmod", "644", "{}", "+"]);
-    expect(r).toContain("-X");
-    expect(r).toContain("chmod");
-    expect(r).toContain("644");
+    expect(t([".", "-type", "f", "-exec", "chmod", "644", "{}", "+"])).toEqual([
+      "-H",
+      "-t",
+      "f",
+      "-X",
+      "chmod",
+      "644",
+      "{}",
+    ]);
   });
 
   it("exec args come after paths", () => {
-    const r = t(["/path", "-name", "*.ts", "-exec", "cat", "{}", ";"]);
-    const pathIdx = r.indexOf("/path");
-    const xIdx = r.indexOf("-x");
-    expect(xIdx).toBeGreaterThan(pathIdx);
+    expect(t(["/path", "-name", "*.ts", "-exec", "cat", "{}", ";"])).toEqual([
+      "-H",
+      "-g",
+      "*.ts",
+      "/path",
+      "-x",
+      "cat",
+      "{}",
+    ]);
   });
 
   it("-execdir treated same as -exec", () => {
-    const r = t([".", "-execdir", "echo", "{}", ";"]);
-    expect(r).toContain("-x");
-    expect(r).toContain("echo");
+    expect(t([".", "-execdir", "echo", "{}", ";"])).toEqual(["-H", "-x", "echo", "{}"]);
   });
 });
 
 describe("output flags", () => {
   it("-print0 → -0", () => {
-    expect(t([".", "-name", "*.txt", "-print0"])).toContain("-0");
+    expect(t([".", "-name", "*.txt", "-print0"])).toEqual(["-H", "-0", "-g", "*.txt"]);
   });
 
   it("-print is dropped", () => {
-    const r = t([".", "-name", "*.txt", "-print"]);
-    expect(r).not.toContain("-print");
+    expect(t([".", "-name", "*.txt", "-print"])).toEqual(["-H", "-g", "*.txt"]);
   });
 });
 
 describe("symlink flags", () => {
   it("-L before path → -L in output", () => {
-    const r = t(["-L", ".", "-name", "*.txt"]);
-    expect(r).toContain("-L");
+    expect(t(["-L", ".", "-name", "*.txt"])).toEqual(["-H", "-L", "-g", "*.txt"]);
   });
 
   it("-follow → -L", () => {
-    const r = t(["-follow", ".", "-name", "*.txt"]);
-    expect(r).toContain("-L");
+    expect(t(["-follow", ".", "-name", "*.txt"])).toEqual(["-H", "-L", "-g", "*.txt"]);
   });
 
   it("-L in expression position → -L", () => {
-    const r = t([".", "-L", "-name", "*.txt"]);
-    expect(r).toContain("-L");
+    expect(t([".", "-L", "-name", "*.txt"])).toEqual(["-H", "-L", "-g", "*.txt"]);
   });
 });
 
 describe("time filters", () => {
   it("-mtime -7 → --changed-within 7d", () => {
-    const r = t([".", "-mtime", "-7"]);
-    expect(r).toContain("--changed-within");
-    expect(r[r.indexOf("--changed-within") + 1]).toBe("7d");
+    expect(t([".", "-mtime", "-7"])).toEqual(["-H", "--changed-within", "7d"]);
   });
 
   it("-mtime +30 → --changed-before 30d", () => {
-    const r = t([".", "-mtime", "+30"]);
-    expect(r).toContain("--changed-before");
-    expect(r[r.indexOf("--changed-before") + 1]).toBe("30d");
+    expect(t([".", "-mtime", "+30"])).toEqual(["-H", "--changed-before", "30d"]);
   });
 
   it("-atime -1 → --changed-within 1d", () => {
-    const r = t([".", "-atime", "-1"]);
-    expect(r).toContain("--changed-within");
-    expect(r[r.indexOf("--changed-within") + 1]).toBe("1d");
+    expect(t([".", "-atime", "-1"])).toEqual(["-H", "--changed-within", "1d"]);
   });
 
   it("-ctime +7 → --changed-before 7d", () => {
-    const r = t([".", "-ctime", "+7"]);
-    expect(r).toContain("--changed-before");
-    expect(r[r.indexOf("--changed-before") + 1]).toBe("7d");
+    expect(t([".", "-ctime", "+7"])).toEqual(["-H", "--changed-before", "7d"]);
   });
 
   it("-mmin -60 → --changed-within 60min", () => {
-    const r = t([".", "-mmin", "-60"]);
-    expect(r).toContain("--changed-within");
-    expect(r[r.indexOf("--changed-within") + 1]).toBe("60min");
+    expect(t([".", "-mmin", "-60"])).toEqual(["-H", "--changed-within", "60min"]);
   });
 
   it("-amin +30 → --changed-before 30min", () => {
-    const r = t([".", "-amin", "+30"]);
-    expect(r).toContain("--changed-before");
-    expect(r[r.indexOf("--changed-before") + 1]).toBe("30min");
+    expect(t([".", "-amin", "+30"])).toEqual(["-H", "--changed-before", "30min"]);
   });
 });
 
 describe("size", () => {
   it("-size +1M → -S +1M", () => {
-    const r = t([".", "-size", "+1M"]);
-    expect(r).toContain("-S");
-    expect(r[r.indexOf("-S") + 1]).toBe("+1M");
+    expect(t([".", "-size", "+1M"])).toEqual(["-H", "-S", "+1M"]);
   });
 
   it("-size +100M", () => {
-    const r = t([".", "-type", "f", "-size", "+100M"]);
-    expect(r).toContain("-S");
-    expect(r[r.indexOf("-S") + 1]).toBe("+100M");
+    expect(t([".", "-type", "f", "-size", "+100M"])).toEqual(["-H", "-t", "f", "-S", "+100M"]);
   });
 });
 
 describe("newer", () => {
   it("-newer file → --newer file", () => {
-    const r = t([".", "-newer", "go.mod"]);
-    expect(r).toContain("--newer");
-    expect(r[r.indexOf("--newer") + 1]).toBe("go.mod");
+    expect(t([".", "-newer", "go.mod"])).toEqual(["-H", "--newer", "go.mod"]);
   });
 });
 
 describe("user and group", () => {
   it("-user root → --owner root", () => {
-    const r = t([".", "-user", "root"]);
-    expect(r).toContain("--owner");
-    expect(r[r.indexOf("--owner") + 1]).toBe("root");
+    expect(t([".", "-user", "root"])).toEqual(["-H", "--owner", "root"]);
   });
 
   it("-group wheel → --owner :wheel", () => {
-    const r = t([".", "-group", "wheel"]);
-    expect(r).toContain("--owner");
-    expect(r[r.indexOf("--owner") + 1]).toBe(":wheel");
+    expect(t([".", "-group", "wheel"])).toEqual(["-H", "--owner", ":wheel"]);
   });
 });
 
 describe("-path expression", () => {
   it("-path PAT -prune → -E with stripped pattern", () => {
-    const r = t([".", "-path", "*/.git", "-prune"]);
-    expect(r).toContain("-E");
-    expect(r[r.indexOf("-E") + 1]).toBe(".git");
+    expect(t([".", "-path", "*/.git", "-prune"])).toEqual(["-H", "-E", ".git"]);
   });
 
   it("-path PAT without -prune → -p PAT", () => {
-    const r = t([".", "-path", "*/test/*"]);
-    expect(r).toContain("-p");
-    expect(r[r.indexOf("-p") + 1]).toBe("*/test/*");
+    expect(t([".", "-path", "*/test/*"])).toEqual(["-H", "-p", "*/test/*"]);
   });
 });
 
 describe("regex patterns", () => {
   it("-regex PAT → pattern without -g", () => {
-    const r = t([".", "-regex", ".*\\.go$"]);
-    expect(r).toContain(".*\\.go$");
-    expect(r).not.toContain("-g");
+    expect(t([".", "-regex", ".*\\.go$"])).toEqual(["-H", ".*\\.go$"]);
   });
 
   it("-iregex PAT → -i + pattern without -g", () => {
-    const r = t([".", "-iregex", ".*\\.GO$"]);
-    expect(r).toContain("-i");
-    expect(r).toContain(".*\\.GO$");
-    expect(r).not.toContain("-g");
+    expect(t([".", "-iregex", ".*\\.GO$"])).toEqual(["-H", "-i", ".*\\.GO$"]);
   });
 
   it("-name takes priority over -regex", () => {
-    const r = t([".", "-name", "*.ts", "-regex", ".*\\.go$"]);
-    expect(r).toContain("-g");
-    expect(r).toContain("*.ts");
-    expect(r).not.toContain(".*\\.go$");
+    expect(t([".", "-name", "*.ts", "-regex", ".*\\.go$"])).toEqual(["-H", "-g", "*.ts"]);
   });
 });
 
 describe("misc flags", () => {
   it("-empty → -t e", () => {
-    const r = t([".", "-empty"]);
-    expect(r).toContain("-t");
-    expect(r[r.indexOf("-t") + 1]).toBe("e");
+    expect(t([".", "-empty"])).toEqual(["-H", "-t", "e"]);
   });
 
   it("-executable → -t x", () => {
-    const r = t([".", "-executable"]);
-    expect(r).toContain("-t");
-    expect(r[r.indexOf("-t") + 1]).toBe("x");
+    expect(t([".", "-executable"])).toEqual(["-H", "-t", "x"]);
   });
 
   it("-xdev → --one-file-system", () => {
-    expect(t([".", "-xdev"])).toContain("--one-file-system");
+    expect(t([".", "-xdev"])).toEqual(["-H", "--one-file-system"]);
   });
 
   it("-mount → --one-file-system", () => {
-    expect(t([".", "-mount"])).toContain("--one-file-system");
+    expect(t([".", "-mount"])).toEqual(["-H", "--one-file-system"]);
   });
 
   it("-quit → -1", () => {
-    expect(t([".", "-name", "*.go", "-quit"])).toContain("-1");
+    expect(t([".", "-name", "*.go", "-quit"])).toEqual(["-H", "-1", "-g", "*.go"]);
   });
 
   it("-print dropped", () => {
-    expect(t([".", "-print"])).not.toContain("-print");
+    expect(t([".", "-print"])).toEqual(["-H"]);
   });
 
   it("-prune dropped", () => {
-    expect(t([".", "-prune"])).not.toContain("-prune");
+    expect(t([".", "-prune"])).toEqual(["-H"]);
   });
 
   it("-perm silently dropped (no fd equivalent)", () => {
-    const r = t([".", "-perm", "644"]);
-    expect(r).not.toContain("-perm");
-    expect(r).not.toContain("644");
+    expect(t([".", "-perm", "644"])).toEqual(["-H"]);
   });
 
   it("unknown flag not forwarded to output", () => {
-    expect(t([".", "-samefile", "other.txt"])).not.toContain("-samefile");
+    expect(t([".", "-samefile", "other.txt"])).toBeUndefined();
   });
 
   it("logical operators (, ), -o, -a dropped", () => {
-    const r = t([".", "(", "-name", "*.ts", "-o", "-name", "*.tsx", ")"]);
-    expect(r).not.toContain("(");
-    expect(r).not.toContain(")");
-    expect(r).not.toContain("-o");
+    expect(t([".", "(", "-name", "*.ts", "-o", "-name", "*.tsx", ")"])).toEqual([
+      "-H",
+      "-g",
+      "{*.ts,*.tsx}",
+    ]);
   });
 });
 
 describe("combined real-world patterns", () => {
   it("find . -type f -name '*.ts'", () => {
-    const r = t([".", "-type", "f", "-name", "*.ts"]);
-    expect(r).toContain("-H");
-    expect(r).toContain("-t");
-    expect(r[r.indexOf("-t") + 1]).toBe("f");
-    expect(r).toContain("-g");
-    expect(r).toContain("*.ts");
+    expect(t([".", "-type", "f", "-name", "*.ts"])).toEqual(["-H", "-t", "f", "-g", "*.ts"]);
   });
 
   it("find . -type d -name node_modules", () => {
-    const r = t([".", "-type", "d", "-name", "node_modules"]);
-    expect(r).toContain("-t");
-    expect(r[r.indexOf("-t") + 1]).toBe("d");
-    expect(r).toContain("node_modules");
+    expect(t([".", "-type", "d", "-name", "node_modules"])).toEqual([
+      "-H",
+      "-t",
+      "d",
+      "-g",
+      "node_modules",
+    ]);
   });
 
   it("find . -maxdepth 2 -name '*.json'", () => {
-    const r = t([".", "-maxdepth", "2", "-name", "*.json"]);
-    expect(r).toContain("-d");
-    expect(r[r.indexOf("-d") + 1]).toBe("2");
-    expect(r).toContain("*.json");
+    expect(t([".", "-maxdepth", "2", "-name", "*.json"])).toEqual([
+      "-H",
+      "-d",
+      "2",
+      "-g",
+      "*.json",
+    ]);
   });
 
   it("find /var/log -name '*.log' -mtime -1", () => {
-    const r = t(["/var/log", "-name", "*.log", "-mtime", "-1"]);
-    expect(r).toContain("--changed-within");
-    expect(r).toContain("1d");
-    expect(r).toContain("*.log");
-    expect(r).toContain("/var/log");
+    expect(t(["/var/log", "-name", "*.log", "-mtime", "-1"])).toEqual([
+      "-H",
+      "--changed-within",
+      "1d",
+      "-g",
+      "*.log",
+      "/var/log",
+    ]);
   });
 
   it("find /path -maxdepth 3 -name a -o -name b", () => {
-    const r = t([
-      "/path",
-      "-maxdepth",
-      "3",
-      "-name",
-      ".ruby-version",
-      "-o",
-      "-name",
-      ".tool-versions",
-    ]);
-    expect(r).toContain("/path");
-    expect(r).toContain("-d");
-    const gIdx = r.indexOf("-g");
-    expect(gIdx).toBeGreaterThan(-1);
-    expect(r[gIdx + 1]).toBe("{.ruby-version,.tool-versions}");
+    expect(
+      t(["/path", "-maxdepth", "3", "-name", ".ruby-version", "-o", "-name", ".tool-versions"]),
+    ).toEqual(["-H", "-d", "3", "-g", "{.ruby-version,.tool-versions}", "/path"]);
   });
 
   it("find . \\( -type f \\) -exec wc {} + (parens + batch exec)", () => {
-    const r = t([".", "(", "-type", "f", ")", "-exec", "wc", "{}", "+"]);
-    expect(r).toContain("-t");
-    expect(r).toContain("-X");
-    expect(r).toContain("wc");
+    expect(t([".", "(", "-type", "f", ")", "-exec", "wc", "{}", "+"])).toEqual([
+      "-H",
+      "-t",
+      "f",
+      "-X",
+      "wc",
+      "{}",
+    ]);
   });
 
   it("find . \\( -name '*.ts' -o -name '*.tsx' \\) -type f (parens + OR)", () => {
-    const r = t([".", "(", "-name", "*.ts", "-o", "-name", "*.tsx", ")", "-type", "f"]);
-    const gIdx = r.indexOf("-g");
-    expect(gIdx).toBeGreaterThan(-1);
-    expect(r[gIdx + 1]).toBe("{*.ts,*.tsx}");
-    expect(r).toContain("-t");
+    expect(t([".", "(", "-name", "*.ts", "-o", "-name", "*.tsx", ")", "-type", "f"])).toEqual([
+      "-H",
+      "-t",
+      "f",
+      "-g",
+      "{*.ts,*.tsx}",
+    ]);
   });
 
   it("find . -type f -name '*.log' -mtime +7 (old logs)", () => {
-    const r = t([".", "-type", "f", "-name", "*.log", "-mtime", "+7"]);
-    expect(r).toContain("-t");
-    expect(r).toContain("--changed-before");
-    expect(r).toContain("7d");
-    expect(r).toContain("*.log");
+    expect(t([".", "-type", "f", "-name", "*.log", "-mtime", "+7"])).toEqual([
+      "-H",
+      "-t",
+      "f",
+      "--changed-before",
+      "7d",
+      "-g",
+      "*.log",
+    ]);
   });
 });
 
 describe("unknown flags", () => {
-  it("no unknowns for common expressions", () => {
-    expect(unknowns([".", "-name", "*.ts"])).toHaveLength(0);
-    expect(unknowns([".", "-type", "f", "-maxdepth", "2"])).toHaveLength(0);
-    expect(unknowns([".", "-exec", "wc", "{}", ";"])).toHaveLength(0);
-    expect(unknowns([".", "-mtime", "-7", "-size", "+1M"])).toHaveLength(0);
-  });
-
   it("-samefile reported as unknown", () => {
-    expect(unknowns([".", "-samefile", "other.txt"])).toContain("-samefile");
+    expect(t([".", "-samefile", "other.txt"])).toBeUndefined();
   });
 
   it("-inum reported as unknown", () => {
-    expect(unknowns([".", "-inum", "12345"])).toContain("-inum");
+    expect(t([".", "-inum", "12345"])).toBeUndefined();
   });
 
   it("-links reported as unknown", () => {
-    expect(unknowns([".", "-links", "2"])).toContain("-links");
+    expect(t([".", "-links", "2"])).toBeUndefined();
   });
 
   it("-nouser reported as unknown", () => {
-    expect(unknowns([".", "-nouser"])).toContain("-nouser");
+    expect(t([".", "-nouser"])).toBeUndefined();
   });
 
-  it("multiple unknowns all reported", () => {
-    const u = unknowns([".", "-samefile", "f", "-inum", "123"]);
-    expect(u).toContain("-samefile");
-    expect(u).toContain("-inum");
-  });
-
-  it("unknown flag not forwarded to translated args", () => {
-    const r = t([".", "-samefile", "other.txt", "-name", "*.ts"]);
-    expect(r).not.toContain("-samefile");
-    expect(r).toContain("*.ts");
+  it("multiple unknowns", () => {
+    expect(t([".", "-samefile", "f", "-inum", "123"])).toBeUndefined();
   });
 
   it("logical operators not flagged as unknown", () => {
-    expect(unknowns([".", "(", "-name", "*.ts", "-o", "-name", "*.tsx", ")"])).toHaveLength(0);
-    expect(unknowns([".", "-name", "*.ts", "-a", "-type", "f"])).toHaveLength(0);
+    expect(t([".", "(", "-name", "*.ts", "-o", "-name", "*.tsx", ")"])).toEqual([
+      "-H",
+      "-g",
+      "{*.ts,*.tsx}",
+    ]);
+    expect(t([".", "-name", "*.ts", "-a", "-type", "f"])).toEqual(["-H", "-t", "f", "-g", "*.ts"]);
   });
 
   it("known-but-dropped expressions not flagged (-print, -prune, -depth)", () => {
-    expect(unknowns([".", "-print"])).toHaveLength(0);
-    expect(unknowns([".", "-prune"])).toHaveLength(0);
-    expect(unknowns([".", "-depth"])).toHaveLength(0);
-    expect(unknowns([".", "-daystart"])).toHaveLength(0);
-    expect(unknowns([".", "-delete"])).toHaveLength(0);
+    expect(t([".", "-print"])).toEqual(["-H"]);
+    expect(t([".", "-prune"])).toEqual(["-H"]);
+    expect(t([".", "-depth"])).toEqual(["-H"]);
+    expect(t([".", "-daystart"])).toEqual(["-H"]);
+    expect(t([".", "-delete"])).toEqual(["-H"]);
   });
 });

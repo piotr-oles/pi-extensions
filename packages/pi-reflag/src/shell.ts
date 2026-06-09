@@ -1,115 +1,102 @@
-import type { ControlOperator, ParseEntry } from "shell-quote";
-import { parse, quote } from "shell-quote";
-import { translateFindArgs } from "./find.js";
-import { translateGrepArgs } from "./grep.js";
+import type { Parser, Node as SyntaxNode } from "web-tree-sitter";
+import { find } from "./find.js";
+import { grep } from "./grep.js";
+import { loadBashParser } from "./tree-sitter.js";
+import type { Command } from "./types.js";
 
-type OpEntry = { op: ControlOperator } | { op: "glob"; pattern: string };
+const COMMAND_REWRITES = [grep, find];
 
-function isOp(entry: ParseEntry): entry is OpEntry {
-  return typeof entry === "object" && "op" in entry;
+interface BashCommand extends Command {
+  startIndex: number;
+  endIndex: number;
 }
 
-function isString(entry: ParseEntry): entry is string {
-  return typeof entry === "string";
-}
-
-function isSubshell(entry: ParseEntry): boolean {
-  return isOp(entry) && (entry.op === "(" || entry.op === ")");
-}
-
-type Segment = {
-  tokens: string[];
-  trailingOp: ControlOperator | null;
-};
-
-function splitSegments(entries: ParseEntry[]): Segment[] | null {
-  const segments: Segment[] = [];
-  let current: string[] = [];
-
-  for (const entry of entries) {
-    if (isSubshell(entry)) {
-      return null;
-    }
-    if (isOp(entry)) {
-      const op = entry.op === "glob" ? null : entry.op;
-      if (op === null) {
-        return null;
-      }
-      segments.push({ tokens: current, trailingOp: op });
-      current = [];
-    } else if (isString(entry)) {
-      current.push(entry);
-    } else {
-      return null;
-    }
-  }
-  segments.push({ tokens: current, trailingOp: null });
-  return segments;
-}
-
-function rewriteSegment(
-  tokens: string[],
-  rewriteGrep: boolean,
-  rewriteFind: boolean,
-): { tokens: string[]; changed: boolean; unknownFlags: string[] } {
-  if (rewriteGrep && tokens[0] === "grep") {
-    const { args, unknownFlags } = translateGrepArgs(tokens.slice(1));
-    if (unknownFlags.length > 0) {
-      return { tokens, changed: false, unknownFlags };
-    }
-    return { tokens: ["rg", ...args], changed: true, unknownFlags: [] };
-  }
-  if (rewriteFind && tokens[0] === "find") {
-    const { args, unknownFlags } = translateFindArgs(tokens.slice(1));
-    if (unknownFlags.length > 0) {
-      return { tokens, changed: false, unknownFlags };
-    }
-    return { tokens: ["fd", ...args], changed: true, unknownFlags: [] };
-  }
-  return { tokens, changed: false, unknownFlags: [] };
-}
-
-function joinSegments(segments: Segment[]): string {
-  const parts: string[] = [];
-  for (const { tokens, trailingOp } of segments) {
-    parts.push(quote(tokens));
-    if (trailingOp !== null) {
-      parts.push(trailingOp);
-    }
-  }
-  return parts.join(" ");
-}
-
-export function rewriteCommand(
-  cmd: string,
-  { rewriteGrep = true, rewriteFind = true }: { rewriteGrep?: boolean; rewriteFind?: boolean } = {},
-): { rewritten: string; changed: boolean; unknownFlags: string[] } {
-  let entries: ParseEntry[];
+export async function rewriteBash(bash: string): Promise<string> {
+  let parser: Parser | undefined;
   try {
-    entries = parse(cmd);
+    parser = await loadBashParser();
   } catch {
-    return { rewritten: cmd, changed: false, unknownFlags: [] };
+    return bash;
   }
 
-  const segments = splitSegments(entries);
-  if (segments === null) {
-    return { rewritten: cmd, changed: false, unknownFlags: [] };
+  const tree = parser.parse(bash);
+  if (!tree) {
+    return bash;
   }
 
-  let anyChanged = false;
-  const allUnknownFlags: string[] = [];
-  const rewritten = segments.map((seg) => {
-    const result = rewriteSegment(seg.tokens, rewriteGrep, rewriteFind);
-    if (result.changed) {
-      anyChanged = true;
+  let rewrittenBash = bash;
+
+  for (const command of extractCommands(tree.rootNode)) {
+    const commandRewrite = COMMAND_REWRITES.find((r) => r.isMatching(command));
+    if (!commandRewrite) {
+      continue;
     }
-    allUnknownFlags.push(...result.unknownFlags);
-    return { tokens: result.tokens, trailingOp: seg.trailingOp };
-  });
 
-  if (!anyChanged) {
-    return { rewritten: cmd, changed: false, unknownFlags: allUnknownFlags };
+    const rewrittenCommand = commandRewrite.rewrite(command);
+
+    if (rewrittenCommand) {
+      rewrittenBash =
+        rewrittenBash.slice(0, command.startIndex) +
+        stringifyCommand(rewrittenCommand) +
+        rewrittenBash.slice(command.endIndex);
+    }
   }
 
-  return { rewritten: joinSegments(rewritten), changed: true, unknownFlags: allUnknownFlags };
+  tree.delete();
+
+  return rewrittenBash;
+}
+
+const COMPLEX_ARG_TYPES = new Set([
+  "expansion",
+  "simple_expansion",
+  "command_substitution",
+  "arithmetic_expansion",
+  "process_substitution",
+]);
+
+function* extractCommands(node: SyntaxNode): Generator<BashCommand> {
+  switch (node.type) {
+    case "subshell":
+      // skip subshell
+      return;
+
+    case "command": {
+      const nameNode = node.childForFieldName("name");
+      const argNodes = node.childrenForFieldName("argument");
+
+      if (node.descendantsOfType("variable_assignment").length) {
+        // skip when there is a variable assignment
+        return;
+      }
+
+      if (argNodes.some((argNode) => COMPLEX_ARG_TYPES.has(argNode.type))) {
+        // skip when complex arg types
+        return;
+      }
+
+      yield {
+        startIndex: node.startIndex,
+        endIndex: node.endIndex,
+        name: nameNode?.text ?? "",
+        args: argNodes.map((n) => n.text),
+      };
+      return;
+    }
+
+    default: {
+      // traverse AST from right to left
+      // this way earlier positions stay valid as we replace later ones
+      for (let i = node.childCount; i >= 0; i--) {
+        const child = node.child(i);
+        if (child) {
+          yield* extractCommands(child);
+        }
+      }
+    }
+  }
+}
+
+function stringifyCommand(command: Command): string {
+  return [command.name, ...command.args].join(" ");
 }

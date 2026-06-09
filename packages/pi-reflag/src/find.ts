@@ -5,6 +5,19 @@
  *   - kaofelix/greprip-rs src/fnd.rs (MIT)
  *   - kluzzebass/reflag translator/find2fd/translator.go (MIT)
  */
+import type { CommandRewrite } from "./types.js";
+
+export const find: CommandRewrite = {
+  isMatching(command) {
+    return command.name === "find";
+  },
+  rewrite(command) {
+    const args = translateFindArgs(command.args);
+    if (args) {
+      return { name: "fd", args };
+    }
+  },
+};
 
 function translateDays(val: string): string[] {
   if (val.startsWith("-")) {
@@ -26,9 +39,8 @@ function translateMins(val: string): string[] {
   return ["--changed-within", `${val}min`];
 }
 
-export function translateFindArgs(args: string[]): { args: string[]; unknownFlags: string[] } {
-  const result: string[] = [];
-  const unknownFlags: string[] = [];
+export function translateFindArgs(args: string[]): string[] | undefined {
+  const translated: string[] = [];
   const paths: string[] = [];
   const globPatterns: string[] = [];
   let regexPattern: string | null = null;
@@ -36,7 +48,7 @@ export function translateFindArgs(args: string[]): { args: string[]; unknownFlag
   let caseInsensitive = false;
 
   // fd excludes hidden files by default; find includes them
-  result.push("-H");
+  translated.push("-H");
 
   let i = 0;
 
@@ -44,7 +56,7 @@ export function translateFindArgs(args: string[]): { args: string[]; unknownFlag
   while (i < args.length) {
     const arg = args[i];
     if (arg === "-L" || arg === "-follow") {
-      result.push("-L");
+      translated.push("-L");
       i++;
     } else if (arg === "-H" || arg === "-P") {
       // -H (find) = follow command-line symlinks; already added fd's -H above
@@ -84,9 +96,17 @@ export function translateFindArgs(args: string[]): { args: string[]; unknownFlag
       continue;
     }
 
-    // ! -name PAT or -not -name PAT → exclude pattern
+    // ! -name PAT or -not -name PAT → exclude glob pattern
     if ((arg === "!" || arg === "-not") && i + 2 < args.length && args[i + 1] === "-name") {
-      result.push("-E", args[i + 2]);
+      translated.push("-E", args[i + 2]);
+      i += 3;
+      continue;
+    }
+
+    // ! -path PAT or -not -path PAT → strip glob anchors and exclude
+    if ((arg === "!" || arg === "-not") && i + 2 < args.length && args[i + 1] === "-path") {
+      const pat = args[i + 2].replace(/^\*\//, "").replace(/\/\*$/, "").replace(/\*$/, "");
+      translated.push("-E", pat);
       i += 3;
       continue;
     }
@@ -123,55 +143,55 @@ export function translateFindArgs(args: string[]): { args: string[]; unknownFlag
     }
 
     if (arg === "-type" && i + 1 < args.length) {
-      result.push("-t", args[i + 1]);
+      translated.push("-t", args[i + 1]);
       i += 2;
       continue;
     }
 
     if (arg === "-maxdepth" && i + 1 < args.length) {
-      result.push("-d", args[i + 1]);
+      translated.push("-d", args[i + 1]);
       i += 2;
       continue;
     }
 
     if (arg === "-mindepth" && i + 1 < args.length) {
-      result.push("--min-depth", args[i + 1]);
+      translated.push("--min-depth", args[i + 1]);
       i += 2;
       continue;
     }
 
     if (arg === "-size" && i + 1 < args.length) {
-      result.push("-S", args[i + 1]);
+      translated.push("-S", args[i + 1]);
       i += 2;
       continue;
     }
 
     if (arg === "-newer" && i + 1 < args.length) {
-      result.push("--newer", args[i + 1]);
+      translated.push("--newer", args[i + 1]);
       i += 2;
       continue;
     }
 
     if ((arg === "-mtime" || arg === "-atime" || arg === "-ctime") && i + 1 < args.length) {
-      result.push(...translateDays(args[i + 1]));
+      translated.push(...translateDays(args[i + 1]));
       i += 2;
       continue;
     }
 
     if ((arg === "-mmin" || arg === "-amin" || arg === "-cmin") && i + 1 < args.length) {
-      result.push(...translateMins(args[i + 1]));
+      translated.push(...translateMins(args[i + 1]));
       i += 2;
       continue;
     }
 
     if (arg === "-user" && i + 1 < args.length) {
-      result.push("--owner", args[i + 1]);
+      translated.push("--owner", args[i + 1]);
       i += 2;
       continue;
     }
 
     if (arg === "-group" && i + 1 < args.length) {
-      result.push("--owner", `:${args[i + 1]}`);
+      translated.push("--owner", `:${args[i + 1]}`);
       i += 2;
       continue;
     }
@@ -180,13 +200,13 @@ export function translateFindArgs(args: string[]): { args: string[]; unknownFlag
       if (i + 2 < args.length && args[i + 2] === "-prune") {
         // -path PAT -prune → exclude directory: strip leading */ and trailing /*
         const pat = args[i + 1].replace(/^\*\//, "").replace(/\/\*$/, "").replace(/\*$/, "");
-        result.push("-E", pat);
+        translated.push("-E", pat);
         i += 3;
         if (i < args.length && (args[i] === "-o" || args[i] === "-or")) {
           i++;
         }
       } else {
-        result.push("-p", args[i + 1]);
+        translated.push("-p", args[i + 1]);
         i += 2;
       }
       continue;
@@ -220,7 +240,7 @@ export function translateFindArgs(args: string[]): { args: string[]; unknownFlag
     }
 
     if (arg === "-print0") {
-      result.push("-0");
+      translated.push("-0");
       i++;
       continue;
     }
@@ -229,7 +249,7 @@ export function translateFindArgs(args: string[]): { args: string[]; unknownFlag
       continue;
     }
     if (arg === "-L" || arg === "-follow") {
-      result.push("-L");
+      translated.push("-L");
       i++;
       continue;
     }
@@ -238,22 +258,22 @@ export function translateFindArgs(args: string[]): { args: string[]; unknownFlag
       continue;
     }
     if (arg === "-empty") {
-      result.push("-t", "e");
+      translated.push("-t", "e");
       i++;
       continue;
     }
     if (arg === "-executable") {
-      result.push("-t", "x");
+      translated.push("-t", "x");
       i++;
       continue;
     }
     if (arg === "-xdev" || arg === "-mount") {
-      result.push("--one-file-system");
+      translated.push("--one-file-system");
       i++;
       continue;
     }
     if (arg === "-quit") {
-      result.push("-1");
+      translated.push("-1");
       i++;
       continue;
     }
@@ -262,31 +282,31 @@ export function translateFindArgs(args: string[]): { args: string[]; unknownFlag
       continue;
     }
 
-    // unknown expression
+    // unknown expression - bail
     if (arg.startsWith("-")) {
-      unknownFlags.push(arg);
+      return undefined;
     }
     i++;
   }
 
   if (caseInsensitive) {
-    result.push("-i");
+    translated.push("-i");
   }
 
   // glob patterns take priority over regex pattern
   if (globPatterns.length === 1) {
-    result.push("-g", globPatterns[0]);
+    translated.push("-g", globPatterns[0]);
   } else if (globPatterns.length > 1) {
-    result.push("-g", `{${globPatterns.join(",")}}`);
+    translated.push("-g", `{${globPatterns.join(",")}}`);
   } else if (regexPattern !== null) {
-    result.push(regexPattern);
+    translated.push(regexPattern);
   } else if (paths.length > 0) {
     // fd requires a pattern before path args; "." matches everything
-    result.push(".");
+    translated.push(".");
   }
 
-  result.push(...paths);
-  result.push(...execArgs);
+  translated.push(...paths);
+  translated.push(...execArgs);
 
-  return { args: result, unknownFlags };
+  return translated;
 }

@@ -1,15 +1,10 @@
 import { type ExtensionAPI, isToolCallEventType } from "@earendil-works/pi-coding-agent";
-import { rewriteCommand } from "./shell.js";
+import { rewriteBash } from "./shell.js";
 
 export default function piReflag(pi: ExtensionAPI): void {
-  pi.registerFlag("pi-reflag-grep", {
-    type: "string",
-    description: "grep → rg rewriting: on (default) or off",
-  });
-
-  pi.registerFlag("pi-reflag-find", {
-    type: "string",
-    description: "find → fd rewriting: on (default) or off",
+  pi.registerFlag("pi-reflag-verbose", {
+    type: "boolean",
+    description: "Render how command was reflagged in the ui.",
   });
 
   pi.on("tool_call", async (event, ctx) => {
@@ -17,29 +12,23 @@ export default function piReflag(pi: ExtensionAPI): void {
       return undefined;
     }
 
-    const rewriteGrep = pi.getFlag("pi-reflag-grep") !== "off";
-    const rewriteFind = pi.getFlag("pi-reflag-find") !== "off";
-    if (!rewriteGrep && !rewriteFind) {
-      return undefined;
-    }
-
     const original = event.input.command;
-    const { rewritten, changed, unknownFlags } = rewriteCommand(original, {
-      rewriteGrep,
-      rewriteFind,
-    });
+    const rewritten = await rewriteBash(original);
 
-    if (unknownFlags.length > 0) {
-      const flags = unknownFlags.map((f) => `\`${f}\``).join(", ");
-      ctx.ui.notify(`pi-reflag: unknown flag ${flags} — kept original command`, "warning");
-    }
-
-    if (!changed) {
+    if (rewritten === original) {
       return undefined;
     }
 
     event.input.command = rewritten;
-    ctx.ui.notify(`pi-reflag: \`${original}\` → \`${rewritten}\``, "info");
-    return undefined;
+    if (isVerbose(pi)) {
+      ctx.ui.notify(
+        `pi-reflag:\n${ctx.ui.theme.fg("mdCode", original)}\n${ctx.ui.theme.fg("mdCode", rewritten)}`,
+        "info",
+      );
+    }
   });
+}
+
+function isVerbose(pi: ExtensionAPI) {
+  return pi.getFlag("pi-reflag-verbose") || process.env.PI_REFLAG_VERBOSE === "true";
 }
