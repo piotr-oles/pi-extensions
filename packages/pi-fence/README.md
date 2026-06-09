@@ -51,6 +51,7 @@ Control via the `--pi-fence-mode` CLI flag (takes precedence) or the `PI_FENCE_M
 pi --pi-fence-mode warn    # default: write proceeds, warning shown to model
 pi --pi-fence-mode block   # write is blocked; model must remove fences and retry
 pi --pi-fence-mode remove  # fence comments are stripped silently before writing
+pi --pi-fence-mode delete  # alias for remove
 
 PI_FENCE_MODE=block pi    # same, via env variable
 ```

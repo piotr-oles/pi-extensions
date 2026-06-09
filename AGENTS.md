@@ -11,28 +11,26 @@ A pnpm monorepo of [pi coding agent](https://github.com/earendil-works/pi) exten
 ### `pi-fence` (`packages/pi-fence`)
 Hooks into pi's `tool_call` / `tool_result` events to detect decorative fence/divider comments being written (e.g. `// ---- section ----`, `// ===== Title =====`). Operates in three modes controlled by the `pi-fence-mode` flag:
 
-- **warn** (default) — appends a warning to the tool result after writing
-- **block** — returns `{ block: true }` before the write happens
-- **remove** — strips the fence comments from the content before writing
+- **warn** (default) - appends a warning to the tool result after writing
+- **block** - returns `{ block: true }` before the write happens
+- **remove** - strips the fence comments from the content before writing
 
 Uses [tree-sitter](https://tree-sitter.github.io/) to parse comment nodes. Supports JS/TS, Python, Go, and Rust.
 
 ### `pi-caveman` (`packages/pi-caveman`)
-Makes the agent respond in caveman mode — cuts ~75% of output tokens while keeping full technical accuracy. Injects a level-specific instruction file into the system prompt at session start. Level is controlled by the `pi-caveman` flag (`lite`, `full`, `ultra`, or `off`; default: `full`).
+Makes the agent respond in caveman mode - cuts ~75% of output tokens while keeping full technical accuracy. Injects a level-specific instruction file into the system prompt at session start. Level is controlled by the `pi-caveman` flag (`lite`, `full`, `ultra`, or `off`; default: `full`).
 
 ### `pi-plan` (`packages/pi-plan`)
-Adds a `review-plan` tool that writes a named markdown plan to `~/.pi/plan/<repo>/<name>.md`, opens it in Zed, commits it to a git repo inside `~/.pi/plan/`, and shows an interactive terminal widget so the user can confirm, request changes, or reply freely before the agent proceeds.
+Adds a `review-plan` tool that writes a named markdown plan to `~/.pi/plan/<repo>/<name>.md`, commits it to a git repo inside `~/.pi/plan/`, and shows an interactive terminal widget so the user can confirm, request changes, or reply freely before the agent proceeds.
 
 ### `pi-reflag` (`packages/pi-reflag`)
-Intercepts `bash` tool calls and rewrites `grep` → `rg` (ripgrep) and `find` → `fd` transparently before execution. Shows a user-visible toast notification on rewrite — agent never sees it.
+Intercepts `bash` tool calls and rewrites `grep` → `rg` (ripgrep) and `find` → `fd` transparently before execution. Shows a user-visible toast notification on rewrite - agent never sees it.
 
-- **grep → rg**: drops `-r`/`-R`/`-E`, maps long flags, converts `--include`/`--exclude` to `-g` globs, converts BRE patterns to ERE. Controlled by `pi-reflag-grep` flag (`on` by default).
-- **find → fd**: translates `-name`/`-iname` to `-g` globs (OR patterns become brace expansion), `-type`, `-maxdepth`/`-mindepth`, `-exec`/`-execdir`, `-mtime`/`-size`/`-user`/`-group` and more. Always adds `-H` (fd excludes hidden files by default, find doesn’t). Controlled by `pi-reflag-find` flag (`on` by default).
+- **grep → rg**: drops `-r`/`-R`/`-E`, maps long flags, converts `--include`/`--exclude` to `-g` globs, converts BRE patterns to ERE.
+- **find → fd**: translates `-name`/`-iname` to `-g` globs (OR patterns become brace expansion), `-type`, `-maxdepth`/`-mindepth`, `-exec`/`-execdir`, `-mtime`/`-size`/`-user`/`-group` and more. Always adds `-H` (fd excludes hidden files by default, find doesn't).
+- **xargs**: `xargs grep`/`xargs find` rewrites are also supported.
 
-Skips commands with subshells. Both rewrites are independent — either can be disabled without affecting the other.
-
-### `pi-sem` (`packages/pi-sem`) — private
-Wraps the [`sem`](https://github.com/piotr-oles/sem) CLI as four pi tools: `sem_context`, `sem_entities`, `sem_impact`, `sem_diff`. Gives the model semantic understanding of code structure without reading entire files.
+Skips commands with subshells or variable assignments. Enable verbose logging with `pi-reflag-verbose` flag to see rewrites in the UI.
 
 ## Tech stack
 
@@ -41,7 +39,7 @@ Wraps the [`sem`](https://github.com/piotr-oles/sem) CLI as four pi tools: `sem_
 - **Package manager**: pnpm 10 with workspaces
 - **Linter/formatter**: Biome
 - **Tests**: Vitest
-- **Releases**: Changesets (`pi-fence`, `pi-caveman`, and `pi-plan` are published; `pi-sem` is private)
+- **Releases**: Changesets
 
 ## Development commands
 
@@ -89,31 +87,24 @@ This is what pi loads from the `"pi": { "extensions": [...] }` field in `package
 
 ## Testing approach
 
-Tests live in `src/` (or `src/tests/` for `pi-sem`) inside each package. Vitest is the test runner.
+Tests live in `src/` inside each package. Vitest is the test runner.
 
 `pi-fence` uses the [`@marcfargas/pi-test-harness`](https://www.npmjs.com/package/@marcfargas/pi-test-harness) package to simulate pi events against the extension.
-
-`pi-caveman` uses simple unit tests that verify instruction files load correctly and contain the expected directives.
-
-`pi-sem` uses three layers:
-- **Unit** — tool logic with `exec` mocked via `vi.fn()`
-- **Integration** — real pi runtime + mocked `sem` subprocess
-- **Smoke** — `npm pack` → install → load in real pi
 
 ## Adding a new package
 
 1. `mkdir packages/<name>`
-2. `packages/<name>/package.json` — include:
+2. `packages/<name>/package.json` - include:
    - `"type": "module"`
    - `"pi": { "extensions": ["./src/index.ts"] }`
    - scripts: `test`, `typecheck`, `check`, `fix`
-3. `packages/<name>/tsconfig.json` — extend `../../tsconfig.base.json`
-4. `packages/<name>/src/index.ts` — default-export a function `(pi: ExtensionAPI) => void`
+3. `packages/<name>/tsconfig.json` - extend `../../tsconfig.base.json`
+4. `packages/<name>/src/index.ts` - default-export a function `(pi: ExtensionAPI) => void`
 5. CI picks it up automatically via `pnpm -r`
 
 For publishable packages, also add `"publishConfig": { "access": "public" }` and `"files"` to `package.json`. Private packages set `"private": true`.
 
 ## CI
 
-`.github/workflows/ci.yml` — runs `test`, `typecheck`, `check` on every PR.  
-`.github/workflows/release.yml` — Changesets release flow on `main`: opens a Version Packages PR while changesets are pending, publishes to npm once merged.
+`.github/workflows/ci.yml` - runs `test`, `typecheck`, `check` on every PR.
+`.github/workflows/release.yml` - Changesets release flow on `main`: opens a Version Packages PR while changesets are pending, publishes to npm once merged.

@@ -17,9 +17,9 @@ apt install ripgrep fd-find  # Debian/Ubuntu
 
 ## How it works
 
-Intercepts `bash` tool calls in the `tool_call` event. When a command segment starts with `grep` or `find` (including piped commands), it translates the arguments to their `rg`/`fd` equivalents and rewrites the command in place before execution. The agent never sees the rewrite — only a user-visible toast notification is shown.
+Intercepts `bash` tool calls in the `tool_call` event. When a command segment starts with `grep`, `find`, or `xargs grep`/`xargs find` (including piped commands), it translates the arguments to their `rg`/`fd` equivalents and rewrites the command in place before execution. The agent never sees the rewrite.
 
-Subshell constructs (`$(…)`, `(…)`) are left untouched to avoid misinterpreting nested commands.
+Subshell constructs (`$(…)`, `(…)`) and commands with variable assignments are left untouched to avoid misinterpreting nested or complex commands.
 
 ## grep → rg
 
@@ -45,12 +45,6 @@ Subshell constructs (`$(…)`, `(…)`) are left untouched to avoid misinterpret
 | `--exclude-dir=<dir>` | `-g !<dir>/` |
 | `-s` | `--no-messages` |
 | `-N` (numeric context) | `-C N` |
-
-Disable per-session:
-
-```bash
-pi --pi-reflag-grep off
-```
 
 ## find → fd
 
@@ -88,10 +82,14 @@ pi --pi-reflag-grep off
 | `-xdev` / `-mount` | `--one-file-system` |
 | `-quit` | `-1` |
 
-Disable per-session:
+## Verbose mode
+
+See exactly how each command was rewritten in the UI:
 
 ```bash
-pi --pi-reflag-find off
+pi --pi-reflag-verbose
+
+PI_REFLAG_VERBOSE=true pi
 ```
 
 ## Thanks
