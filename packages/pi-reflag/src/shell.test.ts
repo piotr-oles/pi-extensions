@@ -209,6 +209,22 @@ describe("redirect handling", () => {
   });
 });
 
+describe("xargs grep rewrites", () => {
+  it("xargs grep basic", async () => {
+    expect(await rewriteBash("xargs grep -l pattern")).toEqual("xargs rg -l pattern");
+  });
+
+  it("find piped to xargs grep", async () => {
+    expect(await rewriteBash("find . -name '*.ts' | xargs grep -l 'tool_call'")).toEqual(
+      "fd -H -g '*.ts' | xargs rg -l 'tool_call'",
+    );
+  });
+
+  it("xargs grep with recursive flag dropped", async () => {
+    expect(await rewriteBash("xargs grep -rn pattern")).toEqual("xargs rg -n pattern");
+  });
+});
+
 describe("BRE conversion via shell", () => {
   it("BRE alternation: \\| converted to | within original shell quoting", async () => {
     expect(await rewriteBash("grep 'foo\\|bar' file.txt")).toEqual("rg 'foo|bar' file.txt");

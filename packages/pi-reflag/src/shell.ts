@@ -24,27 +24,24 @@ export async function rewriteBash(bash: string): Promise<string> {
     return bash;
   }
 
-  let rewrittenBash = bash;
+  let newBash = bash;
 
   for (const command of extractCommands(tree.rootNode)) {
-    const commandRewrite = COMMAND_REWRITES.find((r) => r.isMatching(command));
-    if (!commandRewrite) {
-      continue;
-    }
+    for (const rewrite of COMMAND_REWRITES) {
+      const newCommand = rewrite(command);
 
-    const rewrittenCommand = commandRewrite.rewrite(command);
-
-    if (rewrittenCommand) {
-      rewrittenBash =
-        rewrittenBash.slice(0, command.startIndex) +
-        stringifyCommand(rewrittenCommand) +
-        rewrittenBash.slice(command.endIndex);
+      if (newCommand) {
+        newBash =
+          newBash.slice(0, command.startIndex) +
+          stringifyCommand(newCommand) +
+          newBash.slice(command.endIndex);
+        break;
+      }
     }
   }
-
   tree.delete();
 
-  return rewrittenBash;
+  return newBash;
 }
 
 const COMPLEX_ARG_TYPES = new Set([
