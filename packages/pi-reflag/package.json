@@ -13,7 +13,8 @@
   "type": "module",
   "files": [
     "src",
-    "!src/*.test.ts"
+    "!src/*.test.ts",
+    "vendor"
   ],
   "publishConfig": {
     "access": "public"
@@ -31,7 +32,7 @@
     "fix": "biome check --write src/"
   },
   "dependencies": {
-    "shell-quote": "^1.8.4"
+    "web-tree-sitter": "^0.26.9"
   },
   "peerDependencies": {
     "@earendil-works/pi-agent-core": "*",
@@ -40,7 +41,6 @@
   "devDependencies": {
     "@earendil-works/pi-agent-core": "^0.75.5",
     "@earendil-works/pi-coding-agent": "^0.75.5",
-    "@types/shell-quote": "^1.7.5",
     "typescript": "^5.8.3",
     "vitest": "^3.2.1"
   }

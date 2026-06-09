@@ -4,6 +4,21 @@
  * Ported from greprip-rs/src/grg.rs (MIT license, kaofelix).
  */
 
+import type { CommandRewrite } from "./types.js";
+
+export const grep: CommandRewrite = {
+  isMatching(command) {
+    return command.name === "grep";
+  },
+  rewrite(command) {
+    const args = translateGrepArgs(command.args);
+
+    if (args) {
+      return { name: "rg", args };
+    }
+  },
+};
+
 function convertBreToEre(pattern: string): string {
   return pattern
     .replace(/\\\(/g, "(")
@@ -40,7 +55,6 @@ const PASSTHROUGH_NO_ARG: ReadonlySet<string> = new Set([
   "-v",
   "-w",
   "-l",
-  "-c",
   "-o",
   "-h",
   "-H",
@@ -71,10 +85,9 @@ const LONG_TO_SHORT: ReadonlyMap<string, string | null> = new Map([
   ["--recursive", null],
 ]);
 
-export function translateGrepArgs(args: string[]): { args: string[]; unknownFlags: string[] } {
+export function translateGrepArgs(args: string[]): string[] | undefined {
   const fixedStrings = hasFixedStringsFlag(args);
-  const result: string[] = [];
-  const unknownFlags: string[] = [];
+  const trasnlated: string[] = [];
   let i = 0;
   let patternSeen = false;
 
@@ -82,7 +95,7 @@ export function translateGrepArgs(args: string[]): { args: string[]; unknownFlag
     const arg = args[i];
 
     if (arg.startsWith("-") && arg.length > 1 && /^-\d+$/.test(arg)) {
-      result.push("-C", arg.slice(1));
+      trasnlated.push("-C", arg.slice(1));
       i++;
       continue;
     }
@@ -93,51 +106,51 @@ export function translateGrepArgs(args: string[]): { args: string[]; unknownFlag
     }
 
     if (arg === "-s") {
-      result.push("--no-messages");
+      trasnlated.push("--no-messages");
       i++;
       continue;
     }
 
     if (arg.startsWith("--include=")) {
-      result.push("-g", arg.slice("--include=".length));
+      trasnlated.push("-g", arg.slice("--include=".length));
       i++;
       continue;
     }
 
     if (arg.startsWith("--exclude=")) {
-      result.push("-g", `!${arg.slice("--exclude=".length)}`);
+      trasnlated.push("-g", `!${arg.slice("--exclude=".length)}`);
       i++;
       continue;
     }
 
     if (arg.startsWith("--exclude-dir=")) {
-      result.push("-g", `!${arg.slice("--exclude-dir=".length)}/`);
+      trasnlated.push("-g", `!${arg.slice("--exclude-dir=".length)}/`);
       i++;
       continue;
     }
 
     if (arg.startsWith("--regexp=")) {
       const pattern = arg.slice("--regexp=".length);
-      result.push("-e", fixedStrings ? pattern : convertBreToEre(pattern));
+      trasnlated.push("-e", fixedStrings ? pattern : convertBreToEre(pattern));
       i++;
       continue;
     }
 
     if (arg === "--color") {
-      result.push("--color=always");
+      trasnlated.push("--color=always");
       i++;
       continue;
     }
 
     if (arg.startsWith("--color=")) {
-      result.push(arg);
+      trasnlated.push(arg);
       i++;
       continue;
     }
 
     if (arg.startsWith("--")) {
       if (arg === "--") {
-        result.push(arg);
+        trasnlated.push(arg);
         i++;
         continue;
       }
@@ -147,20 +160,22 @@ export function translateGrepArgs(args: string[]): { args: string[]; unknownFlag
       }
       if (LONG_TO_SHORT.has(arg)) {
         const mapped = LONG_TO_SHORT.get(arg);
-        if (mapped !== null && mapped !== undefined) {
-          result.push(mapped);
+        if (mapped === "-c") {
+          trasnlated.push("-c", "--include-zero");
+        } else if (mapped !== null && mapped !== undefined) {
+          trasnlated.push(mapped);
         }
         i++;
         continue;
       }
       if (PASSTHROUGH_NO_ARG.has(arg)) {
-        result.push(arg);
+        trasnlated.push(arg);
         i++;
         continue;
       }
-      unknownFlags.push(arg);
-      i++;
-      continue;
+
+      // unknown flag - bail
+      return undefined;
     }
 
     if (arg.startsWith("-") && arg.length > 2 && !/^-\d/.test(arg)) {
@@ -170,59 +185,70 @@ export function translateGrepArgs(args: string[]): { args: string[]; unknownFlag
           continue;
         }
         if (flag === "-s") {
-          result.push("--no-messages");
+          trasnlated.push("--no-messages");
+          continue;
+        }
+        if (flag === "-c") {
+          trasnlated.push("-c", "--include-zero");
           continue;
         }
         if (PASSTHROUGH_NO_ARG.has(flag)) {
-          result.push(flag);
+          trasnlated.push(flag);
           continue;
         }
-        unknownFlags.push(flag);
+
+        // unknown flag - bail
+        return undefined;
       }
       i++;
       continue;
     }
 
     if (arg === "-e") {
-      result.push("-e");
+      trasnlated.push("-e");
       if (i + 1 < args.length) {
         i++;
-        result.push(fixedStrings ? args[i] : convertBreToEre(args[i]));
+        trasnlated.push(fixedStrings ? args[i] : convertBreToEre(args[i]));
       }
       i++;
       continue;
     }
 
+    if (arg === "-c") {
+      trasnlated.push("-c", "--include-zero");
+      i++;
+      continue;
+    }
+
     if (PASSTHROUGH_NO_ARG.has(arg)) {
-      result.push(arg);
+      trasnlated.push(arg);
       i++;
       continue;
     }
 
     if (PASSTHROUGH_WITH_ARG.has(arg)) {
-      result.push(arg);
+      trasnlated.push(arg);
       if (i + 1 < args.length) {
         i++;
-        result.push(args[i]);
+        trasnlated.push(args[i]);
       }
       i++;
       continue;
     }
 
     if (arg.startsWith("-") && arg.length > 1) {
-      unknownFlags.push(arg);
-      i++;
-      continue;
+      // unknown flag - bail
+      return undefined;
     }
 
     if (!patternSeen) {
-      result.push(fixedStrings ? arg : convertBreToEre(arg));
+      trasnlated.push(fixedStrings ? arg : convertBreToEre(arg));
       patternSeen = true;
     } else {
-      result.push(arg);
+      trasnlated.push(arg);
     }
     i++;
   }
 
-  return { args: result, unknownFlags };
+  return trasnlated;
 }

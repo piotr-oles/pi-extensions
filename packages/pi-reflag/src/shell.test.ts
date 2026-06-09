@@ -1,306 +1,216 @@
 import { describe, expect, it } from "vitest";
-import { rewriteCommand } from "./shell.js";
-
-function rewritten(cmd: string): string {
-  return rewriteCommand(cmd).rewritten;
-}
-
-function changed(cmd: string): boolean {
-  return rewriteCommand(cmd).changed;
-}
-
-function rewrittenOpts(
-  cmd: string,
-  opts: { rewriteGrep?: boolean; rewriteFind?: boolean },
-): string {
-  return rewriteCommand(cmd, opts).rewritten;
-}
-
-function changedOpts(cmd: string, opts: { rewriteGrep?: boolean; rewriteFind?: boolean }): boolean {
-  return rewriteCommand(cmd, opts).changed;
-}
-
-function unknownFlagsOf(cmd: string): string[] {
-  return rewriteCommand(cmd).unknownFlags;
-}
+import { rewriteBash } from "./shell.js";
 
 describe("no grep — unchanged", () => {
-  it("no grep at all", () => {
-    expect(changed("echo hello")).toBe(false);
+  it("no grep at all", async () => {
+    expect(await rewriteBash("echo hello")).toEqual("echo hello");
   });
 
-  it("grep in middle of segment (not first token)", () => {
-    expect(changed("echo grep")).toBe(false);
+  it("grep in middle of segment (not first token)", async () => {
+    expect(await rewriteBash("echo grep")).toEqual("echo grep");
   });
 
-  it("absolute path grep", () => {
-    expect(changed("/usr/bin/grep pattern file.txt")).toBe(false);
+  it("absolute path grep", async () => {
+    expect(await rewriteBash("/usr/bin/grep pattern file.txt")).toEqual(
+      "/usr/bin/grep pattern file.txt",
+    );
   });
 
-  it("rg command untouched", () => {
-    expect(changed("rg pattern src/")).toBe(false);
+  it("rg command untouched", async () => {
+    expect(await rewriteBash("rg pattern src/")).toEqual("rg pattern src/");
   });
 });
 
 describe("simple grep rewrites", () => {
-  it("pattern and file", () => {
-    const r = rewritten("grep hello file.txt");
-    expect(r).toContain("rg");
-    expect(r).toContain("hello");
-    expect(r).toContain("file.txt");
-    expect(r).not.toMatch(/\bgrep\b/);
+  it("pattern and file", async () => {
+    expect(await rewriteBash("grep hello file.txt")).toEqual("rg hello file.txt");
   });
 
-  it("recursive flag dropped", () => {
-    const r = rewritten("grep -rn hello src/");
-    expect(r).toContain("rg");
-    expect(r).toContain("-n");
-    expect(r).not.toContain("-r");
-    expect(changed("grep -rn hello src/")).toBe(true);
+  it("recursive flag dropped", async () => {
+    expect(await rewriteBash("grep -rn hello src/")).toEqual("rg -n hello src/");
   });
 
-  it("case insensitive kept", () => {
-    const r = rewritten("grep -i hello file.txt");
-    expect(r).toContain("-i");
-    expect(r).not.toMatch(/\bgrep\b/);
+  it("case insensitive kept", async () => {
+    expect(await rewriteBash("grep -i hello file.txt")).toEqual("rg -i hello file.txt");
   });
 
-  it("extended regex flag dropped", () => {
-    const r = rewritten('grep -E "foo|bar" file.txt');
-    expect(r).not.toContain("-E");
-    // quote() shell-escapes | to \| — check | is present in some form
-    expect(r).toMatch(/foo[\\]?\|bar/);
-    expect(r).toContain("rg");
+  it("extended regex flag dropped", async () => {
+    expect(await rewriteBash('grep -E "foo|bar" file.txt')).toEqual('rg "foo|bar" file.txt');
   });
 
-  it("quoted pattern preserved as single arg", () => {
-    const r = rewritten("grep 'hello world' file.txt");
-    expect(r).toContain("rg");
-    expect(r).toContain("hello world");
-    expect(r).not.toMatch(/\bgrep\b/);
+  it("quoted pattern preserved as single arg", async () => {
+    expect(await rewriteBash("grep 'hello world' file.txt")).toEqual("rg 'hello world' file.txt");
   });
 });
 
 describe("pipeline rewrites", () => {
-  it("grep after pipe", () => {
-    const r = rewritten("cat file.txt | grep hello");
-    expect(r).toContain("cat");
-    expect(r).toContain("|");
-    expect(r).toContain("rg");
-    expect(r).not.toMatch(/\bgrep\b/);
-    expect(changed("cat file.txt | grep hello")).toBe(true);
+  it("grep after pipe", async () => {
+    expect(await rewriteBash("cat file.txt | grep hello")).toEqual("cat file.txt | rg hello");
   });
 
-  it("both sides of pipe are grep", () => {
-    const r = rewritten("grep foo file.txt | grep bar");
-    expect(r.match(/\brg\b/g)).toHaveLength(2);
-    expect(r).not.toMatch(/\bgrep\b/);
+  it("both sides of pipe are grep", async () => {
+    expect(await rewriteBash("grep foo file.txt | grep bar")).toEqual("rg foo file.txt | rg bar");
   });
 
-  it("only second segment is grep", () => {
-    const r = rewritten("echo something | grep pattern");
-    expect(r).toContain("echo something");
-    expect(r).toContain("rg");
-    expect(r).not.toMatch(/\bgrep\b/);
+  it("only second segment is grep", async () => {
+    expect(await rewriteBash("echo something | grep pattern")).toEqual(
+      "echo something | rg pattern",
+    );
   });
 });
 
 describe("shell operators", () => {
-  it("grep with && operator", () => {
-    const r = rewritten("grep foo file.txt && echo done");
-    expect(r).toContain("rg");
-    expect(r).toContain("&&");
-    expect(r).toContain("echo done");
-    expect(r).not.toMatch(/\bgrep\b/);
+  it("grep with && operator", async () => {
+    expect(await rewriteBash("grep foo file.txt && echo done")).toEqual(
+      "rg foo file.txt && echo done",
+    );
   });
 
-  it("grep with ; separator", () => {
-    const r = rewritten("grep foo file.txt ; grep bar file.txt");
-    expect(r.match(/\brg\b/g)).toHaveLength(2);
-    expect(r).not.toMatch(/\bgrep\b/);
+  it("grep with ; separator", async () => {
+    expect(await rewriteBash("grep foo file.txt ; grep bar file.txt")).toEqual(
+      "rg foo file.txt ; rg bar file.txt",
+    );
   });
 
-  it("grep with || operator", () => {
-    const r = rewritten("grep foo file.txt || echo not found");
-    expect(r).toContain("rg");
-    expect(r).toContain("||");
-    expect(r).not.toMatch(/\bgrep\b/);
-  });
-});
-
-describe("passthrough — no change flag", () => {
-  it("returns changed:false when no grep", () => {
-    expect(changed("ls -la")).toBe(false);
-  });
-
-  it("returns changed:true when grep rewritten", () => {
-    expect(changed("grep pattern file.txt")).toBe(true);
-  });
-
-  it("returns changed:false for grep in non-initial position", () => {
-    expect(changed("echo grep")).toBe(false);
+  it("grep with || operator", async () => {
+    expect(await rewriteBash("grep foo file.txt || echo not found")).toEqual(
+      "rg foo file.txt || echo not found",
+    );
   });
 });
 
 describe("no find — unchanged", () => {
-  it("no find at all", () => {
-    expect(changed("echo hello")).toBe(false);
+  it("no find at all", async () => {
+    expect(await rewriteBash("echo hello")).toEqual("echo hello");
   });
 
-  it("find in non-initial position", () => {
-    expect(changed("echo find")).toBe(false);
+  it("find in non-initial position", async () => {
+    expect(await rewriteBash("echo find")).toEqual("echo find");
   });
 
-  it("absolute path find untouched", () => {
-    expect(changed("/usr/bin/find . -name '*.ts'")).toBe(false);
+  it("absolute path find untouched", async () => {
+    expect(await rewriteBash("/usr/bin/find . -name '*.ts'")).toEqual(
+      "/usr/bin/find . -name '*.ts'",
+    );
   });
 
-  it("fd command untouched", () => {
-    expect(changed("fd '*.ts' src/")).toBe(false);
+  it("fd command untouched", async () => {
+    expect(await rewriteBash("fd '*.ts' src/")).toEqual("fd '*.ts' src/");
   });
 });
 
 describe("simple find rewrites", () => {
-  it("find . -name rewrites to fd", () => {
-    const r = rewritten("find . -name '*.ts'");
-    expect(r).toContain("fd");
-    expect(r).toContain("*.ts");
-    expect(r).not.toMatch(/\bfind\b/);
+  it("find . -name rewrites to fd", async () => {
+    expect(await rewriteBash("find . -name '*.ts'")).toEqual("fd -H -g '*.ts'");
   });
 
-  it("find with path", () => {
-    const r = rewritten("find packages/ -name 'index.ts'");
-    expect(r).toContain("fd");
-    expect(r).toContain("packages/");
-    expect(r).not.toMatch(/\bfind\b/);
+  it("find with path", async () => {
+    expect(await rewriteBash("find packages/ -name 'index.ts'")).toEqual(
+      "fd -H -g 'index.ts' packages/",
+    );
   });
 
-  it("-maxdepth translated", () => {
-    const r = rewritten("find . -maxdepth 2 -name '*.json'");
-    expect(r).toContain("fd");
-    expect(r).toContain("-d");
-    expect(r).toContain("2");
-    expect(changed("find . -maxdepth 2 -name '*.json'")).toBe(true);
+  it("-maxdepth translated", async () => {
+    expect(await rewriteBash("find . -maxdepth 2 -name '*.json'")).toEqual(
+      "fd -H -d 2 -g '*.json'",
+    );
   });
 
-  it("-type f kept", () => {
-    const r = rewritten("find . -type f -name '*.ts'");
-    expect(r).toContain("-t");
-    expect(r).toContain("f");
-    expect(r).not.toMatch(/\bfind\b/);
+  it("-type f kept", async () => {
+    expect(await rewriteBash("find . -type f -name '*.ts'")).toEqual("fd -H -t f -g '*.ts'");
   });
 });
 
 describe("find pipeline rewrites", () => {
-  it("find piped to another command", () => {
-    const r = rewritten("find . -name '*.ts' | xargs wc -l");
-    expect(r).toContain("fd");
-    expect(r).toContain("|");
-    expect(r).toContain("xargs");
-    expect(r).not.toMatch(/\bfind\b/);
+  it("find piped to another command", async () => {
+    expect(await rewriteBash("find . -name '*.ts' | xargs wc -l")).toEqual(
+      "fd -H -g '*.ts' | xargs wc -l",
+    );
   });
 
-  it("grep and find both in pipeline rewritten", () => {
-    const r = rewritten("find . -name '*.ts' | grep import");
-    expect(r).toContain("fd");
-    expect(r).toContain("rg");
-    expect(r).not.toMatch(/\bfind\b/);
-    expect(r).not.toMatch(/\bgrep\b/);
-  });
-});
-
-describe("rewriteCommand options", () => {
-  it("rewriteGrep:false skips grep", () => {
-    const r = rewrittenOpts("grep hello file.txt", { rewriteGrep: false });
-    expect(r).toMatch(/\bgrep\b/);
-    expect(changedOpts("grep hello file.txt", { rewriteGrep: false })).toBe(false);
-  });
-
-  it("rewriteFind:false skips find", () => {
-    const r = rewrittenOpts("find . -name '*.ts'", { rewriteFind: false });
-    expect(r).toMatch(/\bfind\b/);
-    expect(changedOpts("find . -name '*.ts'", { rewriteFind: false })).toBe(false);
-  });
-
-  it("rewriteFind:false still rewrites grep", () => {
-    const r = rewrittenOpts("grep hello file.txt", { rewriteFind: false });
-    expect(r).toContain("rg");
-    expect(r).not.toMatch(/\bgrep\b/);
-  });
-
-  it("rewriteGrep:false still rewrites find", () => {
-    const r = rewrittenOpts("find . -name '*.ts'", { rewriteGrep: false });
-    expect(r).toContain("fd");
-    expect(r).not.toMatch(/\bfind\b/);
+  it("grep and find both in pipeline rewriteBash", async () => {
+    expect(await rewriteBash("find . -name '*.ts' | grep import")).toEqual(
+      "fd -H -g '*.ts' | rg import",
+    );
   });
 });
 
 describe("unknown flag fallback", () => {
-  it("unknown grep long flag → not rewritten, unknown reported", () => {
-    expect(changed("grep --binary-files=text hello file.txt")).toBe(false);
-    expect(unknownFlagsOf("grep --binary-files=text hello file.txt")).toContain(
-      "--binary-files=text",
+  it("unknown grep long flag → not rewriteBash, unknown reported", async () => {
+    expect(await rewriteBash("grep --binary-files=text hello file.txt")).toEqual(
+      "grep --binary-files=text hello file.txt",
     );
   });
 
-  it("unknown grep short flag → not rewritten, unknown reported", () => {
-    expect(changed("grep -x hello file.txt")).toBe(false);
-    expect(unknownFlagsOf("grep -x hello file.txt")).toContain("-x");
+  it("unknown grep short flag → not rewriteBash, unknown reported", async () => {
+    expect(await rewriteBash("grep -x hello file.txt")).toEqual("grep -x hello file.txt");
   });
 
-  it("unknown find flag → not rewritten, unknown reported", () => {
-    expect(changed("find . -samefile other.txt")).toBe(false);
-    expect(unknownFlagsOf("find . -samefile other.txt")).toContain("-samefile");
+  it("unknown find flag → not rewriteBash, unknown reported", async () => {
+    expect(await rewriteBash("find . -samefile other.txt")).toEqual("find . -samefile other.txt");
   });
 
-  it("unknown find flag → not rewritten, unknown reported", () => {
-    expect(changed("find . -inum 12345")).toBe(false);
-    expect(unknownFlagsOf("find . -inum 12345")).toContain("-inum");
+  it("unknown find flag → not rewriteBash, unknown reported", async () => {
+    expect(await rewriteBash("find . -inum 12345")).toEqual("find . -inum 12345");
   });
 
-  it("known-only grep → still rewritten, no unknowns", () => {
-    expect(changed("grep -rn hello src/")).toBe(true);
-    expect(unknownFlagsOf("grep -rn hello src/")).toHaveLength(0);
+  it("known-only grep → still rewriteBash, no unknowns", async () => {
+    expect(await rewriteBash("grep -rn hello src/")).toEqual("rg -n hello src/");
   });
 
-  it("known-only find → still rewritten, no unknowns", () => {
-    expect(changed("find . -type f -name '*.ts'")).toBe(true);
-    expect(unknownFlagsOf("find . -type f -name '*.ts'")).toHaveLength(0);
+  it("known-only find → still rewriteBash, no unknowns", async () => {
+    expect(await rewriteBash("find . -type f -name '*.ts'")).toEqual("fd -H -t f -g '*.ts'");
   });
 
-  it("pipeline: grep unknown falls back, find known still rewrites", () => {
-    const r = rewritten("find . -name '*.ts' | grep --binary-files=text import");
-    expect(r).toContain("fd");
-    expect(r).not.toMatch(/\bfind\b/);
-    expect(r).toMatch(/\bgrep\b/);
-    expect(r).not.toContain("rg");
-    expect(unknownFlagsOf("find . -name '*.ts' | grep --binary-files=text import")).toContain(
-      "--binary-files=text",
+  it("pipeline: grep unknown falls back, find known still rewrites", async () => {
+    expect(await rewriteBash("find . -name '*.ts' | grep --binary-files=text import")).toEqual(
+      "fd -H -g '*.ts' | grep --binary-files=text import",
     );
   });
 
-  it("pipeline: find unknown falls back, grep known still rewrites", () => {
-    const r = rewritten("find . -samefile other | grep pattern");
-    expect(r).toMatch(/\bfind\b/);
-    expect(r).toContain("rg");
-    expect(r).not.toMatch(/\bgrep\b/);
-    expect(unknownFlagsOf("find . -samefile other | grep pattern")).toContain("-samefile");
+  it("pipeline: find unknown falls back, grep known still rewrites", async () => {
+    expect(await rewriteBash("find . -samefile other | grep pattern")).toEqual(
+      "find . -samefile other | rg pattern",
+    );
+  });
+});
+
+describe("redirect handling", () => {
+  it("2>/dev/null — exact bug repro with pipeline", async () => {
+    expect(
+      await rewriteBash(
+        `grep -r "foo.bar" /some/path --include="*.proto" -l 2>/dev/null | head -20`,
+      ),
+    ).toEqual('rg "foo.bar" /some/path -g "*.proto" -l 2>/dev/null | head -20');
   });
 
-  it("no unknowns when no grep/find", () => {
-    expect(unknownFlagsOf("echo hello")).toHaveLength(0);
-    expect(unknownFlagsOf("ls -la")).toHaveLength(0);
+  it("2>/dev/null plain", async () => {
+    expect(await rewriteBash("grep foo dir 2>/dev/null")).toEqual("rg foo dir 2>/dev/null");
+  });
+
+  it(">/dev/null plain redirect", async () => {
+    expect(await rewriteBash("grep foo dir >/dev/null")).toEqual("rg foo dir >/dev/null");
+  });
+
+  it("2>&1", async () => {
+    expect(await rewriteBash("grep foo dir 2>&1")).toEqual("rg foo dir 2>&1");
+  });
+
+  it("1>/dev/null 2>&1 (two redirects)", async () => {
+    expect(await rewriteBash("grep foo dir 1>/dev/null 2>&1")).toEqual(
+      "rg foo dir 1>/dev/null 2>&1",
+    );
+  });
+
+  it("2>/dev/null piped to wc", async () => {
+    expect(await rewriteBash("grep foo dir 2>/dev/null | wc -l")).toEqual(
+      "rg foo dir 2>/dev/null | wc -l",
+    );
   });
 });
 
 describe("BRE conversion via shell", () => {
-  it("BRE alternation: command rewritten to rg", () => {
-    // Input: grep with BRE pattern foo\|bar
-    // translateGrepArgs converts \| → | (ERE); quote() then shell-escapes | → \|
-    // Net: command is rewritten from grep to rg (the meaningful observable change)
-    const r = rewritten("grep 'foo\\|bar' file.txt");
-    expect(r).toMatch(/^rg/);
-    expect(r).not.toMatch(/\bgrep\b/);
-    expect(changed("grep 'foo\\|bar' file.txt")).toBe(true);
+  it("BRE alternation: \\| converted to | within original shell quoting", async () => {
+    expect(await rewriteBash("grep 'foo\\|bar' file.txt")).toEqual("rg 'foo|bar' file.txt");
   });
 });
