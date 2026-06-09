@@ -1,3 +1,4 @@
+import { access } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 import type { ExtensionAPI, Theme, ToolDefinition } from "@earendil-works/pi-coding-agent";
@@ -42,15 +43,21 @@ export function createReviewPlanTool(
 
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
       if (!ctx.hasUI) {
-        return {
-          content: [{ type: "text", text: "Error: UI not available in non-interactive mode." }],
-          details: { result: "cancel" },
-        };
+        throw new Error("UI not available in non-interactive mode.");
       }
 
       const planPath = join(plansDir, params.planPath);
       const planName = basename(planPath);
       const relPath = params.planPath;
+
+      try {
+        await access(planPath);
+      } catch {
+        throw new Error(
+          `Plan file not found: ${toTildePath(planPath)}. Write the file inside ${toTildePath(plansDir)} first, then call review_plan.`,
+        );
+      }
+
       await ensureGitRepo(exec, plansDir);
       await commitFile(exec, plansDir, relPath, `create: ${planName}`);
 
@@ -152,7 +159,15 @@ export function createReviewPlanTool(
       return new PlanReviewCall(theme, plansDir, args.planPath);
     },
 
-    renderResult(result, _options, theme): Component {
+    renderResult(result, _options, theme, context): Component {
+      if (context.isError) {
+        const errorText = result.content
+          .filter((content) => content.type === "text")
+          .map((content) => content.text)
+          .join("");
+
+        return new Text(theme.fg("error", errorText), 0, 0);
+      }
       return new PlanReviewResult(theme, result.details);
     },
   };
@@ -207,7 +222,7 @@ class PlanReviewResult implements Component {
       }
       case "question": {
         this.container.addChild(
-          new Text(theme.fg("accent", `Question: `) + `${details.message ?? ""}`, 0, 0),
+          new Text(`${theme.fg("accent", `Question: `)}${details.message ?? ""}`, 0, 0),
         );
         break;
       }
