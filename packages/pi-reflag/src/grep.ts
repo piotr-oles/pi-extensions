@@ -5,19 +5,16 @@
  */
 
 import type { CommandRewrite } from "./types.js";
+import { xargs } from "./xargs.js";
 
-export const grep: CommandRewrite = {
-  isMatching(command) {
-    return command.name === "grep";
-  },
-  rewrite(command) {
+export const grep: CommandRewrite = xargs((command) => {
+  if (command.name === "grep") {
     const args = translateGrepArgs(command.args);
-
     if (args) {
       return { name: "rg", args };
     }
-  },
-};
+  }
+});
 
 function convertBreToEre(pattern: string): string {
   return pattern

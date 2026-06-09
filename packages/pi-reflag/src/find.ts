@@ -6,18 +6,16 @@
  *   - kluzzebass/reflag translator/find2fd/translator.go (MIT)
  */
 import type { CommandRewrite } from "./types.js";
+import { xargs } from "./xargs.js";
 
-export const find: CommandRewrite = {
-  isMatching(command) {
-    return command.name === "find";
-  },
-  rewrite(command) {
+export const find: CommandRewrite = xargs((command) => {
+  if (command.name === "find") {
     const args = translateFindArgs(command.args);
     if (args) {
       return { name: "fd", args };
     }
-  },
-};
+  }
+});
 
 function translateDays(val: string): string[] {
   if (val.startsWith("-")) {

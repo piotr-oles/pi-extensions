@@ -3,7 +3,4 @@ export interface Command {
   args: string[];
 }
 
-export interface CommandRewrite {
-  isMatching(command: Command): boolean;
-  rewrite(command: Command): Command | undefined;
-}
+export type CommandRewrite = (command: Command) => Command | undefined;
