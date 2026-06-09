@@ -5,6 +5,7 @@ import type { ExtensionAPI, Theme, ToolDefinition } from "@earendil-works/pi-cod
 import { renderDiff } from "@earendil-works/pi-coding-agent";
 import { type Component, Container, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
+import { detectEditor } from "./editor.js";
 import { commitFile, computeGitDiff, ensureGitRepo } from "./git.js";
 import { PlanWidget, type PlanWidgetAnswer } from "./plan-widget.js";
 import { toTildePath } from "./utils.js";
@@ -61,15 +62,29 @@ export function createReviewPlanTool(
       await ensureGitRepo(exec, plansDir);
       await commitFile(exec, plansDir, relPath, `create: ${planName}`);
 
+      const editor = detectEditor();
+
       ctx.ui.setWorkingVisible(false);
 
-      const result = await ctx.ui.custom<PlanWidgetAnswer>((tui, theme, _kb, done) => {
-        const planWidget = new PlanWidget(tui, theme, planPath);
-        planWidget.onSelect = (answer) => done(answer);
-        planWidget.onQuestion = (question) => done({ type: "question", question });
+      let editorOpened = false;
+      let result: PlanWidgetAnswer;
 
-        return planWidget;
-      });
+      while (true) {
+        result = await ctx.ui.custom<PlanWidgetAnswer>((tui, theme, _kb, done) => {
+          const planWidget = new PlanWidget(tui, theme, planPath, editor, editorOpened);
+          planWidget.onSelect = (answer) => done(answer);
+          planWidget.onQuestion = (question) => done({ type: "question", question });
+
+          return planWidget;
+        });
+
+        if (result.type !== "open-in-editor") {
+          break;
+        }
+
+        editor?.open(planPath).catch(() => {});
+        editorOpened = true;
+      }
 
       ctx.ui.setWorkingVisible(true);
 
