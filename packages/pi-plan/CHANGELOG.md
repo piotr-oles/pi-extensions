@@ -1,5 +1,11 @@
 # @piotr-oles/pi-plan
 
+## 0.2.0
+
+### Minor Changes
+
+- 50a1b0d: add "Open in" option, force llm to put plan in correct dir
+
 ## 0.1.1
 
 ### Patch Changes
