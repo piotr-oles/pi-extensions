@@ -1,0 +1,153 @@
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { AgentTemplatesManager } from "./agent-templates-manager.js";
+
+async function load(cwd: string) {
+  const templatesManager = new AgentTemplatesManager(cwd);
+  await templatesManager.reload();
+  return templatesManager.listTemplates();
+}
+
+let globalAgentsDir = "";
+
+vi.mock("@earendil-works/pi-coding-agent", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@earendil-works/pi-coding-agent")>();
+  return { ...original, getAgentDir: () => globalAgentsDir };
+});
+
+beforeAll(async () => {
+  globalAgentsDir = await mkdtemp(join(tmpdir(), "pi-sub-af-global-"));
+  await mkdir(join(globalAgentsDir, "subagents"), { recursive: true });
+});
+
+afterAll(async () => {
+  await rm(globalAgentsDir, { recursive: true, force: true });
+});
+
+describe("loadCustomAgents", () => {
+  let cwd: string;
+
+  beforeEach(async () => {
+    cwd = await mkdtemp(join(tmpdir(), "pi-sub-af-"));
+  });
+
+  afterEach(async () => {
+    await rm(cwd, { recursive: true, force: true });
+  });
+
+  it("returns empty array when neither global nor project dirs have agents", async () => {
+    expect((await load(cwd)).length).toBe(0);
+  });
+
+  it("loads an agent from the global agents dir", async () => {
+    const globalPath = join(globalAgentsDir, "subagents", "my-agent.md");
+    await writeFile(
+      globalPath,
+      ["---", "description: My global agent", "---", "", "You are a helpful assistant."].join("\n"),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "my-agent")!;
+    expect(cfg.description).toBe("My global agent");
+    expect(cfg.instructions).toBe("You are a helpful assistant.");
+    expect(cfg.source).toBe("global");
+
+    await rm(globalPath, { force: true });
+  });
+
+  it("loads an agent from the project agents dir", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "proj-agent.md"),
+      ["---", "description: Project-specific agent", "---", "", "Focus on this project only."].join(
+        "\n",
+      ),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "proj-agent")!;
+    expect(cfg.source).toBe("project");
+    expect(cfg.instructions).toBe("Focus on this project only.");
+  });
+
+  it("project agent overrides global agent with same name", async () => {
+    const globalPath = join(globalAgentsDir, "subagents", "shared.md");
+    await writeFile(
+      globalPath,
+      ["---", "description: Global version", "---", "", "Global prompt."].join("\n"),
+      "utf-8",
+    );
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "shared.md"),
+      ["---", "description: Project version", "---", "", "Project prompt."].join("\n"),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "shared")!;
+    expect(cfg.description).toBe("Project version");
+    expect(cfg.source).toBe("project");
+
+    await rm(globalPath, { force: true });
+  });
+
+  it("parses optional fields: model, thinking, max_turns, disallowed_tools", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "full.md"),
+      [
+        "---",
+        "description: Full agent",
+        "model: anthropic/claude-haiku-4-5",
+        "thinking: low",
+        "max_turns: 10",
+        "excluded_tools: edit, write",
+        "---",
+        "",
+        "Specialized prompt.",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "full")!;
+    expect(cfg.model).toBe("anthropic/claude-haiku-4-5");
+    expect(cfg.thinkingLevel).toBe("low");
+    expect(cfg.maxTurns).toBe(10);
+    expect(cfg.excludedTools).toEqual(["edit", "write"]);
+  });
+
+  it("defaults enabled to true when not specified", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "default-enabled.md"),
+      ["---", "description: test", "---"].join("\n"),
+      "utf-8",
+    );
+
+    expect((await load(cwd)).find((t) => t.name === "default-enabled")!.enabled).toBe(true);
+  });
+
+  it("respects enabled: false", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "disabled.md"),
+      ["---", "description: test", "enabled: false", "---"].join("\n"),
+      "utf-8",
+    );
+
+    expect((await load(cwd)).find((t) => t.name === "disabled")!.enabled).toBe(false);
+  });
+
+  it("uses filename as description fallback when description not set", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "no-desc.md"),
+      ["---", "---", "", "Some prompt."].join("\n"),
+      "utf-8",
+    );
+
+    expect((await load(cwd)).find((t) => t.name === "no-desc")!.description).toBe("no-desc");
+  });
+});
