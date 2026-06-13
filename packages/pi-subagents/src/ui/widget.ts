@@ -15,31 +15,34 @@ export class AgentWidget {
   private readonly hiddenDoneIds = new Set<string>();
   private readonly cleanupTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
-  constructor(private readonly manager: AgentInstancesManager) {}
+  constructor(private readonly manager: AgentInstancesManager) { }
 
   getVisibleInstances(): AgentInstance[] {
-    const visible: AgentInstance[] = [];
-    for (const inst of this.manager.listInstances()) {
-      if (inst.status === "done") {
-        if (inst.completedAt <= this.mountTime) {
-          continue;
-        }
-        if (this.hiddenDoneIds.has(inst.id)) {
-          continue;
-        }
-        if (!this.cleanupTimers.has(inst.id)) {
-          const id = inst.id;
-          const timer = setTimeout(() => {
-            this.hiddenDoneIds.add(id);
-            this.cleanupTimers.delete(id);
-            this.onInstanceHidden();
-          }, DONE_TTL_MS);
-          this.cleanupTimers.set(inst.id, timer);
-        }
+    const visible = this.manager.listInstances().filter((inst) => {
+      if (inst.status !== "done") {
+        return true;
       }
-      visible.push(inst);
-    }
+      if (inst.doneAt <= this.mountTime) {
+        return false;
+      }
+      return !this.hiddenDoneIds.has(inst.id);
+    });
+    this.scheduleDoneTtl(visible);
     return visible;
+  }
+
+  private scheduleDoneTtl(instances: AgentInstance[]): void {
+    for (const inst of instances) {
+      if (inst.status === "done" && !this.cleanupTimers.has(inst.id)) {
+        const id = inst.id;
+        const timer = setTimeout(() => {
+          this.hiddenDoneIds.add(id);
+          this.cleanupTimers.delete(id);
+          this.onInstanceHidden();
+        }, DONE_TTL_MS);
+        this.cleanupTimers.set(inst.id, timer);
+      }
+    }
   }
 
   private onInstanceHidden(): void {

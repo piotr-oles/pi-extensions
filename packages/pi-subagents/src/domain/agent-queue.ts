@@ -1,6 +1,6 @@
 import type { DoneAgentInstance, RunningAgentInstance } from "./instance/index.js";
 
-interface QueueItem {
+export interface QueueItem {
   id: string;
   onUpdate?: (running: RunningAgentInstance) => void;
   onComplete?: (instance: DoneAgentInstance) => void;
@@ -24,10 +24,22 @@ export class AgentQueue {
     }
   }
 
+  cancel(id: string): QueueItem | undefined {
+    const index = this.pending.findIndex((item) => item.id === id);
+    if (index === -1) {
+      return undefined;
+    }
+    const [item] = this.pending.splice(index, 1);
+    return item;
+  }
+
   release(): void {
     this.running--;
-    while (this.pending.length > 0 && this.running < this.maxConcurrent) {
-      const item = this.pending.shift()!;
+    while (this.running < this.maxConcurrent) {
+      const item = this.pending.shift();
+      if (item === undefined) {
+        break;
+      }
       this.running++;
       this.onStart(item);
     }

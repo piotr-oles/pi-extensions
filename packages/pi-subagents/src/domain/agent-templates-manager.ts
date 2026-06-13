@@ -1,4 +1,4 @@
-import { access, readdir, readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { getAgentDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
 import { type AgentName, type AgentSource, AgentTemplate, type ThinkingLevel } from "./types.js";
@@ -52,7 +52,7 @@ export class AgentTemplatesManager {
       return undefined;
     }
     const template = this.templates.get(key);
-    return template?.enabled !== false ? template : undefined;
+    return template?.enabled ? template : undefined;
   }
 
   getTemplateOrDefault(name: AgentName): AgentTemplate {
@@ -69,10 +69,6 @@ export class AgentTemplatesManager {
     );
   }
 
-  getAllNames(): AgentName[] {
-    return [...this.templates.keys()];
-  }
-
   listTemplates(): AgentTemplate[] {
     return Array.from(this.templates.values()).sort(
       (templateA, templateB) => templateB.getRelevanceScore() - templateA.getRelevanceScore(),
@@ -81,7 +77,7 @@ export class AgentTemplatesManager {
 
   getEnabledNames(): AgentName[] {
     return [...this.templates.entries()]
-      .filter(([, template]) => template.enabled !== false)
+      .filter(([, template]) => template.enabled)
       .map(([name]) => name);
   }
 
@@ -90,12 +86,6 @@ export class AgentTemplatesManager {
     source: AgentSource,
   ): Promise<Map<AgentName, AgentTemplate>> {
     const templates = new Map<AgentName, AgentTemplate>();
-
-    try {
-      await access(dir);
-    } catch {
-      return templates;
-    }
 
     let files: string[];
     try {
@@ -120,27 +110,27 @@ export class AgentTemplatesManager {
         continue;
       }
       const name = basename(file, ".md");
-      const { frontmatter: fm, body } = parseFrontmatter(content);
-
-      templates.set(
-        name,
-        new AgentTemplate({
-          name,
-          description: parseString(fm.description) ?? name,
-          excludedTools: Array.from(new Set(parseCsvField(fm.excluded_tools) ?? [])),
-          model: parseString(fm.model),
-          thinkingLevel: parseThinkingLevel(fm.thinking),
-          maxTurns: parseNonNegativeInt(fm.max_turns),
-          graceTurns: parseNonNegativeInt(fm.grace_turns),
-          instructions: body.trim(),
-          enabled: fm.enabled !== false,
-          source,
-        }),
-      );
+      templates.set(name, parseTemplateFile(name, content, source));
     }
 
     return templates;
   }
+}
+
+function parseTemplateFile(name: string, content: string, source: AgentSource): AgentTemplate {
+  const { frontmatter: fm, body } = parseFrontmatter(content);
+  return new AgentTemplate({
+    name,
+    description: parseString(fm.description) ?? name,
+    excludedTools: Array.from(new Set(parseCsvField(fm.excluded_tools) ?? [])),
+    model: parseString(fm.model),
+    thinkingLevel: parseThinkingLevel(fm.thinking),
+    maxTurns: parseNonNegativeInt(fm.max_turns),
+    graceTurns: parseNonNegativeInt(fm.grace_turns),
+    instructions: body.trim(),
+    enabled: fm.enabled !== false,
+    source,
+  });
 }
 
 const THINKING_LEVELS: ReadonlySet<ThinkingLevel> = new Set([
@@ -152,11 +142,13 @@ const THINKING_LEVELS: ReadonlySet<ThinkingLevel> = new Set([
   "xhigh",
 ]);
 
+function isThinkingLevel(value: string): value is ThinkingLevel {
+  return THINKING_LEVELS.has(value as ThinkingLevel);
+}
+
 function parseThinkingLevel(value: unknown): ThinkingLevel | undefined {
   const str = parseString(value);
-  return str !== undefined && THINKING_LEVELS.has(str as ThinkingLevel)
-    ? (str as ThinkingLevel)
-    : undefined;
+  return str !== undefined && isThinkingLevel(str) ? str : undefined;
 }
 
 function parseString(value: unknown): string | undefined {

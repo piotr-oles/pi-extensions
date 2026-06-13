@@ -52,16 +52,7 @@ export function createSubagentTool(deps: AgentToolDeps) {
         onComplete: (instance: DoneAgent) => {
           widget.requestRender();
           const result = instance.result ?? "";
-          const text = [
-            `Subagent "${instance.config.name}" with id "${instance.id}" finished with ${instance.reason} reason.`,
-            instance.reason === "completed" || instance.reason === "steered"
-              ? instance.result
-                ? `Result:\n${instance.result}`
-                : "No results."
-              : instance.error
-                ? `Error: ${instance.error}`
-                : "No output",
-          ].join("\n");
+          const text = formatCompletionMessage(instance);
           pi.sendMessage(
             {
               customType: "subagent-message",
@@ -102,4 +93,17 @@ export function createSubagentTool(deps: AgentToolDeps) {
       };
     },
   });
+}
+
+function formatCompletionMessage(instance: DoneAgent): string {
+  const header = `Subagent "${instance.config.name}" with id "${instance.id}" finished with ${instance.reason} reason.`;
+  const succeeded = instance.reason === "completed" || instance.reason === "steered";
+  const body = succeeded
+    ? instance.result
+      ? `Result:\n${instance.result}`
+      : "No results."
+    : instance.error
+      ? `Error: ${instance.error}`
+      : "No output";
+  return [header, body].join("\n");
 }

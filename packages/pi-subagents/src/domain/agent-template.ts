@@ -40,18 +40,12 @@ export class AgentTemplate {
     this.source = params.source;
   }
 
+  private static readonly RELEVANCE: Record<AgentSource, [disabled: number, enabled: number]> = {
+    global: [0, 2],
+    project: [1, 3],
+  };
+
   getRelevanceScore(): number {
-    if (!this.enabled) {
-      if (this.source === "global") {
-        return 0;
-      } else if (this.source === "project") {
-        return 1;
-      }
-    } else if (this.source === "global") {
-      return 2;
-    } else if (this.source === "project") {
-      return 3;
-    }
-    return 0;
+    return AgentTemplate.RELEVANCE[this.source][this.enabled ? 1 : 0];
   }
 }

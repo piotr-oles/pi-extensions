@@ -1,4 +1,5 @@
-import type { AgentSession, AgentSessionEvent } from "@earendil-works/pi-coding-agent";
+import type { AgentSessionEvent } from "@earendil-works/pi-coding-agent";
+import type { Session } from "../types.js";
 import type { AgentConfig } from "../agent-config.js";
 import type { DoneAgentParams } from "./done-agent.js";
 import { DoneAgentInstance } from "./done-agent.js";
@@ -15,26 +16,20 @@ export class RunningAgentInstance {
   readonly status = "running" as const;
   readonly id: string;
   readonly config: AgentConfig;
-  readonly session: AgentSession;
+  readonly session: Session;
   readonly startedAt: number;
   readonly signal: AbortSignal;
 
   private turnCount = 0;
   private aborted: false | "signal" | "limit" = false;
-  private softLimitReached: boolean = false;
-  private readonly activeToolsMap = new Map<string, string>();
+  private softLimitReached = false;
   private readonly controller: AbortController;
 
   get name() {
     return this.config.name;
   }
 
-  constructor({
-    queued: { id, config, session, signal },
-    startedAt,
-    onUpdate,
-    onDone,
-  }: RunningAgentParams) {
+  private constructor({ queued: { id, config, session, signal }, startedAt }: RunningAgentParams) {
     this.id = id;
     this.config = config;
     this.startedAt = startedAt;
@@ -43,68 +38,17 @@ export class RunningAgentInstance {
     this.signal = signal
       ? AbortSignal.any([signal, this.controller.signal])
       : this.controller.signal;
+  }
 
-    this.aborted = false;
-    this.softLimitReached = false;
-    this.signal.addEventListener("abort", this.handleAbortSignal);
-
-    (async () => {
-      const unsubscribe = session.subscribe(async (event: AgentSessionEvent) => {
-        if (event.type === "turn_end") {
-          const next = await this.nextTurn();
-          if (next.status === "done") {
-            onDone(next);
-          } else {
-            onUpdate?.(next);
-          }
-        }
-        if (event.type === "tool_execution_start") {
-          this.activeToolsMap.set(event.toolCallId, event.toolName);
-          onUpdate?.(this);
-        }
-        if (event.type === "tool_execution_end") {
-          this.activeToolsMap.delete(event.toolCallId);
-          onUpdate?.(this);
-        }
-        if (event.type === "compaction_end" && !event.aborted && event.result) {
-          onUpdate?.(this);
-        }
-      });
-
-      try {
-        await session.prompt(config.prompt);
-
-        if (this.aborted === "signal") {
-          onDone(this.done({ reason: "stopped" }));
-        } else if (this.aborted === "limit") {
-          onDone(this.done({ reason: "aborted" }));
-        } else {
-          onDone(
-            this.done({
-              reason: this.softLimitReached ? "steered" : "completed",
-              result: session.getLastAssistantText(),
-            }),
-          );
-        }
-      } catch (error: unknown) {
-        onDone(
-          this.done({
-            reason: "error",
-            error: error instanceof Error ? error.message : String(error),
-          }),
-        );
-      } finally {
-        unsubscribe();
-      }
-    })();
+  static start(params: RunningAgentParams): RunningAgentInstance {
+    const instance = new RunningAgentInstance(params);
+    instance.signal.addEventListener("abort", instance.handleAbort);
+    instance.runSession(params.onUpdate, params.onDone);
+    return instance;
   }
 
   get duration(): number {
     return Date.now() - this.startedAt;
-  }
-
-  get activeTools(): string[] {
-    return Array.from(this.activeToolsMap.values());
   }
 
   async nextTurn(): Promise<RunningAgentInstance | DoneAgentInstance> {
@@ -136,16 +80,63 @@ export class RunningAgentInstance {
     return this.done({ reason: "aborted" });
   }
 
-  done({ reason, result, error }: Omit<DoneAgentParams, "running">): DoneAgentInstance {
-    this.signal.removeEventListener("abort", this.handleAbortSignal);
-    return new DoneAgentInstance({ running: this, reason, result, error });
+  done({ reason, result, error }: Omit<DoneAgentParams, "instance">): DoneAgentInstance {
+    this.signal.removeEventListener("abort", this.handleAbort);
+    return new DoneAgentInstance({ instance: this, reason, result, error });
   }
 
-  private handleAbortSignal = () => {
+  private async runSession(
+    onUpdate: RunningAgentParams["onUpdate"],
+    onDone: RunningAgentParams["onDone"],
+  ): Promise<void> {
+    const { session, config } = this;
+    // typescript narrows type to RunningAgentInstance even with explicit type annotation :/
+    let next: RunningAgentInstance | DoneAgentInstance = this as RunningAgentInstance | DoneAgentInstance;
+    const unsubscribe = session.subscribe(async (event: AgentSessionEvent) => {
+      if (event.type === "turn_end") {
+        next = await this.nextTurn();
+        if (next.status !== "done") {
+          onUpdate?.(next);
+        }
+      } else {
+        onUpdate?.(this);
+      }
+    });
+
+    try {
+      await session.prompt(config.prompt);
+
+      if (next.status === 'done') {
+        onDone(next);
+      } else if (next.aborted === "signal") {
+        onDone(next.done({ reason: "stopped" }));
+      } else if (next.aborted === "limit") {
+        onDone(next.done({ reason: "aborted" }));
+      } else {
+        onDone(
+          next.done({
+            reason: next.softLimitReached ? "steered" : "completed",
+            result: session.getLastAssistantText(),
+          }),
+        );
+      }
+    } catch (error: unknown) {
+      onDone(
+        this.done({
+          reason: "error",
+          error: error instanceof Error ? error.message : String(error),
+        }),
+      );
+    } finally {
+      unsubscribe();
+    }
+  }
+
+  private handleAbort = () => {
     if (!this.aborted) {
       this.aborted = "signal";
     }
     this.session.abort();
-    this.signal.removeEventListener("abort", this.handleAbortSignal);
+    this.signal.removeEventListener("abort", this.handleAbort);
   };
 }

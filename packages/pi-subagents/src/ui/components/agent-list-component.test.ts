@@ -1,63 +1,10 @@
-import type { AgentSession, Theme } from "@earendil-works/pi-coding-agent";
 import type { TUI } from "@earendil-works/pi-tui";
 import stripAnsi from "strip-ansi";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AgentConfig } from "../../domain/agent-config.js";
-import { AgentTemplate } from "../../domain/agent-template.js";
-import { QueuedAgentInstance } from "../../domain/instance/queued-agent.js";
-import { RunningAgentInstance } from "../../domain/instance/running-agent.js";
+import { makeDone, makeQueued, makeRunning, mockTheme } from "../test-helpers.js";
 import { AgentListComponent } from "./agent-list-component.js";
 
-const mockTheme = {
-  fg: (_: string, text: string) => text,
-  bg: (_: string, text: string) => text,
-  bold: (text: string) => text,
-} as unknown as Theme;
-
 const mockTui = { requestRender: vi.fn() } as unknown as TUI;
-
-const mockSession = {
-  getContextUsage: () => undefined,
-  getLastAssistantText: () => "",
-  messages: [],
-  steer: async () => {},
-  abort: () => {},
-  bindExtensions: async () => {},
-  prompt: async () => {},
-  subscribe: () => () => {},
-} as unknown as AgentSession;
-
-const mockTemplate = new AgentTemplate({
-  name: "my-agent",
-  description: "",
-  instructions: "",
-  source: "global",
-});
-
-const mockConfig = new AgentConfig({
-  template: mockTemplate,
-  description: "doing a task",
-  prompt: "do something",
-  activeTools: [],
-});
-
-function makeQueued(id: string) {
-  return new QueuedAgentInstance({
-    id,
-    config: mockConfig,
-    session: mockSession,
-    signal: undefined,
-  });
-}
-
-function makeRunning(id: string) {
-  const queued = makeQueued(id);
-  return new RunningAgentInstance({ queued, startedAt: 0, onDone: () => {} });
-}
-
-function makeDone(id: string) {
-  return makeRunning(id).done({ reason: "completed" });
-}
 
 function render(component: AgentListComponent): string {
   return stripAnsi(

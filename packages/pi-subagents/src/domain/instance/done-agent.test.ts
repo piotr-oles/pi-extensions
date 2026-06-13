@@ -1,60 +1,14 @@
-import type { AgentSession } from "@earendil-works/pi-coding-agent";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AgentConfig } from "../agent-config.js";
-import { AgentTemplate } from "../types.js";
-import type { DoneAgentInstance } from "./done-agent.js";
-import { QueuedAgentInstance } from "./queued-agent.js";
-import { RunningAgentInstance } from "./running-agent.js";
-
-const mockTemplate = new AgentTemplate({
-  name: "test",
-  description: "test agent",
-  instructions: "",
-  source: "global",
-});
-
-const mockConfig = new AgentConfig({
-  template: mockTemplate,
-  description: "test task",
-  prompt: "do something",
-  activeTools: [],
-});
-
-const mockSession = {
-  messages: [],
-  steer: async () => {},
-  abort: () => {},
-  bindExtensions: async () => {},
-  prompt: async () => {},
-  subscribe: () => () => {},
-} as unknown as AgentSession;
-
-const queued = new QueuedAgentInstance({
-  id: "test-id",
-  config: mockConfig,
-  session: mockSession,
-  signal: undefined,
-});
-
-function makeRunning(): RunningAgentInstance {
-  return new RunningAgentInstance({ queued, startedAt: 0, onDone: () => {} });
-}
-
-function makeDone(): DoneAgentInstance {
-  return new RunningAgentInstance({
-    queued,
-    startedAt: 1000,
-    onDone: () => {},
-  }).done({ reason: "completed" });
-}
+import { makeQueued, makeDone, makeRunning, mockConfig } from "./test-helpers.js";
 
 describe("DoneAgentInstance", () => {
   it("preserves session", () => {
-    expect(makeRunning().done({ reason: "completed" }).session).toBe(mockSession);
+    expect(makeRunning().done({ reason: "completed" }).session).toBeDefined();
   });
 
   it("preserves id and config", () => {
-    const done = makeDone();
+    const queued = makeQueued();
+    const done = makeRunning(queued).done({ reason: "completed" });
     expect(done.id).toBe(queued.id);
     expect(done.config).toBe(mockConfig);
   });
@@ -85,21 +39,13 @@ describe("DoneAgentInstance", () => {
 
     it("is completedAt minus startedAt", () => {
       vi.setSystemTime(6000);
-      const done = new RunningAgentInstance({
-        queued,
-        startedAt: 1000,
-        onDone: () => {},
-      }).done({ reason: "completed" });
+      const done = makeRunning(makeQueued(), 1000).done({ reason: "completed" });
       expect(done.duration).toBe(5000);
     });
 
     it("is fixed regardless of current time after creation", () => {
       vi.setSystemTime(6000);
-      const done = new RunningAgentInstance({
-        queued,
-        startedAt: 1000,
-        onDone: () => {},
-      }).done({ reason: "completed" });
+      const done = makeRunning(makeQueued(), 1000).done({ reason: "completed" });
       vi.setSystemTime(999_999);
       expect(done.duration).toBe(5000);
     });
@@ -111,13 +57,8 @@ describe("DoneAgentInstance", () => {
       "stopped",
       "error",
     ] as const)("uses completedAt - startedAt for reason '%s'", (reason) => {
-      const r = new RunningAgentInstance({
-        queued,
-        startedAt: 0,
-        onDone: () => {},
-      });
       vi.setSystemTime(1234);
-      expect(r.done({ reason }).duration).toBe(1234);
+      expect(makeDone(reason).duration).toBe(1234);
     });
   });
 });

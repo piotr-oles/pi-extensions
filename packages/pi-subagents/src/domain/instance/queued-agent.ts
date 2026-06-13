@@ -1,12 +1,12 @@
-import type { AgentSession } from "@earendil-works/pi-coding-agent";
+import type { Session } from "../types.js";
 import type { AgentConfig } from "../agent-config.js";
-import type { DoneAgentInstance } from "./done-agent.js";
+import { DoneAgentInstance } from "./done-agent.js";
 import { RunningAgentInstance } from "./running-agent.js";
 
 export interface QueuedAgentParams {
   id: string;
   config: AgentConfig;
-  session: AgentSession;
+  session: Session;
   signal: AbortSignal | undefined;
 }
 
@@ -19,7 +19,7 @@ export class QueuedAgentInstance {
   readonly status = "queued" as const;
   readonly id: string;
   readonly config: AgentConfig;
-  readonly session: AgentSession;
+  readonly session: Session;
   readonly signal: AbortSignal | undefined;
 
   get name() {
@@ -33,8 +33,12 @@ export class QueuedAgentInstance {
     this.signal = signal;
   }
 
+  abort(): DoneAgentInstance {
+    return new DoneAgentInstance({ instance: this, reason: "aborted" });
+  }
+
   run({ onUpdate, onDone }: RunAgentParams): RunningAgentInstance {
-    return new RunningAgentInstance({
+    return RunningAgentInstance.start({
       queued: this,
       startedAt: Date.now(),
       onUpdate,
