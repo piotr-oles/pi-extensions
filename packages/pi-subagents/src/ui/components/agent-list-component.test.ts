@@ -1,7 +1,7 @@
 import type { TUI } from "@earendil-works/pi-tui";
 import stripAnsi from "strip-ansi";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { makeDone, makeQueued, makeRunning, mockTheme } from "../test-helpers.js";
+import { makeDone, makeQueued, makeRunning, mockTheme } from "../../test-helpers.js";
 import { AgentListComponent } from "./agent-list-component.js";
 
 const mockTui = { requestRender: vi.fn() } as unknown as TUI;
@@ -33,7 +33,7 @@ describe("AgentListComponent", () => {
 
   it("renders header and done rows", () => {
     const component = new AgentListComponent(
-      () => [makeDone("1"), makeDone("2")],
+      () => [makeDone({ id: "1" }), makeDone({ id: "2" })],
       mockTui,
       mockTheme,
     );
@@ -47,7 +47,7 @@ describe("AgentListComponent", () => {
 
   it("renders queued count for queued instances", () => {
     const component = new AgentListComponent(
-      () => [makeQueued("1"), makeQueued("2")],
+      () => [makeQueued({ id: "1" }), makeQueued({ id: "2" })],
       mockTui,
       mockTheme,
     );
@@ -60,7 +60,7 @@ describe("AgentListComponent", () => {
 
   it("renders running rows alongside done rows and queued count", () => {
     const component = new AgentListComponent(
-      () => [makeRunning("1"), makeDone("2"), makeQueued("3")],
+      () => [makeRunning({ id: "1" }), makeDone({ id: "2" }), makeQueued({ id: "3" })],
       mockTui,
       mockTheme,
     );
@@ -74,7 +74,7 @@ describe("AgentListComponent", () => {
   });
 
   it("updates header text after invalidate()", () => {
-    const component = new AgentListComponent(() => [makeDone("1")], mockTui, mockTheme);
+    const component = new AgentListComponent(() => [makeDone({ id: "1" })], mockTui, mockTheme);
     component.invalidate();
     expect(render(component)).toMatchInlineSnapshot(`
       "● Subagents

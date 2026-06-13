@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DoneAgentInstance } from "./done-agent.js";
 import { RunningAgentInstance } from "./running-agent.js";
-import { makeQueued } from "./test-helpers.js";
+import { makeQueued } from "../../test-helpers.js";
 import { ScriptedSessionBuilder } from "../../test-helpers/scripted-session-builder.js";
 
 interface RunOptions {

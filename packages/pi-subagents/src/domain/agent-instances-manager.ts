@@ -46,7 +46,7 @@ export class AgentInstancesManager {
     const session = await createAgentSessionFromConfig(config, ctx);
     const queued = new QueuedAgentInstance({ id, config, session, signal });
     this.instances.set(id, queued);
-    this.queue.enqueue({ id, onUpdate, onComplete });
+    this.queue.enqueue({ id, onUpdate, onDone: onComplete });
     return id;
   }
 
@@ -68,7 +68,7 @@ export class AgentInstancesManager {
       const item = this.queue.cancel(id);
       const done = instance.abort();
       this.instances.set(id, done);
-      item?.onComplete?.(done);
+      item?.onDone?.(done);
       return true;
     }
     return false;
@@ -90,7 +90,7 @@ export class AgentInstancesManager {
     );
   }
 
-  private startQueuedAgent({ id, onUpdate, onComplete }: QueueItem): void {
+  private startQueuedAgent({ id, onUpdate, onDone }: QueueItem): void {
     const instance = this.instances.get(id);
     if (!instance || instance.status !== "queued") {
       this.queue.release();
@@ -103,7 +103,7 @@ export class AgentInstancesManager {
         onDone: (done) => {
           try {
             this.instances.set(id, done);
-            onComplete?.(done);
+            onDone?.(done);
           } finally {
             this.queue.release();
           }

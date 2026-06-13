@@ -3,7 +3,7 @@ import type { DoneAgentInstance, RunningAgentInstance } from "./instance/index.j
 export interface QueueItem {
   id: string;
   onUpdate?: (running: RunningAgentInstance) => void;
-  onComplete?: (instance: DoneAgentInstance) => void;
+  onDone?: (instance: DoneAgentInstance) => void;
 }
 
 export class AgentQueue {
@@ -13,7 +13,7 @@ export class AgentQueue {
   constructor(
     private readonly maxConcurrent: number,
     private readonly onStart: (item: QueueItem) => void,
-  ) {}
+  ) { }
 
   enqueue(item: QueueItem): void {
     if (this.running < this.maxConcurrent) {

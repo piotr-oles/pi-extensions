@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AgentConfig } from "../agent-config.js";
-import { AgentTemplate } from "../types.js";
-import { makeQueued } from "./test-helpers.js";
+import { makeAgentConfig, makeAgentTemplate, makeQueued } from "../../test-helpers.js";
 
 describe("QueuedAgentInstance", () => {
   it("transitions to running state when started", () => {
@@ -11,19 +9,9 @@ describe("QueuedAgentInstance", () => {
   });
 
   it("carries config into the running state", () => {
-    const config = new AgentConfig({
-      template: new AgentTemplate({
-        name: "n",
-        description: "agent",
-        instructions: "",
-        maxTurns: 5,
-        source: "global",
-      }),
-      description: "d",
-      prompt: "go",
-      activeTools: [],
-    });
-    const running = makeQueued({ config }).run({ onDone: () => {} });
+    const running = makeQueued({
+      config: makeAgentConfig({ template: makeAgentTemplate({ name: "n", maxTurns: 5 }) }),
+    }).run({ onDone: () => {} });
     expect(running.config.name).toBe("n");
     expect(running.config.maxTurns).toBe(5);
   });

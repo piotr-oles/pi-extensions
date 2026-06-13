@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { AgentQueue } from "./agent-queue.js";
 
-function item(id: string) {
+function makeItem(id: string) {
   return { id };
 }
 
@@ -10,7 +10,7 @@ describe("AgentQueue", () => {
     const onStart = vi.fn();
     const queue = new AgentQueue(2, onStart);
 
-    queue.enqueue(item("a"));
+    queue.enqueue(makeItem("a"));
 
     expect(onStart).toHaveBeenCalledOnce();
     expect(onStart).toHaveBeenCalledWith(expect.objectContaining({ id: "a" }));
@@ -20,8 +20,8 @@ describe("AgentQueue", () => {
     const onStart = vi.fn();
     const queue = new AgentQueue(1, onStart);
 
-    queue.enqueue(item("a"));
-    queue.enqueue(item("b"));
+    queue.enqueue(makeItem("a"));
+    queue.enqueue(makeItem("b"));
 
     expect(onStart).toHaveBeenCalledOnce();
     expect(onStart).toHaveBeenCalledWith(expect.objectContaining({ id: "a" }));
@@ -31,8 +31,8 @@ describe("AgentQueue", () => {
     const onStart = vi.fn();
     const queue = new AgentQueue(1, onStart);
 
-    queue.enqueue(item("a"));
-    queue.enqueue(item("b"));
+    queue.enqueue(makeItem("a"));
+    queue.enqueue(makeItem("b"));
     queue.release();
 
     expect(onStart).toHaveBeenCalledTimes(2);
@@ -43,9 +43,9 @@ describe("AgentQueue", () => {
     const onStart = vi.fn();
     const queue = new AgentQueue(1, onStart);
 
-    queue.enqueue(item("a"));
-    queue.enqueue(item("b"));
-    queue.enqueue(item("c"));
+    queue.enqueue(makeItem("a"));
+    queue.enqueue(makeItem("b"));
+    queue.enqueue(makeItem("c"));
 
     // only "a" started so far
     expect(onStart).toHaveBeenCalledOnce();
@@ -64,9 +64,9 @@ describe("AgentQueue", () => {
     const started: string[] = [];
     const queue = new AgentQueue(1, (it) => started.push(it.id));
 
-    queue.enqueue(item("a"));
-    queue.enqueue(item("b"));
-    queue.enqueue(item("c"));
+    queue.enqueue(makeItem("a"));
+    queue.enqueue(makeItem("b"));
+    queue.enqueue(makeItem("c"));
     queue.release();
     queue.release();
 
@@ -77,7 +77,7 @@ describe("AgentQueue", () => {
     const onStart = vi.fn();
     const queue = new AgentQueue(2, onStart);
 
-    queue.enqueue(item("a"));
+    queue.enqueue(makeItem("a"));
     queue.release();
     // no pending items, no error, no extra onStart calls
     expect(onStart).toHaveBeenCalledOnce();
@@ -87,9 +87,9 @@ describe("AgentQueue", () => {
     const onStart = vi.fn();
     const queue = new AgentQueue(2, onStart);
 
-    queue.enqueue(item("a"));
-    queue.enqueue(item("b"));
-    queue.enqueue(item("c"));
+    queue.enqueue(makeItem("a"));
+    queue.enqueue(makeItem("b"));
+    queue.enqueue(makeItem("c"));
 
     // two slots → "a" and "b" start, "c" queued
     expect(onStart).toHaveBeenCalledTimes(2);
@@ -102,10 +102,10 @@ describe("AgentQueue", () => {
     const onStart = vi.fn();
     const queue = new AgentQueue(1, onStart);
     const onUpdate = vi.fn();
-    const onComplete = vi.fn();
+    const onDone = vi.fn();
 
-    queue.enqueue({ id: "x", onUpdate, onComplete });
+    queue.enqueue({ id: "x", onUpdate, onDone });
 
-    expect(onStart).toHaveBeenCalledWith({ id: "x", onUpdate, onComplete });
+    expect(onStart).toHaveBeenCalledWith({ id: "x", onUpdate, onDone });
   });
 });

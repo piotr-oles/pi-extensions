@@ -1,7 +1,7 @@
 import type { AgentSessionEvent, ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AgentTemplate } from "./agent-template.js";
 import { AgentInstancesManager } from "./agent-instances-manager.js";
+import { makeAgentTemplate } from "../test-helpers.js";
 
 vi.mock("../infrastructure/session-factory.js");
 vi.mock("../flags.js");
@@ -49,12 +49,7 @@ function makeMockCtx(): ExtensionContext {
   } as unknown as ExtensionContext;
 }
 
-const template = new AgentTemplate({
-  name: "tester",
-  description: "test agent",
-  instructions: "do stuff",
-  source: "global",
-});
+const template = makeAgentTemplate({ name: "tester", instructions: "do stuff" });
 
 async function flushMicrotasks(): Promise<void> {
   await new Promise<void>((res) => setImmediate(res));

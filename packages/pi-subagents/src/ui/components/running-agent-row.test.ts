@@ -1,7 +1,7 @@
 import type { TUI } from "@earendil-works/pi-tui";
 import stripAnsi from "strip-ansi";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { makeRunning, mockSession, mockTheme } from "../test-helpers.js";
+import { makeRunning, mockSession, mockTheme } from "../../test-helpers.js";
 import { RunningAgentRow } from "./running-agent-row.js";
 
 const mockTui = { requestRender: vi.fn() } as unknown as TUI;
@@ -26,7 +26,7 @@ describe("RunningAgentRow", () => {
   });
 
   it("renders spinner and agent description", () => {
-    const row = new RunningAgentRow(makeRunning("1"), mockTui, mockTheme);
+    const row = new RunningAgentRow(makeRunning({ id: "1" }), mockTui, mockTheme);
     expect(render(row)).toMatchInlineSnapshot(`"⠋ #1 my-agent · doing a task"`);
     row.stop();
   });
@@ -36,20 +36,20 @@ describe("RunningAgentRow", () => {
       ...mockSession,
       getContextUsage: () => ({ tokens: 1500, contextWindow: 10_000, percent: null }),
     };
-    const row = new RunningAgentRow(makeRunning("1", { session }), mockTui, mockTheme);
+    const row = new RunningAgentRow(makeRunning({ id: "1", session }), mockTui, mockTheme);
     expect(render(row)).toMatchInlineSnapshot(`"⠋ #1 my-agent · doing a task · 1.5K"`);
     row.stop();
   });
 
   it("advances the spinner frame as time passes", () => {
-    const row = new RunningAgentRow(makeRunning("1"), mockTui, mockTheme);
+    const row = new RunningAgentRow(makeRunning({ id: "1" }), mockTui, mockTheme);
     vi.advanceTimersByTime(80);
     expect(render(row)).toMatchInlineSnapshot(`"⠙ #1 my-agent · doing a task"`);
     row.stop();
   });
 
   it("re-renders correctly after update()", () => {
-    const instance = makeRunning("1");
+    const instance = makeRunning({ id: "1" });
     const row = new RunningAgentRow(instance, mockTui, mockTheme);
     row.update(instance);
     expect(render(row)).toMatchInlineSnapshot(`"⠋ #1 my-agent · doing a task"`);
