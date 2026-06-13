@@ -1,4 +1,4 @@
-import type { Theme } from "@earendil-works/pi-coding-agent";
+import { Theme, type ThemeColor } from "@earendil-works/pi-coding-agent";
 import { AgentConfig, type AgentConfigParams } from "./domain/agent-config.js";
 import { AgentTemplate, type AgentTemplateParams } from "./domain/agent-template.js";
 import type { DoneReason } from "./domain/instance/done-agent.js";
@@ -6,11 +6,26 @@ import { QueuedAgentInstance } from "./domain/instance/queued-agent.js";
 import { RunningAgentInstance } from "./domain/instance/running-agent.js";
 import type { Session } from "./domain/types.js";
 
-export const mockTheme: Theme = {
-  fg: (_: string, text: string) => text,
-  bg: (_: string, text: string) => text,
-  bold: (text: string) => text,
-} as unknown as Theme;
+const FG_COLORS: Record<ThemeColor, string> = {
+  accent: "", border: "", borderAccent: "", borderMuted: "",
+  success: "", error: "", warning: "", muted: "", dim: "", text: "",
+  thinkingText: "", userMessageText: "", customMessageText: "", customMessageLabel: "",
+  toolTitle: "", toolOutput: "",
+  mdHeading: "", mdLink: "", mdLinkUrl: "", mdCode: "", mdCodeBlock: "",
+  mdCodeBlockBorder: "", mdQuote: "", mdQuoteBorder: "", mdHr: "", mdListBullet: "",
+  toolDiffAdded: "", toolDiffRemoved: "", toolDiffContext: "",
+  syntaxComment: "", syntaxKeyword: "", syntaxFunction: "", syntaxVariable: "",
+  syntaxString: "", syntaxNumber: "", syntaxType: "", syntaxOperator: "", syntaxPunctuation: "",
+  thinkingOff: "", thinkingMinimal: "", thinkingLow: "", thinkingMedium: "",
+  thinkingHigh: "", thinkingXhigh: "", bashMode: "",
+};
+
+const BG_COLORS = {
+  selectedBg: "", userMessageBg: "", customMessageBg: "",
+  toolPendingBg: "", toolSuccessBg: "", toolErrorBg: "",
+};
+
+export const mockTheme = new Theme(FG_COLORS, BG_COLORS, "truecolor");
 
 export const mockSession: Session = {
   sessionId: "mock",
