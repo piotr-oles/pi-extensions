@@ -14,7 +14,7 @@ export interface AgentToolDeps {
 export function createSubagentTool(deps: AgentToolDeps) {
   const { pi, manager, templatesManager } = deps;
   const enabledNames = templatesManager.getEnabledNames();
-  const widget = new AgentWidget(manager);
+  const widget = new AgentWidget(() => manager.listInstances());
 
   return defineTool({
     name: "subagent",

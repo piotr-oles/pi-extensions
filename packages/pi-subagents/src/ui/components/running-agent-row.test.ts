@@ -1,10 +1,10 @@
 import type { TUI } from "@earendil-works/pi-tui";
 import stripAnsi from "strip-ansi";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { makeRunning, mockSession, mockTheme } from "../../test-helpers.js";
+import { makeRunning, mockSession, mockTheme, mockTui } from "../../test-helpers.js";
 import { RunningAgentRow } from "./running-agent-row.js";
 
-const mockTui = { requestRender: vi.fn() } as unknown as TUI;
+
 
 function render(row: RunningAgentRow): string {
   return stripAnsi(

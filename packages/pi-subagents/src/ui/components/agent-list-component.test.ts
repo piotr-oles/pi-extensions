@@ -1,10 +1,10 @@
 import type { TUI } from "@earendil-works/pi-tui";
 import stripAnsi from "strip-ansi";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { makeDone, makeQueued, makeRunning, mockTheme } from "../../test-helpers.js";
+import { makeDone, makeQueued, makeRunning, mockTheme, mockTui } from "../../test-helpers.js";
 import { AgentListComponent } from "./agent-list-component.js";
 
-const mockTui = { requestRender: vi.fn() } as unknown as TUI;
+
 
 function render(component: AgentListComponent): string {
   return stripAnsi(

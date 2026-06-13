@@ -1,5 +1,8 @@
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { getMaxConcurrent } from "../flags.js";
+import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
+
+export interface ManagerPi {
+  getActiveTools(): string[];
+}
 import { createAgentSessionFromConfig } from "../infrastructure/session-factory.js";
 import { AgentConfig, type AgentConfigOverrides } from "./agent-config.js";
 import { AgentQueue, type QueueItem } from "./agent-queue.js";
@@ -24,8 +27,8 @@ export class AgentInstancesManager {
   private readonly instances = new Map<AgentId, AgentInstance>();
   private readonly queue: AgentQueue;
 
-  constructor(private readonly pi: ExtensionAPI) {
-    this.queue = new AgentQueue(getMaxConcurrent(pi), (item) => this.startQueuedAgent(item));
+  constructor(private readonly pi: ManagerPi, maxConcurrent: number) {
+    this.queue = new AgentQueue(maxConcurrent, (item) => this.startQueuedAgent(item));
   }
 
   async spawn(

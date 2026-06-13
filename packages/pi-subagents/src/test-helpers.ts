@@ -1,4 +1,5 @@
 import { Theme, type ThemeColor } from "@earendil-works/pi-coding-agent";
+import type { TUI } from "@earendil-works/pi-tui";
 import { AgentConfig, type AgentConfigParams } from "./domain/agent-config.js";
 import { AgentTemplate, type AgentTemplateParams } from "./domain/agent-template.js";
 import type { DoneReason } from "./domain/instance/done-agent.js";
@@ -26,6 +27,7 @@ const BG_COLORS = {
 };
 
 export const mockTheme = new Theme(FG_COLORS, BG_COLORS, "truecolor");
+export const mockTui = { requestRender: () => {} } as unknown as TUI;
 
 export const mockSession: Session = {
   sessionId: "mock",

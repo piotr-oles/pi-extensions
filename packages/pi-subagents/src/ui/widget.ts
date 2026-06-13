@@ -1,24 +1,30 @@
-import type { ExtensionUIContext, Theme } from "@earendil-works/pi-coding-agent";
-import type { TUI } from "@earendil-works/pi-tui";
-import type { AgentInstancesManager } from "../domain/agent-instances-manager.js";
+import type { Theme } from "@earendil-works/pi-coding-agent";
+import type { Component, TUI } from "@earendil-works/pi-tui";
 import type { AgentInstance } from "../domain/instance/index.js";
+
+export interface WidgetUiContext {
+  setWidget(
+    key: string,
+    factory: ((tui: TUI, theme: Theme) => Component & { dispose?(): void }) | undefined,
+  ): void;
+}
 import { AgentListComponent } from "./components/agent-list-component.js";
 
 const DONE_TTL_MS = 30_000;
 
 export class AgentWidget {
   private mountTime = 0;
-  private ui: ExtensionUIContext | null = null;
+  private ui: WidgetUiContext | null = null;
   private tui: TUI | null = null;
   private list: AgentListComponent | null = null;
 
   private readonly hiddenDoneIds = new Set<string>();
   private readonly cleanupTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
-  constructor(private readonly manager: AgentInstancesManager) { }
+  constructor(private readonly getInstances: () => AgentInstance[]) { }
 
   getVisibleInstances(): AgentInstance[] {
-    return this.manager.listInstances().filter((inst) => {
+    return this.getInstances().filter((inst) => {
       if (inst.status !== "done") {
         return true;
       }
@@ -51,7 +57,7 @@ export class AgentWidget {
     }
   }
 
-  mount(ui: ExtensionUIContext): void {
+  mount(ui: WidgetUiContext): void {
     if (this.ui === null) {
       this.mountTime = Date.now();
     }
@@ -69,7 +75,7 @@ export class AgentWidget {
     this.tui?.requestRender();
   }
 
-  unmount(ui: ExtensionUIContext): void {
+  unmount(ui: WidgetUiContext): void {
     this.list?.dispose();
     ui.setWidget("pi-subagents", undefined);
     this.ui = null;

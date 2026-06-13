@@ -5,7 +5,7 @@ import type { DoneAgentInstance, DoneReason } from "../../domain/instance/index.
 import { formatDuration, formatUsage } from "../format.js";
 
 export class DoneAgentRow implements Component {
-  private text: Text;
+  private readonly text: Text;
 
   constructor(
     private instance: DoneAgentInstance,

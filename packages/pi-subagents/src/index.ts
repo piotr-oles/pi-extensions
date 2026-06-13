@@ -2,7 +2,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { showSubagents } from "./commands/agents-menu.js";
 import { AgentInstancesManager } from "./domain/agent-instances-manager.js";
 import { AgentTemplatesManager } from "./domain/agent-templates-manager.js";
-import { registerFlags } from "./flags.js";
+import { getMaxConcurrent, registerFlags } from "./flags.js";
 import { createSubagentTool } from "./tools/subagent-tool.js";
 
 export default async function piSubagents(pi: ExtensionAPI): Promise<void> {
@@ -10,7 +10,7 @@ export default async function piSubagents(pi: ExtensionAPI): Promise<void> {
 
   const templatesManager = new AgentTemplatesManager(process.cwd());
   await templatesManager.reload();
-  const manager = new AgentInstancesManager(pi);
+  const manager = new AgentInstancesManager(pi, getMaxConcurrent(pi));
 
   pi.registerTool(createSubagentTool({ pi, manager, templatesManager }));
 

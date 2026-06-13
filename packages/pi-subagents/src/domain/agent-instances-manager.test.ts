@@ -1,13 +1,11 @@
-import type { AgentSessionEvent, ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import type { AgentSessionEvent, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AgentInstancesManager } from "./agent-instances-manager.js";
+import { AgentInstancesManager, type ManagerPi } from "./agent-instances-manager.js";
 import { makeAgentTemplate } from "../test-helpers.js";
 
 vi.mock("../infrastructure/session-factory.js");
-vi.mock("../flags.js");
 
 import { createAgentSessionFromConfig } from "../infrastructure/session-factory.js";
-import { getMaxConcurrent } from "../flags.js";
 import type { Session } from "./types.js";
 
 type EventHandler = (event: AgentSessionEvent) => void | Promise<void>;
@@ -34,11 +32,10 @@ function makeMockSession({ promptImpl, captureSubscribe }: MockSessionOptions = 
   };
 }
 
-function makeMockPi(): ExtensionAPI {
+function makeMockPi(): ManagerPi {
   return {
-    getFlag: vi.fn().mockReturnValue("4"),
     getActiveTools: vi.fn().mockReturnValue(["read", "write"]),
-  } as unknown as ExtensionAPI;
+  };
 }
 
 function makeMockCtx(): ExtensionContext {
@@ -57,7 +54,7 @@ async function flushMicrotasks(): Promise<void> {
 
 describe("AgentInstancesManager", () => {
   let session: Session;
-  let pi: ExtensionAPI;
+  let pi: ManagerPi;
   let ctx: ExtensionContext;
   let manager: AgentInstancesManager;
 
@@ -66,8 +63,7 @@ describe("AgentInstancesManager", () => {
     pi = makeMockPi();
     ctx = makeMockCtx();
     vi.mocked(createAgentSessionFromConfig).mockResolvedValue(session);
-    vi.mocked(getMaxConcurrent).mockReturnValue(4);
-    manager = new AgentInstancesManager(pi);
+    manager = new AgentInstancesManager(pi, 4);
   });
 
   afterEach(() => {
@@ -98,8 +94,7 @@ describe("AgentInstancesManager", () => {
     });
 
     it("instance is 'queued' when at max capacity", async () => {
-      vi.mocked(getMaxConcurrent).mockReturnValue(1);
-      manager = new AgentInstancesManager(pi);
+      manager = new AgentInstancesManager(pi, 1);
 
       await manager.spawn(ctx, template, { description: "a", prompt: "p1" });
       const id2 = await manager.spawn(ctx, template, { description: "b", prompt: "p2" });
@@ -154,8 +149,7 @@ describe("AgentInstancesManager", () => {
     });
 
     it("returns undefined for queued instance", async () => {
-      vi.mocked(getMaxConcurrent).mockReturnValue(1);
-      manager = new AgentInstancesManager(pi);
+      manager = new AgentInstancesManager(pi, 1);
 
       await manager.spawn(ctx, template, { description: "a", prompt: "p" });
       const id2 = await manager.spawn(ctx, template, { description: "b", prompt: "p" });
@@ -198,8 +192,7 @@ describe("AgentInstancesManager", () => {
     });
 
     it("returns true and transitions queued instance to done", async () => {
-      vi.mocked(getMaxConcurrent).mockReturnValue(1);
-      manager = new AgentInstancesManager(pi);
+      manager = new AgentInstancesManager(pi, 1);
 
       await manager.spawn(ctx, template, { description: "a", prompt: "p" });
       const id2 = await manager.spawn(ctx, template, { description: "b", prompt: "p" });
@@ -209,9 +202,8 @@ describe("AgentInstancesManager", () => {
     });
 
     it("calls onComplete when aborting queued instance", async () => {
-      vi.mocked(getMaxConcurrent).mockReturnValue(1);
       const onComplete = vi.fn();
-      manager = new AgentInstancesManager(pi);
+      manager = new AgentInstancesManager(pi, 1);
 
       await manager.spawn(ctx, template, { description: "a", prompt: "p" });
       const id2 = await manager.spawn(ctx, template, { description: "b", prompt: "p", onComplete });
@@ -225,7 +217,6 @@ describe("AgentInstancesManager", () => {
     });
 
     it("aborted queued instance does not start when slot opens", async () => {
-      vi.mocked(getMaxConcurrent).mockReturnValue(1);
 
       let resolveFirst!: () => void;
       const firstSession = makeMockSession({
@@ -235,7 +226,7 @@ describe("AgentInstancesManager", () => {
         .mockResolvedValueOnce(firstSession)
         .mockResolvedValueOnce(session);
 
-      manager = new AgentInstancesManager(pi);
+      manager = new AgentInstancesManager(pi, 1);
 
       const id1 = await manager.spawn(ctx, template, { description: "a", prompt: "p1" });
       const id2 = await manager.spawn(ctx, template, { description: "b", prompt: "p2" });
@@ -277,8 +268,7 @@ describe("AgentInstancesManager", () => {
     });
 
     it("returns false for queued instance", async () => {
-      vi.mocked(getMaxConcurrent).mockReturnValue(1);
-      manager = new AgentInstancesManager(pi);
+      manager = new AgentInstancesManager(pi, 1);
 
       await manager.spawn(ctx, template, { description: "a", prompt: "p" });
       const id2 = await manager.spawn(ctx, template, { description: "b", prompt: "p" });
@@ -304,7 +294,6 @@ describe("AgentInstancesManager", () => {
 
   describe("queue drain", () => {
     it("starts queued agent when running agent completes", async () => {
-      vi.mocked(getMaxConcurrent).mockReturnValue(1);
 
       let resolveFirst!: () => void;
       const firstSession = makeMockSession({
@@ -315,7 +304,7 @@ describe("AgentInstancesManager", () => {
         .mockResolvedValueOnce(firstSession)
         .mockResolvedValueOnce(secondSession);
 
-      manager = new AgentInstancesManager(pi);
+      manager = new AgentInstancesManager(pi, 1);
 
       const id1 = await manager.spawn(ctx, template, { description: "a", prompt: "p1" });
       const id2 = await manager.spawn(ctx, template, { description: "b", prompt: "p2" });
@@ -338,7 +327,7 @@ describe("AgentInstancesManager", () => {
       });
       vi.mocked(createAgentSessionFromConfig).mockResolvedValue(controllableSession);
 
-      manager = new AgentInstancesManager(pi);
+      manager = new AgentInstancesManager(pi, 1);
       await manager.spawn(ctx, template, { description: "d", prompt: "p", onComplete });
 
       resolvePrompt();
@@ -356,7 +345,7 @@ describe("AgentInstancesManager", () => {
       const eventSession = makeMockSession({ captureSubscribe });
       vi.mocked(createAgentSessionFromConfig).mockResolvedValue(eventSession);
 
-      manager = new AgentInstancesManager(pi);
+      manager = new AgentInstancesManager(pi, 1);
       await manager.spawn(ctx, template, { description: "d", prompt: "p", onUpdate });
 
       await captureSubscribe.handler?.({
@@ -372,8 +361,7 @@ describe("AgentInstancesManager", () => {
     });
 
     it("starts multiple agents in parallel when maxConcurrent > 1", async () => {
-      vi.mocked(getMaxConcurrent).mockReturnValue(2);
-      manager = new AgentInstancesManager(pi);
+      manager = new AgentInstancesManager(pi, 2);
 
       const id1 = await manager.spawn(ctx, template, { description: "a", prompt: "p1" });
       const id2 = await manager.spawn(ctx, template, { description: "b", prompt: "p2" });

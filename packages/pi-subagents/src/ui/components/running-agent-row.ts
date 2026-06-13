@@ -1,20 +1,29 @@
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import type { Component, TUI } from "@earendil-works/pi-tui";
-import { Loader, truncateToWidth } from "@earendil-works/pi-tui";
+import { Text, truncateToWidth } from "@earendil-works/pi-tui";
 import type { RunningAgentInstance } from "../../domain/instance/index.js";
 import { formatUsage } from "../format.js";
+import { InlineContainer } from "./inline-container.js";
+import { InlineLoader } from './inline-loader.js'
 
 export class RunningAgentRow implements Component {
-  private readonly loader: Loader;
+  private readonly text: Text;
+  private readonly loader: InlineLoader;
+  private readonly container: InlineContainer;
   private readonly theme: Theme;
 
   constructor(instance: RunningAgentInstance, tui: TUI, theme: Theme) {
-    this.theme = theme;
-    this.loader = new Loader(
+    this.container = new InlineContainer();
+    this.loader = new InlineLoader(
       tui,
       (spinner) => `${theme.fg("accent", spinner)}`,
-      (msg) => msg,
     );
+    this.text = new Text('', 0, 0);
+
+    this.container.addChild(this.loader);
+    this.container.addChild(this.text);
+
+    this.theme = theme;
     this.rebuild(instance);
   }
 
@@ -27,14 +36,11 @@ export class RunningAgentRow implements Component {
   }
 
   invalidate(): void {
-    this.loader.invalidate();
+    this.container.invalidate();
   }
 
   render(width: number): string[] {
-    return this.loader
-      .render(width)
-      .map((line) => line.trim())
-      .filter((line) => line !== "");
+    return this.container.render(width);
   }
 
   private rebuild(instance: RunningAgentInstance): void {
@@ -44,6 +50,6 @@ export class RunningAgentRow implements Component {
     if (usage?.tokens) {
       parts.push(this.theme.fg("dim", formatUsage(usage)));
     }
-    this.loader.setMessage(parts.join(" · "));
+    this.text.setText(parts.join(" · "));
   }
 }
