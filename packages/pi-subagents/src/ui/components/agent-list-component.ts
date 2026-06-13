@@ -8,6 +8,8 @@ import type {
 import { DoneAgentRow } from "./done-agent-row.js";
 import { RunningAgentRow } from "./running-agent-row.js";
 
+const HEADER_LABEL = "● Subagents";
+
 export class AgentListComponent extends Container {
   private readonly headerText: Text;
   private readonly queuedText: Text;
@@ -20,7 +22,7 @@ export class AgentListComponent extends Container {
     private readonly theme: Theme,
   ) {
     super();
-    this.headerText = new Text(theme.fg("accent", "● Subagents"), 0, 0);
+    this.headerText = new Text(theme.fg("accent", HEADER_LABEL), 0, 0);
     this.queuedText = new Text("", 0, 0);
   }
 
@@ -91,7 +93,7 @@ export class AgentListComponent extends Container {
   }
 
   override invalidate(): void {
-    this.headerText.setText(this.theme.fg("accent", "● Agents"));
+    this.headerText.setText(this.theme.fg("accent", HEADER_LABEL));
     this.headerText.invalidate();
     for (const row of this.runningRows.values()) {
       row.invalidate();

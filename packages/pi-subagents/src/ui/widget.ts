@@ -18,7 +18,7 @@ export class AgentWidget {
   constructor(private readonly manager: AgentInstancesManager) { }
 
   getVisibleInstances(): AgentInstance[] {
-    const visible = this.manager.listInstances().filter((inst) => {
+    return this.manager.listInstances().filter((inst) => {
       if (inst.status !== "done") {
         return true;
       }
@@ -27,8 +27,6 @@ export class AgentWidget {
       }
       return !this.hiddenDoneIds.has(inst.id);
     });
-    this.scheduleDoneTtl(visible);
-    return visible;
   }
 
   private scheduleDoneTtl(instances: AgentInstance[]): void {
@@ -67,6 +65,7 @@ export class AgentWidget {
   }
 
   requestRender(): void {
+    this.scheduleDoneTtl(this.getVisibleInstances());
     this.tui?.requestRender();
   }
 

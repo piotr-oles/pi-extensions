@@ -77,7 +77,7 @@ describe("AgentListComponent", () => {
     const component = new AgentListComponent(() => [makeDone("1")], mockTui, mockTheme);
     component.invalidate();
     expect(render(component)).toMatchInlineSnapshot(`
-      "● Agents
+      "● Subagents
       ✓ #1 my-agent · doing a task · 5.0s"
     `);
     component.dispose();

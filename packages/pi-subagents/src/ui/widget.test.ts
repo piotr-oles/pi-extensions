@@ -93,7 +93,7 @@ describe("AgentWidget", () => {
       widget.mount(ui as unknown as ExtensionUIContext);
       ui.invokeFactory(tui);
 
-      widget.getVisibleInstances();
+      widget.requestRender();
       vi.advanceTimersByTime(29_999);
 
       expect(widget.getVisibleInstances()).toHaveLength(1);
@@ -108,7 +108,7 @@ describe("AgentWidget", () => {
       widget.mount(ui as unknown as ExtensionUIContext);
       ui.invokeFactory(tui);
 
-      widget.getVisibleInstances();
+      widget.requestRender();
       vi.advanceTimersByTime(30_000);
 
       expect(widget.getVisibleInstances()).toHaveLength(0);
@@ -123,7 +123,7 @@ describe("AgentWidget", () => {
       widget.mount(ui as unknown as ExtensionUIContext);
       ui.invokeFactory(tui);
 
-      widget.getVisibleInstances();
+      widget.requestRender();
       vi.advanceTimersByTime(30_000);
 
       expect(ui.setWidget).toHaveBeenLastCalledWith("pi-subagents", undefined);
@@ -139,7 +139,7 @@ describe("AgentWidget", () => {
       widget.mount(ui as unknown as ExtensionUIContext);
       ui.invokeFactory(tui);
 
-      widget.getVisibleInstances();
+      widget.requestRender();
       vi.advanceTimersByTime(30_000);
 
       const lastCall = ui.setWidget.mock.calls.at(-1);
@@ -158,12 +158,13 @@ describe("AgentWidget", () => {
       widget.mount(ui as unknown as ExtensionUIContext);
       ui.invokeFactory(tui);
 
-      widget.getVisibleInstances();
+      widget.requestRender();
       widget.unmount(ui as unknown as ExtensionUIContext);
+      tui.requestRender.mockClear();
 
       vi.advanceTimersByTime(30_000);
 
-      // setWidget was called with undefined by unmount, not by the timer
+      // setWidget called with undefined only by unmount, not by cancelled timer
       const undefCalls = ui.setWidget.mock.calls.filter((c) => c[1] === undefined);
       expect(undefCalls).toHaveLength(1);
       expect(tui.requestRender).not.toHaveBeenCalled();

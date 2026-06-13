@@ -1,23 +1,23 @@
 import type { AgentSessionEvent, ContextUsage, AgentSession } from "@earendil-works/pi-coding-agent";
 import type { Session } from "../domain/types.js";
 
-interface TurnStep {
+export interface TurnStep {
   readonly kind: "turn";
 }
 
-interface EventStep {
+export interface EventStep {
   readonly kind: "event";
   readonly eventType: string;
 }
 
-interface SideEffectStep {
+export interface SideEffectStep {
   readonly kind: "side-effect";
   readonly run: () => void;
 }
 
-type Step = TurnStep | EventStep | SideEffectStep;
+export type Step = TurnStep | EventStep | SideEffectStep;
 
-type Completion =
+export type Completion =
   | { readonly kind: "complete"; readonly text: string }
   | { readonly kind: "error"; readonly message: string };
 

@@ -1,24 +1,4 @@
-import { ScriptedSession } from "./scripted-session.js";
-
-interface TurnStep {
-  readonly kind: "turn";
-}
-
-interface EventStep {
-  readonly kind: "event";
-  readonly eventType: string;
-}
-
-interface SideEffectStep {
-  readonly kind: "side-effect";
-  readonly run: () => void;
-}
-
-type Step = TurnStep | EventStep | SideEffectStep;
-
-type Completion =
-  | { readonly kind: "complete"; readonly text: string }
-  | { readonly kind: "error"; readonly message: string };
+import { ScriptedSession, type Completion, type Step } from "./scripted-session.js";
 
 /**
  * Fluent builder for ScriptedSession.
