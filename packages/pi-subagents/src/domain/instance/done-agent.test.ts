@@ -1,30 +1,30 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { makeQueued, makeDone, makeRunning, mockConfig } from "./test-helpers.js";
+import { makeQueued, makeDone, makeRunning } from "./test-helpers.js";
 
 describe("DoneAgentInstance", () => {
-  it("preserves session", () => {
-    expect(makeRunning().done({ reason: "completed" }).session).toBeDefined();
-  });
-
-  it("preserves id and config", () => {
-    const queued = makeQueued();
-    const done = makeRunning(queued).done({ reason: "completed" });
-    expect(done.id).toBe(queued.id);
-    expect(done.config).toBe(mockConfig);
-  });
-
-  it("captures reason and result", () => {
-    const done = makeRunning().done({ reason: "completed", result: "ok" });
+  it("exposes completion result", () => {
+    const done = makeRunning().done({ reason: "completed", result: "the answer" });
     expect(done.status).toBe("done");
     expect(done.reason).toBe("completed");
-    expect(done.result).toBe("ok");
+    expect(done.result).toBe("the answer");
   });
 
-  it("captures error", () => {
-    const done = makeRunning().done({ reason: "error", error: "boom" });
+  it("exposes error message when session fails", () => {
+    const done = makeRunning().done({ reason: "error", error: "timeout" });
     expect(done.status).toBe("done");
     expect(done.reason).toBe("error");
-    expect(done.error).toBe("boom");
+    expect(done.error).toBe("timeout");
+  });
+
+  it("preserves agent id through lifecycle transitions", () => {
+    const queued = makeQueued({ id: "agent-7" });
+    const done = makeRunning(queued).done({ reason: "completed" });
+    expect(done.id).toBe("agent-7");
+  });
+
+  it("has zero duration when agent was aborted before ever starting", () => {
+    const done = makeQueued().abort();
+    expect(done.duration).toBe(0);
   });
 
   describe("duration", () => {

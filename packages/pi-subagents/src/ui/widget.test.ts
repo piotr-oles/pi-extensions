@@ -29,7 +29,8 @@ function makeMockUi() {
 }
 
 function makeMockTui() {
-  return { requestRender: vi.fn() } as unknown as TUI;
+  const requestRender = vi.fn();
+  return Object.assign({ requestRender } as unknown as TUI, { requestRender });
 }
 
 describe("AgentWidget", () => {

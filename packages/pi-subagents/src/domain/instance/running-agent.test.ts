@@ -3,29 +3,34 @@ import type { DoneAgentInstance } from "./done-agent.js";
 import { RunningAgentInstance } from "./running-agent.js";
 import { makeQueued } from "./test-helpers.js";
 import { ScriptedSessionBuilder } from "../../test-helpers/scripted-session-builder.js";
-import { ScriptedSession } from "../../test-helpers/scripted-session.js";
 
 interface RunOptions {
   maxTurns?: number;
   graceTurns?: number;
   signal?: AbortSignal;
+  startedAt?: number;
 }
 
 interface RunResult {
   done: DoneAgentInstance;
-  updates: RunningAgentInstance[];
+  updateCount: number;
 }
 
-function run(session: ScriptedSession | ScriptedSessionBuilder, options: RunOptions = {}): Promise<RunResult> {
-  const scripted = session instanceof ScriptedSessionBuilder ? session.build() : session;
-  const queued = makeQueued({ session: scripted, signal: options.signal, maxTurns: options.maxTurns, graceTurns: options.graceTurns });
-  const updates: RunningAgentInstance[] = [];
+function run(session: ScriptedSessionBuilder, options: RunOptions = {}): Promise<RunResult> {
+  const scripted = session.build();
+  const queued = makeQueued({
+    session: scripted,
+    signal: options.signal,
+    maxTurns: options.maxTurns,
+    graceTurns: options.graceTurns,
+  });
+  let updateCount = 0;
   return new Promise<RunResult>((resolve) => {
     RunningAgentInstance.start({
       queued,
-      startedAt: 0,
-      onUpdate: (running) => updates.push(running),
-      onDone: (done) => resolve({ done, updates }),
+      startedAt: options.startedAt ?? 0,
+      onUpdate: () => { updateCount++; },
+      onDone: (done) => resolve({ done, updateCount }),
     });
   });
 }
@@ -107,32 +112,32 @@ describe("RunningAgentInstance", () => {
     });
   });
 
-  describe("onUpdate callbacks", () => {
-    it("calls onUpdate for each completed turn", async () => {
-      const { updates } = await run(new ScriptedSessionBuilder().turns(3).complete());
-      expect(updates).toHaveLength(3);
+  describe("progress updates", () => {
+    it("fires an update for each completed turn", async () => {
+      const { updateCount } = await run(new ScriptedSessionBuilder().turns(3).complete());
+      expect(updateCount).toBe(3);
     });
 
-    it("does not call onUpdate for the turn that hits the hard limit", async () => {
-      const { updates } = await run(
+    it("does not fire an update for the turn that hits the hard limit", async () => {
+      const { updateCount } = await run(
         new ScriptedSessionBuilder().turns(20).complete(),
         { maxTurns: 5, graceTurns: 3 },
       );
-      expect(updates).toHaveLength(7);
+      expect(updateCount).toBe(7);
     });
 
-    it("calls onUpdate for non-turn-end events", async () => {
-      const { updates } = await run(
+    it("fires an update for non-turn-end events", async () => {
+      const { updateCount } = await run(
         new ScriptedSessionBuilder()
           .event("tool_execution_start")
           .event("tool_execution_end")
           .complete(),
       );
-      expect(updates).toHaveLength(2);
+      expect(updateCount).toBe(2);
     });
 
-    it("calls onUpdate for a mix of turns and other events", async () => {
-      const { updates } = await run(
+    it("fires an update for a mix of turns and other events", async () => {
+      const { updateCount } = await run(
         new ScriptedSessionBuilder()
           .event("tool_execution_start")
           .turn()
@@ -140,7 +145,7 @@ describe("RunningAgentInstance", () => {
           .turn()
           .complete(),
       );
-      expect(updates).toHaveLength(4);
+      expect(updateCount).toBe(4);
     });
   });
 
@@ -154,13 +159,9 @@ describe("RunningAgentInstance", () => {
       vi.useRealTimers();
     });
 
-    it("returns elapsed time since startedAt", () => {
-      const running = RunningAgentInstance.start({
-        queued: makeQueued({ session: new ScriptedSessionBuilder().build() }),
-        startedAt: 2000,
-        onDone: () => {},
-      });
-      expect(running.duration).toBe(3000);
+    it("records total elapsed time from start to completion", async () => {
+      const { done } = await run(new ScriptedSessionBuilder().complete(), { startedAt: 2000 });
+      expect(done.duration).toBe(3000);
     });
   });
 });
