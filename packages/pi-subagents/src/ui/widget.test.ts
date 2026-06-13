@@ -3,13 +3,8 @@ import type { TUI } from "@earendil-works/pi-tui";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AgentInstancesManager } from "../domain/agent-instances-manager.js";
 import type { AgentInstance } from "../domain/instance/index.js";
-import { makeQueued, makeRunning, mockTheme } from "../test-helpers.js";
+import { makeDone, makeQueued, makeRunning, mockTheme } from "../test-helpers.js";
 import { AgentWidget } from "./widget.js";
-
-function makeDone(id: string, completedAt: number) {
-  vi.setSystemTime(completedAt);
-  return makeRunning({ id }).done({ reason: "completed" });
-}
 
 function makeManager(instances: AgentInstance[]): AgentInstancesManager {
   return { listInstances: () => instances } as unknown as AgentInstancesManager;
@@ -50,34 +45,34 @@ describe("AgentWidget", () => {
     it("includes running and queued instances", () => {
       const instances = [makeRunning({ id: "1" }), makeQueued({ id: "2" })];
       const widget = new AgentWidget(makeManager(instances));
-      vi.setSystemTime(MOUNT_TIME);
       widget.mount(makeMockUi() as unknown as ExtensionUIContext);
 
       expect(widget.getVisibleInstances()).toHaveLength(2);
     });
 
     it("includes done instances completed after mount", () => {
-      const done = makeDone("1", MOUNT_TIME + 1);
-      const widget = new AgentWidget(makeManager([done]));
+      vi.setSystemTime(MOUNT_TIME + 1);
+      const done = makeDone({ id: "1" });
       vi.setSystemTime(MOUNT_TIME);
+      const widget = new AgentWidget(makeManager([done]));
       widget.mount(makeMockUi() as unknown as ExtensionUIContext);
 
       expect(widget.getVisibleInstances()).toHaveLength(1);
     });
 
     it("skips done instances completed before mount", () => {
-      const done = makeDone("1", MOUNT_TIME - 1);
-      const widget = new AgentWidget(makeManager([done]));
+      vi.setSystemTime(MOUNT_TIME - 1);
+      const done = makeDone({ id: "1" });
       vi.setSystemTime(MOUNT_TIME);
+      const widget = new AgentWidget(makeManager([done]));
       widget.mount(makeMockUi() as unknown as ExtensionUIContext);
 
       expect(widget.getVisibleInstances()).toHaveLength(0);
     });
 
     it("skips done instances completed exactly at mount time", () => {
-      const done = makeDone("1", MOUNT_TIME);
+      const done = makeDone({ id: "1" });
       const widget = new AgentWidget(makeManager([done]));
-      vi.setSystemTime(MOUNT_TIME);
       widget.mount(makeMockUi() as unknown as ExtensionUIContext);
 
       expect(widget.getVisibleInstances()).toHaveLength(0);
@@ -86,11 +81,12 @@ describe("AgentWidget", () => {
 
   describe("done agent TTL", () => {
     it("keeps done instance visible before 30s", () => {
-      const done = makeDone("1", MOUNT_TIME + 1);
+      vi.setSystemTime(MOUNT_TIME + 1);
+      const done = makeDone({ id: "1" });
+      vi.setSystemTime(MOUNT_TIME);
       const ui = makeMockUi();
       const tui = makeMockTui();
       const widget = new AgentWidget(makeManager([done]));
-      vi.setSystemTime(MOUNT_TIME);
       widget.mount(ui as unknown as ExtensionUIContext);
       ui.invokeFactory(tui);
 
@@ -101,11 +97,12 @@ describe("AgentWidget", () => {
     });
 
     it("hides done instance after 30s", () => {
-      const done = makeDone("1", MOUNT_TIME + 1);
+      vi.setSystemTime(MOUNT_TIME + 1);
+      const done = makeDone({ id: "1" });
+      vi.setSystemTime(MOUNT_TIME);
       const ui = makeMockUi();
       const tui = makeMockTui();
       const widget = new AgentWidget(makeManager([done]));
-      vi.setSystemTime(MOUNT_TIME);
       widget.mount(ui as unknown as ExtensionUIContext);
       ui.invokeFactory(tui);
 
@@ -116,11 +113,12 @@ describe("AgentWidget", () => {
     });
 
     it("auto-unmounts when last visible instance is hidden", () => {
-      const done = makeDone("1", MOUNT_TIME + 1);
+      vi.setSystemTime(MOUNT_TIME + 1);
+      const done = makeDone({ id: "1" });
+      vi.setSystemTime(MOUNT_TIME);
       const ui = makeMockUi();
       const tui = makeMockTui();
       const widget = new AgentWidget(makeManager([done]));
-      vi.setSystemTime(MOUNT_TIME);
       widget.mount(ui as unknown as ExtensionUIContext);
       ui.invokeFactory(tui);
 
@@ -131,12 +129,13 @@ describe("AgentWidget", () => {
     });
 
     it("does not auto-unmount while other instances remain", () => {
-      const done = makeDone("1", MOUNT_TIME + 1);
+      vi.setSystemTime(MOUNT_TIME + 1);
+      const done = makeDone({ id: "1" });
+      vi.setSystemTime(MOUNT_TIME);
       const running = makeRunning({ id: "2" });
       const ui = makeMockUi();
       const tui = makeMockTui();
       const widget = new AgentWidget(makeManager([done, running]));
-      vi.setSystemTime(MOUNT_TIME);
       widget.mount(ui as unknown as ExtensionUIContext);
       ui.invokeFactory(tui);
 
@@ -151,11 +150,12 @@ describe("AgentWidget", () => {
 
   describe("unmount()", () => {
     it("cancels pending cleanup timers", () => {
-      const done = makeDone("1", MOUNT_TIME + 1);
+      vi.setSystemTime(MOUNT_TIME + 1);
+      const done = makeDone({ id: "1" });
+      vi.setSystemTime(MOUNT_TIME);
       const ui = makeMockUi();
       const tui = makeMockTui();
       const widget = new AgentWidget(makeManager([done]));
-      vi.setSystemTime(MOUNT_TIME);
       widget.mount(ui as unknown as ExtensionUIContext);
       ui.invokeFactory(tui);
 
@@ -174,10 +174,11 @@ describe("AgentWidget", () => {
 
   describe("mount()", () => {
     it("does not reset mountTime on re-mount", () => {
-      const done = makeDone("1", MOUNT_TIME - 1);
+      vi.setSystemTime(MOUNT_TIME - 1);
+      const done = makeDone({ id: "1" });
+      vi.setSystemTime(MOUNT_TIME);
       const ui = makeMockUi();
       const widget = new AgentWidget(makeManager([done]));
-      vi.setSystemTime(MOUNT_TIME);
       widget.mount(ui as unknown as ExtensionUIContext);
 
       vi.setSystemTime(MOUNT_TIME + 5_000);
