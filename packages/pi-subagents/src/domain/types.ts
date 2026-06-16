@@ -1,5 +1,9 @@
-import type { AgentSessionEvent, ContextUsage } from "@earendil-works/pi-coding-agent";
 import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
+import type {
+  AgentSession,
+  AgentSessionEvent,
+  ContextUsage,
+} from "@earendil-works/pi-coding-agent";
 
 export type { ThinkingLevel };
 
@@ -20,6 +24,7 @@ export type { AgentConfig, AgentConfigOverrides, AgentConfigParams } from "./age
 export type { AgentSource, AgentTemplateParams } from "./agent-template.js";
 export { AgentTemplate } from "./agent-template.js";
 export type {
+  AgentInstanceSessionEntry,
   DoneAgentInstance,
   DoneAgentInstance as DoneAgent,
   DoneReason,

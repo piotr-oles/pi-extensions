@@ -1,5 +1,7 @@
-import type { AgentSessionEvent, ContextUsage, AgentSession } from "@earendil-works/pi-coding-agent";
-import type { Session } from "../domain/types.js";
+import type {
+  AgentSessionEvent,
+  ContextUsage,
+} from "@earendil-works/pi-coding-agent";
 
 export interface TurnStep {
   readonly kind: "turn";

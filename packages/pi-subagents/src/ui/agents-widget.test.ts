@@ -2,15 +2,23 @@ import type { TUI } from "@earendil-works/pi-tui";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AgentInstance } from "../domain/instance/index.js";
 import { makeDone, makeQueued, makeRunning, mockTheme } from "../test-helpers.js";
-import type { WidgetUiContext } from "./widget.js";
-import { AgentWidget } from "./widget.js";
+import type { WidgetUiContext } from "./agents-widget.js";
+import { AgentsWidget } from "./agents-widget.js";
 
-function makeMockUi(): WidgetUiContext & { setWidget: ReturnType<typeof vi.fn>; invokeFactory: (tui: TUI) => unknown } {
-  const widgetFactories = new Map<string, ((tui: TUI, theme: typeof mockTheme) => unknown) | undefined>();
+function makeMockUi(): WidgetUiContext & {
+  setWidget: ReturnType<typeof vi.fn>;
+  invokeFactory: (tui: TUI) => unknown;
+} {
+  const widgetFactories = new Map<
+    string,
+    ((tui: TUI, theme: typeof mockTheme) => unknown) | undefined
+  >();
   return {
-    setWidget: vi.fn((key: string, factory: ((tui: TUI, theme: typeof mockTheme) => unknown) | undefined) => {
-      widgetFactories.set(key, factory);
-    }),
+    setWidget: vi.fn(
+      (key: string, factory: ((tui: TUI, theme: typeof mockTheme) => unknown) | undefined) => {
+        widgetFactories.set(key, factory);
+      },
+    ),
     invokeFactory: (tui: TUI) => {
       const factory = widgetFactories.get("pi-subagents");
       return factory ? factory(tui, mockTheme) : null;
@@ -40,7 +48,7 @@ describe("AgentWidget", () => {
   describe("getVisibleInstances()", () => {
     it("includes running and queued instances", () => {
       const instances: AgentInstance[] = [makeRunning({ id: "1" }), makeQueued({ id: "2" })];
-      const widget = new AgentWidget(() => instances);
+      const widget = new AgentsWidget(() => instances);
       widget.mount(makeMockUi());
 
       expect(widget.getVisibleInstances()).toHaveLength(2);
@@ -50,7 +58,7 @@ describe("AgentWidget", () => {
       vi.setSystemTime(MOUNT_TIME + 1);
       const done = makeDone({ id: "1" });
       vi.setSystemTime(MOUNT_TIME);
-      const widget = new AgentWidget(() => [done]);
+      const widget = new AgentsWidget(() => [done]);
       widget.mount(makeMockUi());
 
       expect(widget.getVisibleInstances()).toHaveLength(1);
@@ -60,7 +68,7 @@ describe("AgentWidget", () => {
       vi.setSystemTime(MOUNT_TIME - 1);
       const done = makeDone({ id: "1" });
       vi.setSystemTime(MOUNT_TIME);
-      const widget = new AgentWidget(() => [done]);
+      const widget = new AgentsWidget(() => [done]);
       widget.mount(makeMockUi());
 
       expect(widget.getVisibleInstances()).toHaveLength(0);
@@ -68,7 +76,7 @@ describe("AgentWidget", () => {
 
     it("skips done instances completed exactly at mount time", () => {
       const done = makeDone({ id: "1" });
-      const widget = new AgentWidget(() => [done]);
+      const widget = new AgentsWidget(() => [done]);
       widget.mount(makeMockUi());
 
       expect(widget.getVisibleInstances()).toHaveLength(0);
@@ -82,7 +90,7 @@ describe("AgentWidget", () => {
       vi.setSystemTime(MOUNT_TIME);
       const ui = makeMockUi();
       const { tui } = makeMockTui();
-      const widget = new AgentWidget(() => [done]);
+      const widget = new AgentsWidget(() => [done]);
       widget.mount(ui);
       ui.invokeFactory(tui);
 
@@ -98,7 +106,7 @@ describe("AgentWidget", () => {
       vi.setSystemTime(MOUNT_TIME);
       const ui = makeMockUi();
       const { tui } = makeMockTui();
-      const widget = new AgentWidget(() => [done]);
+      const widget = new AgentsWidget(() => [done]);
       widget.mount(ui);
       ui.invokeFactory(tui);
 
@@ -114,7 +122,7 @@ describe("AgentWidget", () => {
       vi.setSystemTime(MOUNT_TIME);
       const ui = makeMockUi();
       const { tui } = makeMockTui();
-      const widget = new AgentWidget(() => [done]);
+      const widget = new AgentsWidget(() => [done]);
       widget.mount(ui);
       ui.invokeFactory(tui);
 
@@ -131,7 +139,7 @@ describe("AgentWidget", () => {
       const running = makeRunning({ id: "2" });
       const ui = makeMockUi();
       const { tui, requestRender } = makeMockTui();
-      const widget = new AgentWidget(() => [done, running]);
+      const widget = new AgentsWidget(() => [done, running]);
       widget.mount(ui);
       ui.invokeFactory(tui);
 
@@ -151,7 +159,7 @@ describe("AgentWidget", () => {
       vi.setSystemTime(MOUNT_TIME);
       const ui = makeMockUi();
       const { tui, requestRender } = makeMockTui();
-      const widget = new AgentWidget(() => [done]);
+      const widget = new AgentsWidget(() => [done]);
       widget.mount(ui);
       ui.invokeFactory(tui);
 
@@ -174,7 +182,7 @@ describe("AgentWidget", () => {
       const done = makeDone({ id: "1" });
       vi.setSystemTime(MOUNT_TIME);
       const ui = makeMockUi();
-      const widget = new AgentWidget(() => [done]);
+      const widget = new AgentsWidget(() => [done]);
       widget.mount(ui);
 
       vi.setSystemTime(MOUNT_TIME + 5_000);

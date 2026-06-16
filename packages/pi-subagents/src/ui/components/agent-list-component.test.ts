@@ -4,8 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeDone, makeQueued, makeRunning, mockTheme, mockTui } from "../../test-helpers.js";
 import { AgentListComponent } from "./agent-list-component.js";
 
-
-
 function render(component: AgentListComponent): string {
   return stripAnsi(
     component

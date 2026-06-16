@@ -4,8 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeRunning, mockSession, mockTheme, mockTui } from "../../test-helpers.js";
 import { RunningAgentRow } from "./running-agent-row.js";
 
-
-
 function render(row: RunningAgentRow): string {
   return stripAnsi(
     row

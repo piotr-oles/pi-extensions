@@ -4,7 +4,7 @@ import { Text, truncateToWidth } from "@earendil-works/pi-tui";
 import type { RunningAgentInstance } from "../../domain/instance/index.js";
 import { formatUsage } from "../format.js";
 import { InlineContainer } from "./inline-container.js";
-import { InlineLoader } from './inline-loader.js'
+import { InlineLoader } from "./inline-loader.js";
 
 export class RunningAgentRow implements Component {
   private readonly text: Text;
@@ -14,11 +14,8 @@ export class RunningAgentRow implements Component {
 
   constructor(instance: RunningAgentInstance, tui: TUI, theme: Theme) {
     this.container = new InlineContainer();
-    this.loader = new InlineLoader(
-      tui,
-      (spinner) => `${theme.fg("accent", spinner)}`,
-    );
-    this.text = new Text('', 0, 0);
+    this.loader = new InlineLoader(tui, (spinner) => `${theme.fg("accent", spinner)}`);
+    this.text = new Text("", 0, 0);
 
     this.container.addChild(this.loader);
     this.container.addChild(this.text);

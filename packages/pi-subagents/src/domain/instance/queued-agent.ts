@@ -1,5 +1,5 @@
+import type { AgentConfig, AgentConfigSessionEntry } from "../agent-config.js";
 import type { Session } from "../types.js";
-import type { AgentConfig } from "../agent-config.js";
 import { DoneAgentInstance } from "./done-agent.js";
 import { RunningAgentInstance } from "./running-agent.js";
 
@@ -8,6 +8,12 @@ export interface QueuedAgentParams {
   config: AgentConfig;
   session: Session;
   signal: AbortSignal | undefined;
+}
+
+export interface QueuedAgentSessionEntry {
+  readonly status: "queued";
+  readonly id: string;
+  readonly config: AgentConfigSessionEntry;
 }
 
 export interface RunAgentParams {
@@ -34,7 +40,7 @@ export class QueuedAgentInstance {
   }
 
   abort(): DoneAgentInstance {
-    return new DoneAgentInstance({ instance: this, reason: "aborted" });
+    return new DoneAgentInstance({ instance: this, reason: "stopped" });
   }
 
   run({ onUpdate, onDone }: RunAgentParams): RunningAgentInstance {
@@ -44,5 +50,13 @@ export class QueuedAgentInstance {
       onUpdate,
       onDone,
     });
+  }
+
+  toEntry(): QueuedAgentSessionEntry {
+    return {
+      status: "queued",
+      id: this.id,
+      config: this.config.toEntry(),
+    };
   }
 }

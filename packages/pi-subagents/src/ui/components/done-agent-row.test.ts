@@ -28,28 +28,16 @@ describe("DoneAgentRow", () => {
     );
   });
 
-  it("renders 'steered' reason", () => {
-    expect(render(new DoneAgentRow(makeDone({ id: "1", reason: "steered" }), mockTheme))).toMatchInlineSnapshot(
-      `"✓ #1 my-agent · doing a task · 5.0s"`,
-    );
-  });
-
   it("renders 'stopped' reason", () => {
-    expect(render(new DoneAgentRow(makeDone({ id: "1", reason: "stopped" }), mockTheme))).toMatchInlineSnapshot(
-      `"■ #1 my-agent · doing a task · 5.0s"`,
-    );
-  });
-
-  it("renders 'aborted' reason", () => {
-    expect(render(new DoneAgentRow(makeDone({ id: "1", reason: "aborted" }), mockTheme))).toMatchInlineSnapshot(
-      `"✗ #1 my-agent · doing a task · 5.0s"`,
-    );
+    expect(
+      render(new DoneAgentRow(makeDone({ id: "1", reason: "stopped" }), mockTheme)),
+    ).toMatchInlineSnapshot(`"■ #1 my-agent · doing a task · 5.0s"`);
   });
 
   it("renders 'error' reason", () => {
-    expect(render(new DoneAgentRow(makeDone({ id: "1", reason: "error" }), mockTheme))).toMatchInlineSnapshot(
-      `"✗ #1 my-agent · doing a task · 5.0s"`,
-    );
+    expect(
+      render(new DoneAgentRow(makeDone({ id: "1", reason: "error" }), mockTheme)),
+    ).toMatchInlineSnapshot(`"✗ #1 my-agent · doing a task · 5.0s"`);
   });
 
   it("includes token usage when reported", () => {

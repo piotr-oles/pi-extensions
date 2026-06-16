@@ -1,13 +1,18 @@
-import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-
-export interface ManagerPi {
-  getActiveTools(): string[];
-}
-import { createAgentSessionFromConfig } from "../infrastructure/session-factory.js";
+import type { Api, Model } from "@earendil-works/pi-ai";
+import {
+  createAgentSession,
+  type ExtensionContext,
+  type ModelRegistry,
+  SessionManager,
+  SettingsManager,
+} from "@earendil-works/pi-coding-agent";
+import { SubagentsResourceLoader } from "../infrastructure/subagents-resource-loader.js";
 import { AgentConfig, type AgentConfigOverrides } from "./agent-config.js";
 import { AgentQueue, type QueueItem } from "./agent-queue.js";
 import {
   type AgentInstance,
+  type AgentInstanceByStatus,
+  type AgentInstanceStatus,
   type DoneAgentInstance,
   QueuedAgentInstance,
 } from "./instance/index.js";
@@ -16,10 +21,9 @@ import type { AgentId, AgentTemplate, RunningAgentInstance } from "./types.js";
 export interface SpawnOptions {
   prompt: string;
   description: string;
+  availableTools: string[];
   overrides?: AgentConfigOverrides;
   signal?: AbortSignal;
-  onUpdate?: (running: RunningAgentInstance) => void;
-  onComplete?: (instance: DoneAgentInstance) => void;
 }
 
 export class AgentInstancesManager {
@@ -27,68 +31,113 @@ export class AgentInstancesManager {
   private readonly instances = new Map<AgentId, AgentInstance>();
   private readonly queue: AgentQueue;
 
-  constructor(private readonly pi: ManagerPi, maxConcurrent: number) {
+  constructor(maxConcurrent: number) {
     this.queue = new AgentQueue(maxConcurrent, (item) => this.startQueuedAgent(item));
   }
 
-  async spawn(
+  spawn(
     ctx: ExtensionContext,
     template: AgentTemplate,
-    { description, prompt, overrides, signal, onUpdate, onComplete }: SpawnOptions,
-  ): Promise<string> {
+    { description, prompt, availableTools, overrides, signal }: SpawnOptions,
+  ): AsyncIterable<AgentInstance> {
     // use integers so it's easier for agent to replicate
     const id = String(this.lastId++);
+    const model = this.findModel(ctx.modelRegistry, template.model) ?? ctx.model;
     const config = new AgentConfig({
       template,
+      model: model?.name,
       overrides,
       description,
       prompt,
-      activeTools: this.pi.getActiveTools(),
+      availableTools,
     });
-    // we create a session right away, so it's ready to start.
-    const session = await createAgentSessionFromConfig(config, ctx);
-    const queued = new QueuedAgentInstance({ id, config, session, signal });
-    this.instances.set(id, queued);
-    this.queue.enqueue({ id, onUpdate, onDone: onComplete });
-    return id;
+
+    const stream = new ReadableStream<AgentInstance>({
+      start: async (controller) => {
+        const resourceLoader = new SubagentsResourceLoader(ctx.cwd, config);
+        const { session } = await createAgentSession({
+          cwd: ctx.cwd,
+          sessionManager: SessionManager.create(ctx.cwd),
+          settingsManager: SettingsManager.create(ctx.cwd),
+          modelRegistry: ctx.modelRegistry,
+          model,
+          tools: config.enabledTools,
+          resourceLoader,
+          thinkingLevel: config.thinkingLevel,
+        });
+
+        const queued = new QueuedAgentInstance({ id, config, session, signal });
+        this.instances.set(id, queued);
+        this.queue.enqueue({
+          id,
+          onUpdate: (running) => {
+            controller.enqueue(running);
+          },
+          onDone: (done) => {
+            controller.enqueue(done);
+            controller.close();
+          },
+        });
+      },
+    });
+
+    return stream;
   }
 
-  async steer(id: string, message: string): Promise<boolean> {
-    const running = this.getRunningInstance(id);
-    return running?.steer(message) ?? false;
+  async steer(id: string, message: string): Promise<RunningAgentInstance | undefined> {
+    const instance = this.instances.get(id);
+    if (instance && instance.status === "running") {
+      await instance.steer(message);
+      return instance;
+    }
+    return undefined;
   }
 
-  abort(id: string): boolean {
+  async abort(id: string): Promise<DoneAgentInstance | undefined> {
     const instance = this.instances.get(id);
     if (!instance) {
-      return false;
+      return undefined;
     }
     if (instance.status === "running") {
-      this.instances.set(id, instance.abort());
-      return true;
+      const done = instance.abort();
+      this.instances.set(id, done);
+      return done;
     }
     if (instance.status === "queued") {
       const item = this.queue.cancel(id);
       const done = instance.abort();
       this.instances.set(id, done);
       item?.onDone?.(done);
-      return true;
+      return done;
     }
-    return false;
+    return undefined;
   }
 
-  getInstance(id: string): AgentInstance | undefined {
-    return this.instances.get(id);
-  }
-
-  getRunningInstance(id: string): RunningAgentInstance | undefined {
+  getInstance<TStatus extends AgentInstanceStatus>(
+    id: string,
+    status: TStatus,
+  ): AgentInstanceByStatus<TStatus> | undefined;
+  getInstance(id: string): AgentInstance | undefined;
+  getInstance(id: string, status?: AgentInstanceStatus): AgentInstance | undefined {
     const instance = this.instances.get(id);
-    return instance?.status === "running" ? instance : undefined;
+    if (status && instance?.status !== status) {
+      return undefined;
+    }
+    return instance;
   }
 
-  listInstances(): AgentInstance[] {
+  listInstances<TStatus extends AgentInstanceStatus>(
+    status: TStatus,
+  ): AgentInstanceByStatus<TStatus>[];
+  listInstances(): AgentInstance[];
+  listInstances(status?: AgentInstanceStatus): AgentInstance[] {
+    const allInstances = [...this.instances.values()];
+    const selectedInstances = status
+      ? allInstances.filter((instance) => instance.status === status)
+      : allInstances;
+
     // TODO: find better sorting mechanism
-    return [...this.instances.values()].sort(
+    return selectedInstances.sort(
       (instanceA, instanceB) => Number(instanceA.id) - Number(instanceB.id),
     );
   }
@@ -117,5 +166,27 @@ export class AgentInstancesManager {
       this.queue.release();
       // TODO: log this?
     }
+  }
+
+  private findModel(registry: ModelRegistry, name: string | undefined): Model<Api> | undefined {
+    if (!name) {
+      return undefined;
+    }
+    const models = registry.getAvailable();
+    if (!models || models.length === 0) {
+      return undefined;
+    }
+
+    const exact = models.find(
+      (model) => `${model.provider} / ${model.id}` === name || model.id === name,
+    );
+    if (exact) {
+      return exact;
+    }
+
+    const lower = name.toLowerCase();
+    return models.find(
+      (model) => model.id.toLowerCase().includes(lower) || model.name.toLowerCase().includes(lower),
+    );
   }
 }

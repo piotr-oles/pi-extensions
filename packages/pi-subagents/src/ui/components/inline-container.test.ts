@@ -62,7 +62,7 @@ describe("InlineContainer", () => {
   it("truncates output to given width", () => {
     const container = new InlineContainer();
     container.addChild(makeComponent("hello world"));
-    expect(stripAnsi(container.render(5)[0])).toMatchInlineSnapshot(`"he..."`)
+    expect(stripAnsi(container.render(5)[0])).toMatchInlineSnapshot(`"he..."`);
   });
 
   it("stops adding children once width is exhausted", () => {

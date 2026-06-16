@@ -1,11 +1,15 @@
 import type { Component } from "@earendil-works/pi-tui";
-import { Container, visibleWidth, truncateToWidth } from "@earendil-works/pi-tui";
+import { Container, wrapTextWithAnsi, visibleWidth, truncateToWidth } from "@earendil-works/pi-tui";
 
 export class InlineContainer implements Component {
   private readonly container: Container;
 
-  constructor(private readonly gap: string = ' ') {
+  constructor(private readonly gap: string = " ") {
     this.container = new Container();
+  }
+
+  clear() {
+    this.container.clear();
   }
 
   addChild(component: Component) {
@@ -26,8 +30,10 @@ export class InlineContainer implements Component {
         continue;
       }
       const part = rendered[0].trim();
-      if (rendered.length > 1 || part.includes('\n')) {
-        throw new Error(`Cannot render multi-line component in InlineContainer, index=${index}, rendered=${JSON.stringify(rendered)}.`);
+      if (rendered.length > 1 || part.includes("\n")) {
+        throw new Error(
+          `Cannot render multi-line component in InlineContainer, index=${index}, rendered=${JSON.stringify(rendered)}.`,
+        );
       }
       parts.push(part);
       remainingWidth -= visibleWidth(part + this.gap);
@@ -38,7 +44,7 @@ export class InlineContainer implements Component {
 
     const text = parts.join(this.gap);
 
-    return [truncateToWidth(text, width)];
+    return [truncateToWidth(text, width, '', true)];
   }
 
   invalidate() {

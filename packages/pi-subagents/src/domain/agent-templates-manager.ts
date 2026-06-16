@@ -96,31 +96,38 @@ export class AgentTemplatesManager {
 
     const read = await Promise.all(
       files.map(async (file) => {
+        const filePath = join(dir, file);
+
         try {
-          const content = await readFile(join(dir, file), "utf-8");
-          return { file, content };
+          const content = await readFile(filePath, "utf-8");
+          return { filePath, content };
         } catch {
-          return { file, content: undefined };
+          return { filePath, content: undefined };
         }
       }),
     );
 
-    for (const { file, content } of read) {
+    for (const { filePath, content } of read) {
       if (!content) {
         continue;
       }
-      const name = basename(file, ".md");
-      templates.set(name, parseTemplateFile(name, content, source));
+      const name = basename(filePath, ".md");
+      templates.set(name, parseTemplateFile(filePath, name, content, source));
     }
 
     return templates;
   }
 }
 
-function parseTemplateFile(name: string, content: string, source: AgentSource): AgentTemplate {
+function parseTemplateFile(
+  filePath: string,
+  name: string,
+  content: string,
+  source: AgentSource,
+): AgentTemplate {
   const { frontmatter: fm, body } = parseFrontmatter(content);
   return new AgentTemplate({
-    name,
+    name: parseString(fm.name) || name,
     description: parseString(fm.description) ?? name,
     excludedTools: Array.from(new Set(parseCsvField(fm.excluded_tools) ?? [])),
     model: parseString(fm.model),
@@ -130,6 +137,7 @@ function parseTemplateFile(name: string, content: string, source: AgentSource): 
     instructions: body.trim(),
     enabled: fm.enabled !== false,
     source,
+    filePath,
   });
 }
 

@@ -13,6 +13,7 @@ export interface AgentTemplateParams {
   readonly graceTurns?: number;
   readonly enabled?: boolean;
   readonly source: AgentSource;
+  readonly filePath?: string;
 }
 
 export class AgentTemplate {
@@ -26,6 +27,7 @@ export class AgentTemplate {
   readonly instructions: string;
   readonly enabled: boolean;
   readonly source: AgentSource;
+  readonly filePath: string | undefined;
 
   constructor(params: AgentTemplateParams) {
     this.name = params.name;
@@ -38,6 +40,7 @@ export class AgentTemplate {
     this.instructions = params.instructions;
     this.enabled = params.enabled ?? true;
     this.source = params.source;
+    this.filePath = params.filePath;
   }
 
   private static readonly RELEVANCE: Record<AgentSource, [disabled: number, enabled: number]> = {

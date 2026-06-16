@@ -1,4 +1,4 @@
-import { ScriptedSession, type Completion, type Step } from "./scripted-session.js";
+import { type Completion, ScriptedSession, type Step } from "./scripted-session.js";
 
 /**
  * Fluent builder for ScriptedSession.
@@ -48,11 +48,7 @@ export class ScriptedSessionBuilder {
   }
 
   build(): ScriptedSession {
-    return new ScriptedSession(
-      [...this.steps],
-      this.completion,
-      this.steeringLog,
-    );
+    return new ScriptedSession([...this.steps], this.completion, this.steeringLog);
   }
 
   get steeredMessages(): readonly string[] {

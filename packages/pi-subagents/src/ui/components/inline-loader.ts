@@ -5,11 +5,7 @@ export class InlineLoader implements Component {
   private readonly loader: Loader;
 
   constructor(tui: TUI, spinnerColorFn: (str: string) => string) {
-    this.loader = new Loader(
-      tui,
-      spinnerColorFn,
-      () => '',
-    );
+    this.loader = new Loader(tui, spinnerColorFn, () => "");
   }
 
   render(width: number): string[] {

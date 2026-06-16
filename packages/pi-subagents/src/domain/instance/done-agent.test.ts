@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { makeQueued, makeDone, makeRunning } from "../../test-helpers.js";
+import { makeDone, makeQueued, makeRunning } from "../../test-helpers.js";
 
 describe("DoneAgentInstance", () => {
   it("exposes completion result", () => {
@@ -51,8 +51,6 @@ describe("DoneAgentInstance", () => {
 
     it.each([
       "completed",
-      "steered",
-      "aborted",
       "stopped",
       "error",
     ] as const)("uses completedAt - startedAt for reason '%s'", (reason) => {

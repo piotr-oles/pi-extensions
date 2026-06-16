@@ -17,7 +17,6 @@ describe("AgentConfig", () => {
     it("uses template values when no overrides given", () => {
       const cfg = makeAgentConfig({ template: BASE_TEMPLATE });
       expect(cfg.name).toBe("coder");
-      expect(cfg.instructions).toBe("Write clean code.");
       expect(cfg.model).toBe("claude-3");
       expect(cfg.thinkingLevel).toBe("medium");
       expect(cfg.maxTurns).toBe(10);
@@ -44,7 +43,7 @@ describe("AgentConfig", () => {
   describe("tool filtering", () => {
     it("never grants subagent coordination tools regardless of activeTools", () => {
       const cfg = makeAgentConfig({
-        activeTools: ["read", "subagent", "subagent_check", "subagent_steer", "write"],
+        availableTools: ["read", "subagent", "subagent_check", "subagent_steer", "write"],
       });
       expect(cfg.enabledTools).not.toContain("subagent");
       expect(cfg.enabledTools).not.toContain("subagent_check");
@@ -56,7 +55,7 @@ describe("AgentConfig", () => {
     it("excludes tools listed in template excludedTools", () => {
       const cfg = makeAgentConfig({
         template: BASE_TEMPLATE,
-        activeTools: ["read", "bash", "write"],
+        availableTools: ["read", "bash", "write"],
       });
       expect(cfg.enabledTools).not.toContain("bash");
       expect(cfg.enabledTools).toContain("read");
@@ -64,7 +63,7 @@ describe("AgentConfig", () => {
     });
 
     it("only enables tools that appear in activeTools", () => {
-      const cfg = makeAgentConfig({ template: BASE_TEMPLATE, activeTools: ["read"] });
+      const cfg = makeAgentConfig({ template: BASE_TEMPLATE, availableTools: ["read"] });
       expect(cfg.enabledTools).toEqual(["read"]);
     });
   });

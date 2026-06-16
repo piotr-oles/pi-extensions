@@ -1,8 +1,8 @@
 import type { ContextUsage } from "@earendil-works/pi-coding-agent";
 
-export function formatUsage(usage: ContextUsage): string {
-  const formatted = formatSi(usage.tokens ?? 0);
-  if (usage.percent) {
+export function formatUsage(usage: ContextUsage | undefined): string {
+  const formatted = formatSi(usage?.tokens ?? 0);
+  if (usage?.percent) {
     return `${formatted} (${usage.percent.toFixed(1)}%)`;
   }
   return `${formatted}`;

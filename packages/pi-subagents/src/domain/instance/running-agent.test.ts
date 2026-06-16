@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ScriptedSessionBuilder } from "../../test-helpers/scripted-session-builder.js";
+import { makeQueued } from "../../test-helpers.js";
 import type { DoneAgentInstance } from "./done-agent.js";
 import { RunningAgentInstance } from "./running-agent.js";
-import { makeQueued } from "../../test-helpers.js";
-import { ScriptedSessionBuilder } from "../../test-helpers/scripted-session-builder.js";
 
 interface RunOptions {
   maxTurns?: number;
@@ -29,7 +29,9 @@ function run(session: ScriptedSessionBuilder, options: RunOptions = {}): Promise
     RunningAgentInstance.start({
       queued,
       startedAt: options.startedAt ?? 0,
-      onUpdate: () => { updateCount++; },
+      onUpdate: () => {
+        updateCount++;
+      },
       onDone: (done) => resolve({ done, updateCount }),
     });
   });
@@ -62,18 +64,17 @@ describe("RunningAgentInstance", () => {
     });
 
     it("completes with reason 'steered' when agent finishes after reaching soft turn limit", async () => {
-      const { done } = await run(
-        new ScriptedSessionBuilder().turns(5).complete("wrapped up"),
-        { maxTurns: 5 },
-      );
+      const { done } = await run(new ScriptedSessionBuilder().turns(5).complete("wrapped up"), {
+        maxTurns: 5,
+      });
       expect(done.reason).toBe("steered");
     });
 
     it("completes with reason 'aborted' when agent exceeds maxTurns + graceTurns", async () => {
-      const { done } = await run(
-        new ScriptedSessionBuilder().turns(20).complete("won't reach"),
-        { maxTurns: 5, graceTurns: 3 },
-      );
+      const { done } = await run(new ScriptedSessionBuilder().turns(20).complete("won't reach"), {
+        maxTurns: 5,
+        graceTurns: 3,
+      });
       expect(done.reason).toBe("aborted");
     });
 
@@ -119,10 +120,10 @@ describe("RunningAgentInstance", () => {
     });
 
     it("does not fire an update for the turn that hits the hard limit", async () => {
-      const { updateCount } = await run(
-        new ScriptedSessionBuilder().turns(20).complete(),
-        { maxTurns: 5, graceTurns: 3 },
-      );
+      const { updateCount } = await run(new ScriptedSessionBuilder().turns(20).complete(), {
+        maxTurns: 5,
+        graceTurns: 3,
+      });
       expect(updateCount).toBe(7);
     });
 

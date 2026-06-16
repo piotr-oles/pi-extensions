@@ -39,7 +39,6 @@ export class DoneAgentRow implements Component {
   private doneIcon(reason: DoneReason): string {
     switch (reason) {
       case "completed":
-      case "steered":
         return this.theme.fg("success", "✓");
       case "stopped":
         return this.theme.fg("dim", "■");

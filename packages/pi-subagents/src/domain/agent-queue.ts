@@ -13,7 +13,7 @@ export class AgentQueue {
   constructor(
     private readonly maxConcurrent: number,
     private readonly onStart: (item: QueueItem) => void,
-  ) { }
+  ) {}
 
   enqueue(item: QueueItem): void {
     if (this.running < this.maxConcurrent) {

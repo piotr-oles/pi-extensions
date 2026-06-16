@@ -8,11 +8,12 @@ export interface WidgetUiContext {
     factory: ((tui: TUI, theme: Theme) => Component & { dispose?(): void }) | undefined,
   ): void;
 }
+
 import { AgentListComponent } from "./components/agent-list-component.js";
 
 const DONE_TTL_MS = 30_000;
 
-export class AgentWidget {
+export class AgentsWidget {
   private mountTime = 0;
   private ui: WidgetUiContext | null = null;
   private tui: TUI | null = null;
@@ -21,7 +22,7 @@ export class AgentWidget {
   private readonly hiddenDoneIds = new Set<string>();
   private readonly cleanupTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
-  constructor(private readonly getInstances: () => AgentInstance[]) { }
+  constructor(private readonly getInstances: () => AgentInstance[]) {}
 
   getVisibleInstances(): AgentInstance[] {
     return this.getInstances().filter((inst) => {
@@ -58,9 +59,10 @@ export class AgentWidget {
   }
 
   mount(ui: WidgetUiContext): void {
-    if (this.ui === null) {
+    if (!this.mountTime) {
       this.mountTime = Date.now();
     }
+
     this.ui = ui;
     ui.setWidget("pi-subagents", (tui: TUI, theme: Theme) => {
       const list = new AgentListComponent(() => this.getVisibleInstances(), tui, theme);
@@ -76,6 +78,9 @@ export class AgentWidget {
   }
 
   unmount(ui: WidgetUiContext): void {
+    if (this.mountTime) {
+      this.mountTime = 0;
+    }
     this.list?.dispose();
     ui.setWidget("pi-subagents", undefined);
     this.ui = null;
