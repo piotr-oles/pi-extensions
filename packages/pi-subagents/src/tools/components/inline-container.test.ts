@@ -24,16 +24,20 @@ function makeEmptyComponent(): Component {
   };
 }
 
+function renderTrimmed(container: InlineContainer, width: number): string[] {
+  return container.render(width).map((s) => s.trimEnd());
+}
+
 describe("InlineContainer", () => {
   it("renders empty string when no children", () => {
     const container = new InlineContainer();
-    expect(container.render(80)).toEqual([""]);
+    expect(renderTrimmed(container, 80)).toEqual([""]);
   });
 
   it("renders single child trimmed", () => {
     const container = new InlineContainer();
     container.addChild(makeComponent("  hello  "));
-    expect(container.render(80)).toEqual(["hello"]);
+    expect(renderTrimmed(container, 80)).toEqual(["hello"]);
   });
 
   it("renders multiple children joined with default gap (space)", () => {
@@ -41,14 +45,14 @@ describe("InlineContainer", () => {
     container.addChild(makeComponent("foo"));
     container.addChild(makeComponent("bar"));
     container.addChild(makeComponent("baz"));
-    expect(container.render(80)).toEqual(["foo bar baz"]);
+    expect(renderTrimmed(container, 80)).toEqual(["foo bar baz"]);
   });
 
   it("renders children joined with custom gap", () => {
     const container = new InlineContainer(" · ");
     container.addChild(makeComponent("foo"));
     container.addChild(makeComponent("bar"));
-    expect(container.render(80)).toEqual(["foo · bar"]);
+    expect(renderTrimmed(container, 80)).toEqual(["foo · bar"]);
   });
 
   it("skips children that render empty array", () => {
@@ -56,13 +60,13 @@ describe("InlineContainer", () => {
     container.addChild(makeEmptyComponent());
     container.addChild(makeComponent("visible"));
     container.addChild(makeEmptyComponent());
-    expect(container.render(80)).toEqual(["visible"]);
+    expect(renderTrimmed(container, 80)).toEqual(["visible"]);
   });
 
   it("truncates output to given width", () => {
     const container = new InlineContainer();
     container.addChild(makeComponent("hello world"));
-    expect(stripAnsi(container.render(5)[0])).toMatchInlineSnapshot(`"he..."`);
+    expect(stripAnsi(container.render(5)[0])).toMatchInlineSnapshot(`"hello"`);
   });
 
   it("stops adding children once width is exhausted", () => {
@@ -92,7 +96,7 @@ describe("InlineContainer", () => {
     container.addChild(makeComponent("stays"));
     container.addChild(child);
     container.removeChild(child);
-    expect(container.render(80)).toEqual(["stays"]);
+    expect(renderTrimmed(container, 80)).toEqual(["stays"]);
   });
 
   it("passes remaining width to each child", () => {
@@ -108,14 +112,14 @@ describe("InlineContainer", () => {
     container.addChild(trackingComponent("abc"));
     container.addChild(trackingComponent("de"));
     container.render(20);
-    expect(widths[0]).toBe(20);
-    expect(widths[1]).toBe(20 - "abc ".length);
+    expect(widths[0]).toBe(19);
+    expect(widths[1]).toBe(15);
   });
 
   it("does not throw after invalidate()", () => {
     const container = new InlineContainer();
     container.addChild(makeComponent("ok"));
     container.invalidate();
-    expect(container.render(80)).toEqual(["ok"]);
+    expect(renderTrimmed(container, 80)).toEqual(["ok"]);
   });
 });

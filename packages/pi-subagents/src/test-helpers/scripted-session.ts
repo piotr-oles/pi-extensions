@@ -1,7 +1,4 @@
-import type {
-  AgentSessionEvent,
-  ContextUsage,
-} from "@earendil-works/pi-coding-agent";
+import type { AgentSessionEvent, ContextUsage } from "@earendil-works/pi-coding-agent";
 
 export interface TurnStep {
   readonly kind: "turn";
@@ -42,7 +39,7 @@ export class ScriptedSession {
     private readonly steps: readonly Step[],
     private readonly completion: Completion,
     private readonly steeredMessages: string[],
-  ) { }
+  ) {}
 
   readonly sessionId = "scripted";
 
@@ -53,12 +50,17 @@ export class ScriptedSession {
     };
   }
 
-  async prompt(text: string): Promise<void> {
+  async prompt(_text: string): Promise<void> {
     for (const step of this.steps) {
-      if (this.aborted) return;
+      if (this.aborted) {
+        return;
+      }
 
       if (step.kind === "turn") {
-        await this.handler?.({ type: "turn_end" } as AgentSessionEvent);
+        await this.handler?.({
+          type: "turn_end",
+          message: { role: "assistant", content: [] },
+        } as unknown as AgentSessionEvent);
       } else if (step.kind === "event") {
         await this.handler?.({ type: step.eventType } as AgentSessionEvent);
       } else {
@@ -66,7 +68,9 @@ export class ScriptedSession {
       }
     }
 
-    if (this.aborted) return;
+    if (this.aborted) {
+      return;
+    }
 
     if (this.completion.kind === "error") {
       throw new Error(this.completion.message);

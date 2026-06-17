@@ -1,10 +1,14 @@
-
 import { type Static, Type } from "typebox";
 
 export const SubagentToolParams = Type.Object({
   name: Type.String({
-    description: `Name of subagent to spawn.`,
+    description: "Name of subagent template to spawn. Required for both spawn and follow-up.",
   }),
+  id: Type.Optional(
+    Type.String({
+      description: "ID of a done subagent to follow-up.",
+    }),
+  ),
   description: Type.String({
     description: "Short description of the task (shown in UI).",
   }),

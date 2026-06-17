@@ -9,6 +9,7 @@ export function registerFlags(pi: ExtensionAPI): void {
 }
 
 export function getMaxConcurrent(pi: ExtensionAPI): number {
-  const val = Number(pi.getFlag("pi-subagents-max-concurrent"));
-  return Number.isInteger(val) && val >= 1 ? val : 4;
+  return 1;
+  // const val = Number(pi.getFlag("pi-subagents-max-concurrent"));
+  // return Number.isInteger(val) && val >= 1 ? val : 4;
 }

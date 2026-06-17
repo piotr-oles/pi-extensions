@@ -1,3 +1,4 @@
+import type { AgentSession } from "@earendil-works/pi-coding-agent";
 import { type Completion, ScriptedSession, type Step } from "./scripted-session.js";
 
 /**
@@ -47,8 +48,12 @@ export class ScriptedSessionBuilder {
     return this;
   }
 
-  build(): ScriptedSession {
-    return new ScriptedSession([...this.steps], this.completion, this.steeringLog);
+  build(): AgentSession {
+    return new ScriptedSession(
+      [...this.steps],
+      this.completion,
+      this.steeringLog,
+    ) as unknown as AgentSession;
   }
 
   get steeredMessages(): readonly string[] {

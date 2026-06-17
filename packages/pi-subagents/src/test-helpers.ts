@@ -1,11 +1,10 @@
-import { Theme, type ThemeColor } from "@earendil-works/pi-coding-agent";
+import { type AgentSession, Theme, type ThemeColor } from "@earendil-works/pi-coding-agent";
 import type { TUI } from "@earendil-works/pi-tui";
-import { AgentConfig, type AgentConfigParams } from "./domain/agent-config.js";
-import { AgentTemplate, type AgentTemplateParams } from "./domain/agent-template.js";
-import type { DoneReason } from "./domain/instance/done-agent.js";
-import { QueuedAgentInstance } from "./domain/instance/queued-agent.js";
-import { RunningAgentInstance } from "./domain/instance/running-agent.js";
-import type { Session } from "./domain/types.js";
+import { type DoneResult, DoneSubagent } from "./domain/instance/done-subagent.js";
+import { QueuedSubagent } from "./domain/instance/queued-subagent.js";
+import { RunningSubagent } from "./domain/instance/running-subagent.js";
+import type { SubagentConfig } from "./domain/subagent-config.js";
+import type { SubagentTemplate } from "./domain/subagent-template.js";
 
 const FG_COLORS: Record<ThemeColor, string> = {
   accent: "",
@@ -65,92 +64,110 @@ const BG_COLORS = {
 };
 
 export const mockTheme = new Theme(FG_COLORS, BG_COLORS, "truecolor");
-export const mockTui = { requestRender: () => { } } as unknown as TUI;
+export const mockTui = { requestRender: () => {} } as unknown as TUI;
 
-export const mockSession: Session = {
+export const mockSession: AgentSession = {
   sessionId: "mock",
-  steer: async () => { },
-  abort: () => { },
-  prompt: async () => { },
-  subscribe: () => () => { },
+  steer: async () => {},
+  abort: async () => {},
+  prompt: async () => {},
+  subscribe: () => () => {},
   getLastAssistantText: () => undefined,
   getContextUsage: () => undefined,
-};
+} as unknown as AgentSession;
 
-export function makeAgentTemplate(overrides: Partial<AgentTemplateParams> = {}): AgentTemplate {
-  return new AgentTemplate({
+export function makeAgentTemplate(overrides: Partial<SubagentTemplate> = {}): SubagentTemplate {
+  return {
     name: "my-agent",
     description: "",
     instructions: "",
     source: "global",
+    excludedTools: [],
+    enabled: true,
+    filePath: undefined,
     ...overrides,
-  });
+  };
 }
 
-export function makeAgentConfig(overrides: Partial<AgentConfigParams> = {}): AgentConfig {
-  return new AgentConfig({
+export function makeAgentConfig(overrides: Partial<SubagentConfig> = {}): SubagentConfig {
+  return {
+    name: "my-agent",
+    model: "claude-haiku",
+    thinkingLevel: "medium",
+    graceTurns: 5,
     template: makeAgentTemplate(),
-    description: "doing a task",
-    prompt: "do something",
-    model: 'claude-haiku',
-    availableTools: [],
+    enabledTools: [],
     ...overrides,
-  });
+  };
 }
 
-export const mockTemplate: AgentTemplate = makeAgentTemplate();
-export const mockConfig: AgentConfig = makeAgentConfig();
+export const mockTemplate: SubagentTemplate = makeAgentTemplate();
+export const mockConfig: SubagentConfig = makeAgentConfig();
 
 export interface MakeQueuedOptions {
   id?: string;
-  config?: AgentConfig;
-  session?: Session;
-  signal?: AbortSignal;
+  prompt?: string;
+  description?: string;
+  config?: SubagentConfig;
+  session?: AgentSession;
   maxTurns?: number;
   graceTurns?: number;
 }
 
 export function makeQueued({
   id = "test-id",
+  prompt = "do something",
+  description = "doing a task",
   config,
   session = mockSession,
-  signal,
   maxTurns,
   graceTurns,
-}: MakeQueuedOptions = {}): QueuedAgentInstance {
-  return new QueuedAgentInstance({
+}: MakeQueuedOptions = {}): QueuedSubagent {
+  return new QueuedSubagent({
     id,
-    config: config ?? makeAgentConfig({ template: makeAgentTemplate({ maxTurns, graceTurns }) }),
+    prompt,
+    description,
+    config:
+      config ??
+      makeAgentConfig({
+        template: makeAgentTemplate({ maxTurns, graceTurns }),
+        ...(maxTurns !== undefined && { maxTurns }),
+        ...(graceTurns !== undefined && { graceTurns }),
+      }),
     session,
-    signal,
   });
 }
 
 export interface MakeRunningOptions {
   id?: string;
-  config?: AgentConfig;
-  session?: Session;
+  prompt?: string;
+  config?: SubagentConfig;
+  session?: AgentSession;
   startedAt?: number;
 }
 
 export function makeRunning({
   id = "test-id",
+  prompt = "do something",
   config,
   session = mockSession,
   startedAt = 0,
-}: MakeRunningOptions = {}): RunningAgentInstance {
-  return RunningAgentInstance.start({
-    queued: makeQueued({ id, config, session }),
+}: MakeRunningOptions = {}): RunningSubagent {
+  return RunningSubagent.start({
+    instance: makeQueued({ id, config, session }),
+    prompt,
+    description: "doing a task",
     startedAt,
-    onDone: () => { },
+    onUpdate: () => {},
+    onDone: () => {},
   });
 }
 
 export interface MakeDoneOptions {
   id?: string;
-  config?: AgentConfig;
-  session?: Session;
-  reason?: DoneReason;
+  config?: SubagentConfig;
+  session?: AgentSession;
+  result?: DoneResult;
   startedAt?: number;
 }
 
@@ -158,8 +175,8 @@ export function makeDone({
   id = "test-id",
   config,
   session = mockSession,
-  reason = "completed",
+  result = { status: "completed", message: "", steered: false },
   startedAt = 0,
 }: MakeDoneOptions = {}) {
-  return makeRunning({ id, config, session, startedAt }).done({ reason });
+  return new DoneSubagent({ instance: makeRunning({ id, config, session, startedAt }), result });
 }

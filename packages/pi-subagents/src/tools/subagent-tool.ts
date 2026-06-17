@@ -1,120 +1,95 @@
+import type { TextContent } from "@earendil-works/pi-ai";
 import { defineTool, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { type Component } from "@earendil-works/pi-tui";
-import { Type } from "typebox";
-import type { AgentInstancesManager } from "../domain/agent-instances-manager.js";
-import type { AgentTemplatesManager } from "../domain/agent-templates-manager.js";
-import type { AgentInstance } from "../domain/instance/index.js";
-import type { AgentInstanceSessionEntry } from "../domain/types.js";
-import { AgentsWidget } from "../ui/agents-widget.js";
+import type { Component } from "@earendil-works/pi-tui";
+import type { DoneSubagent } from "../domain/instance/done-subagent.js";
+import type { SubagentInstancesManager } from "../domain/subagent-instances-manager.js";
+import type { SubagentTemplatesManager } from "../domain/subagent-templates-manager.js";
+import type { SubagentSessionEntry } from "../domain/types.js";
 import { throttle } from "../throttle.js";
-import { SubagentToolParams } from "./types.js";
 import { SubagentToolCallComponent } from "./components/subagent-tool-call-component.js";
 import { SubagentToolResultComponent } from "./components/subagent-tool-result-component.js";
+import { SubagentToolParams } from "./types.js";
 
 export interface SubagentToolDeps {
   pi: ExtensionAPI;
-  instanceManager: AgentInstancesManager;
-  templatesManager: AgentTemplatesManager;
+  instanceManager: SubagentInstancesManager;
+  templatesManager: SubagentTemplatesManager;
 }
 
 export function createSubagentTool(deps: SubagentToolDeps) {
   const { pi, instanceManager, templatesManager } = deps;
-  const widget = new AgentsWidget(() => instanceManager.listInstances());
 
-  return defineTool<typeof SubagentToolParams, AgentInstanceSessionEntry>({
+  return defineTool<typeof SubagentToolParams, SubagentSessionEntry>({
     name: "subagent",
     label: "Subagent",
     description: `Spawn a specialized subagent to handle a task autonomously.`,
-    promptSnippet:
-      "Spawn a specialized subagent to handle a task autonomously in an isolated session",
     promptGuidelines: [
-      "Use subagent to delegate self-contained tasks that don't require back-and-forth.",
+      "Use subagent tool to delegate self-contained tasks that don't require back-and-forth.",
+      "If asked to spawn multiple subagents, spawn all of them in the same turn, as they will block next turn until done.",
+      "You can follow-up on subagent that finished by calling subagent tool again, but this time with returned id and follow-up prompt.",
     ],
-    parameters: Type.Object({
-      name: Type.String({
-        description: `Name of subagent to spawn.`,
-      }),
-      description: Type.String({
-        description: "Short description of the task (shown in UI).",
-      }),
-      prompt: Type.String({
-        description:
-          "Task prompt for subagent. Should contain all information needed for subagent to work independetly.",
-      }),
-    }),
+    parameters: SubagentToolParams,
     executionMode: "parallel",
-    execute: async (_toolCallId, params, signal, onUpdate, ctx) => {
-      const template = templatesManager.getTemplateOrDefault(params.name);
+    execute: async (toolCallId, params, signal, onUpdate, ctx) => {
       const availableTools = pi.getActiveTools();
+      const resolvedId = params.id ?? instanceManager.id(toolCallId);
+      const onUpdateThrottled = onUpdate ? throttle(onUpdate, 500) : undefined;
 
-      let last: AgentInstance | undefined;
-      const lifetime = instanceManager.spawn(ctx, template, {
-        prompt: params.prompt,
-        description: params.description,
-        availableTools: availableTools,
-        signal,
-      });
+      let promise: Promise<DoneSubagent>;
 
-      const onUpdateThrottled = onUpdate ? throttle(onUpdate, 100) : undefined;
-
-      // ctx.ui.setWorkingIndicator({ frames: [ctx.ui.theme.fg("dim", "●")] });
-      // ctx.ui.setWorkingMessage("Waiting for subagents");
-
-      // (async () => {
-
-      for await (const instance of lifetime) {
-        last = instance;
-        onUpdateThrottled?.({ content: [], details: instance.toEntry() });
-
+      if (params.id) {
+        promise = instanceManager.followUp({
+          id: resolvedId,
+          prompt: params.prompt,
+          description: params.description,
+          signal,
+          onUpdate: (instance) => {
+            onUpdateThrottled?.({ content: [], details: instance.toEntry() });
+          },
+        });
+      } else {
+        promise = instanceManager.spawn({
+          id: resolvedId,
+          ctx,
+          template: templatesManager.getTemplateOrDefault(params.name),
+          prompt: params.prompt,
+          description: params.description,
+          availableTools,
+          signal,
+          onUpdate: (instance) => {
+            onUpdateThrottled?.({ content: [], details: instance.toEntry() });
+          },
+        });
       }
 
+      ctx.ui.setWorkingIndicator({ frames: [ctx.ui.theme.fg("dim", "●")] });
+      ctx.ui.setWorkingMessage("Waiting for subagents");
 
-      // })();
+      const done = await promise;
 
-      // const running = instanceManager.listInstances("running");
-      // if (running.length === 0) {
-      //   ctx.ui.setWorkingIndicator();
-      //   ctx.ui.setWorkingMessage();
-      // }
-
-      if (!last) {
-        // TODO improve this case
-        throw new Error("Unknown error during subagent spawn.");
-      }
-      if (last.status !== "done") {
-        // TODO improve this case
-        throw new Error("Unexpected status of subagent.");
+      if (!instanceManager.isRunning()) {
+        ctx.ui.setWorkingIndicator();
+        ctx.ui.setWorkingMessage();
       }
 
       return {
-        content: [
-          {
-            type: "text",
-            text: [
-              `Subagent "${last.config.name}" with id "${last.id}" ${last.reason === "completed" ? "finished" : last.reason === "stopped" ? "was cancelled" : "errored"}.`,
-              last.reason === "completed"
-                ? last.result
-                  ? `Result:\n${last.result}`
-                  : "No results."
-                : last.error
-                  ? `Error: ${last.error}`
-                  : "No output",
-            ].join("\n"),
-          },
-        ],
-        details: last.toEntry(),
+        content: buildSubagentResponse(done),
+        details: done.toEntry(),
       };
     },
     /** Custom rendering for tool call display */
     renderCall(params, theme, context): Component {
+      const resolvedParams = params.id
+        ? params
+        : { ...params, id: instanceManager.id(context.toolCallId) };
       if (!(context.lastComponent instanceof SubagentToolCallComponent)) {
-        return new SubagentToolCallComponent(params, theme, context.expanded);
+        return new SubagentToolCallComponent(resolvedParams, theme, context.expanded);
       }
-      context.lastComponent.update(params, theme, context.expanded);
+      context.lastComponent.update(resolvedParams, theme, context.expanded);
       return context.lastComponent;
     },
     /** Custom rendering for tool result display */
-    renderResult(result, options, theme, context): Component {
+    renderResult(result, _options, theme, context): Component {
       if (!(context.lastComponent instanceof SubagentToolResultComponent)) {
         return new SubagentToolResultComponent(
           result.details,
@@ -127,4 +102,51 @@ export function createSubagentTool(deps: SubagentToolDeps) {
       return context.lastComponent;
     },
   });
+}
+
+function buildSubagentResponse(done: DoneSubagent): TextContent[] {
+  const subagent = `Subagent "${done.config.name}" with id ${done.id}`;
+
+  switch (done.result.status) {
+    case "completed":
+      return [
+        {
+          type: "text",
+          text: done.result.steered
+            ? `${subagent} completed but had to finish earlier due to imposed limits. Its results might be partial.`
+            : `${subagent} completed.`,
+        },
+        {
+          type: "text",
+          text: done.result.message || "No result.",
+        },
+      ];
+    case "aborted":
+      return [
+        {
+          type: "text",
+          text: `${subagent} cancelled by the user.`,
+        },
+      ];
+    case "error":
+      return [
+        {
+          type: "text",
+          text: [`${subagent} failed.`, `Error: ${done.result.error || "unknown"}`].join("\n"),
+        },
+      ];
+    case "exceeded_limit": {
+      switch (done.result.limit.type) {
+        case "turns":
+          return [
+            {
+              type: "text",
+              text: [
+                `${subagent} exceeded turns limit and didn't respond after asking to wrap up.`,
+              ].join("\n"),
+            },
+          ];
+      }
+    }
+  }
 }

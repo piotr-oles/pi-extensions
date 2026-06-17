@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 import type { ContextUsage } from "@earendil-works/pi-coding-agent";
 
 export function formatUsage(usage: ContextUsage | undefined): string {
@@ -30,4 +31,18 @@ export function formatDuration(ms: number): string {
   return ms >= 60_000
     ? `${Math.floor(ms / 60_000)}m${Math.floor((ms % 60_000) / 1000)}s`
     : `${(ms / 1000).toFixed(1)}s`;
+}
+
+export function formatFilePath(absPath: string): string {
+  const home = homedir();
+  return absPath.startsWith(home) ? `~${absPath.slice(home.length)}` : absPath;
+}
+
+export function getFirstLine(text: string): string {
+  const trimmedText = text.trim();
+  const firstLineText = trimmedText.includes("\n")
+    ? trimmedText.slice(0, trimmedText.indexOf("\n"))
+    : trimmedText;
+
+  return firstLineText;
 }

@@ -1,11 +1,13 @@
 import type { Component } from "@earendil-works/pi-tui";
-import { Container, wrapTextWithAnsi, visibleWidth, truncateToWidth } from "@earendil-works/pi-tui";
+import { Container, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 export class InlineContainer implements Component {
   private readonly container: Container;
+  private readonly gap: string;
 
-  constructor(private readonly gap: string = " ") {
+  constructor(gap: string = " ") {
     this.container = new Container();
+    this.gap = gap;
   }
 
   clear() {
@@ -22,7 +24,7 @@ export class InlineContainer implements Component {
 
   render(width: number): string[] {
     const parts: string[] = [];
-    let remainingWidth = width;
+    let remainingWidth = width - 1; // add 1 for padding, so background color doesn't get trimmed
     for (let index = 0; index < this.container.children.length; ++index) {
       const child = this.container.children[index];
       const rendered = child.render(remainingWidth);
@@ -44,7 +46,7 @@ export class InlineContainer implements Component {
 
     const text = parts.join(this.gap);
 
-    return [truncateToWidth(text, width, '', true)];
+    return [truncateToWidth(text, width, "", true)];
   }
 
   invalidate() {

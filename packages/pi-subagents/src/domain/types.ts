@@ -1,35 +1,22 @@
-import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
-import type {
-  AgentSession,
-  AgentSessionEvent,
-  ContextUsage,
-} from "@earendil-works/pi-coding-agent";
+import type { DoneSubagent, DoneSubagentSessionEntry } from "./instance/done-subagent.js";
+import type { QueuedSubagent, QueuedSubagentSessionEntry } from "./instance/queued-subagent.js";
+import type { RunningAgentSessionEntry, RunningSubagent } from "./instance/running-subagent.js";
 
-export type { ThinkingLevel };
+export type SubagentName = string;
+export type SubagentId = string;
 
-export type AgentName = string;
-export type AgentId = string;
+export type Subagent = QueuedSubagent | RunningSubagent | DoneSubagent;
+export type SubagentStatus = Subagent["status"];
+export type SubagentByStatus<TStatus extends SubagentStatus> =
+  TStatus extends QueuedSubagent["status"]
+    ? QueuedSubagent
+    : TStatus extends RunningSubagent["status"]
+      ? RunningSubagent
+      : TStatus extends DoneSubagent["status"]
+        ? DoneSubagent
+        : never;
 
-export interface Session {
-  readonly sessionId: string;
-  subscribe(listener: (event: AgentSessionEvent) => void | Promise<void>): () => void;
-  prompt(text: string): Promise<void>;
-  steer(text: string): Promise<void>;
-  abort(): void;
-  getLastAssistantText(): string | undefined;
-  getContextUsage(): ContextUsage | undefined;
-}
-
-export type { AgentConfig, AgentConfigOverrides, AgentConfigParams } from "./agent-config.js";
-export type { AgentSource, AgentTemplateParams } from "./agent-template.js";
-export { AgentTemplate } from "./agent-template.js";
-export type {
-  AgentInstanceSessionEntry,
-  DoneAgentInstance,
-  DoneAgentInstance as DoneAgent,
-  DoneReason,
-  QueuedAgentInstance,
-  QueuedAgentInstance as QueuedAgent,
-  RunningAgentInstance,
-  RunningAgentInstance as RunningAgent,
-} from "./instance/index.js";
+export type SubagentSessionEntry =
+  | QueuedSubagentSessionEntry
+  | RunningAgentSessionEntry
+  | DoneSubagentSessionEntry;

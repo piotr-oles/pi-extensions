@@ -1,11 +1,12 @@
 import { readdir, readFile } from "node:fs/promises";
 import { basename, join } from "node:path";
+import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
 import { getAgentDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
-import { type AgentName, type AgentSource, AgentTemplate, type ThinkingLevel } from "./types.js";
+import type { SubagentSource, SubagentTemplate } from "./subagent-template.js";
+import { GENERAL_PURPOSE_TEMPLATE } from "./subagent-template.js";
+import type { SubagentName } from "./types.js";
 
-export class AgentTemplatesManager {
-  private templates = new Map<AgentName, AgentTemplate>();
-
+export class SubagentTemplatesManager {
   static getGlobalDir(): string {
     return join(getAgentDir(), "subagents");
   }
@@ -14,26 +15,57 @@ export class AgentTemplatesManager {
     return join(cwd, ".pi", "subagents");
   }
 
+  private templates = new Map<SubagentName, SubagentTemplate>();
+
   constructor(private readonly cwd: string) {}
 
   async reload(): Promise<void> {
     this.templates.clear();
 
     for (const [file, template] of await this.loadFromDir(
-      AgentTemplatesManager.getGlobalDir(),
+      SubagentTemplatesManager.getGlobalDir(),
       "global",
     )) {
       this.templates.set(file, template);
     }
     for (const [file, template] of await this.loadFromDir(
-      AgentTemplatesManager.getProjectDir(this.cwd),
+      SubagentTemplatesManager.getProjectDir(this.cwd),
       "project",
     )) {
       this.templates.set(file, template);
     }
   }
 
-  resolveName(name: string): AgentName | undefined {
+  getTemplate(name: SubagentName): SubagentTemplate | undefined {
+    const key = this.resolveName(name);
+    if (!key) {
+      return undefined;
+    }
+    const template = this.templates.get(key);
+    return template?.enabled ? template : undefined;
+  }
+
+  getTemplateOrDefault(name: SubagentName): SubagentTemplate {
+    return (
+      this.getTemplate(name) ?? this.getTemplate("general-purpose") ?? GENERAL_PURPOSE_TEMPLATE
+    );
+  }
+
+  listTemplates(): SubagentTemplate[] {
+    return Array.from(this.templates.values()).sort(
+      (templateA, templateB) => this.scoreTemplate(templateB) - this.scoreTemplate(templateA),
+    );
+  }
+
+  private scoreTemplate(template: SubagentTemplate): number {
+    if (template.enabled) {
+      return template.source === "project" ? 3 : 2;
+    } else {
+      return template.source === "project" ? 1 : 0;
+    }
+  }
+
+  private resolveName(name: string): SubagentName | undefined {
     if (this.templates.has(name)) {
       return name;
     }
@@ -46,46 +78,11 @@ export class AgentTemplatesManager {
     return undefined;
   }
 
-  getTemplate(name: AgentName): AgentTemplate | undefined {
-    const key = this.resolveName(name);
-    if (!key) {
-      return undefined;
-    }
-    const template = this.templates.get(key);
-    return template?.enabled ? template : undefined;
-  }
-
-  getTemplateOrDefault(name: AgentName): AgentTemplate {
-    return (
-      this.getTemplate(name) ??
-      this.getTemplate("general-purpose") ??
-      new AgentTemplate({
-        name: "general-purpose",
-        description: "General-purpose agent",
-        instructions: "",
-        enabled: true,
-        source: "global",
-      })
-    );
-  }
-
-  listTemplates(): AgentTemplate[] {
-    return Array.from(this.templates.values()).sort(
-      (templateA, templateB) => templateB.getRelevanceScore() - templateA.getRelevanceScore(),
-    );
-  }
-
-  getEnabledNames(): AgentName[] {
-    return [...this.templates.entries()]
-      .filter(([, template]) => template.enabled)
-      .map(([name]) => name);
-  }
-
   private async loadFromDir(
     dir: string,
-    source: AgentSource,
-  ): Promise<Map<AgentName, AgentTemplate>> {
-    const templates = new Map<AgentName, AgentTemplate>();
+    source: SubagentSource,
+  ): Promise<Map<SubagentName, SubagentTemplate>> {
+    const templates = new Map<SubagentName, SubagentTemplate>();
 
     let files: string[];
     try {
@@ -123,13 +120,14 @@ function parseTemplateFile(
   filePath: string,
   name: string,
   content: string,
-  source: AgentSource,
-): AgentTemplate {
+  source: SubagentSource,
+): SubagentTemplate {
   const { frontmatter: fm, body } = parseFrontmatter(content);
-  return new AgentTemplate({
+  return {
     name: parseString(fm.name) || name,
     description: parseString(fm.description) ?? name,
     excludedTools: Array.from(new Set(parseCsvField(fm.excluded_tools) ?? [])),
+    allowedSubagents: parseCsvField(fm.allowed_subagents),
     model: parseString(fm.model),
     thinkingLevel: parseThinkingLevel(fm.thinking),
     maxTurns: parseNonNegativeInt(fm.max_turns),
@@ -138,7 +136,7 @@ function parseTemplateFile(
     enabled: fm.enabled !== false,
     source,
     filePath,
-  });
+  };
 }
 
 const THINKING_LEVELS: ReadonlySet<ThinkingLevel> = new Set([

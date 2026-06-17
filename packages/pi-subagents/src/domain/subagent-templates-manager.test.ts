@@ -2,10 +2,10 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { AgentTemplatesManager } from "./agent-templates-manager.js";
+import { SubagentTemplatesManager } from "./subagent-templates-manager.js";
 
 async function load(cwd: string) {
-  const templatesManager = new AgentTemplatesManager(cwd);
+  const templatesManager = new SubagentTemplatesManager(cwd);
   await templatesManager.reload();
   return templatesManager.listTemplates();
 }
@@ -116,6 +116,32 @@ describe("loadCustomAgents", () => {
     expect(cfg.thinkingLevel).toBe("low");
     expect(cfg.maxTurns).toBe(10);
     expect(cfg.excludedTools).toEqual(["edit", "write"]);
+  });
+
+  it("parses allowed_subagents as array", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "orchestrator.md"),
+      ["---", "description: Orchestrator", "allowed_subagents: explorer, reviewer", "---"].join(
+        "\n",
+      ),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "orchestrator")!;
+    expect(cfg.allowedSubagents).toEqual(["explorer", "reviewer"]);
+  });
+
+  it("leaves allowedSubagents undefined when field absent", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "basic.md"),
+      ["---", "description: Basic agent", "---"].join("\n"),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "basic")!;
+    expect(cfg.allowedSubagents).toBeUndefined();
   });
 
   it("defaults enabled to true when not specified", async () => {
