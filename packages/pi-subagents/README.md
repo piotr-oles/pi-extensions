@@ -14,7 +14,7 @@ Define agents as markdown files with YAML frontmatter. Two locations are support
 
 | Location | Scope |
 |---|---|
-| `~/.pi/agents/subagents/<name>.md` | Global — available in all projects |
+| `~/.pi/agent/subagents/<name>.md` | Global — available in all projects |
 | `.pi/subagents/<name>.md` | Project — available in current project only |
 
 A project template overrides a global template with the same name.
@@ -67,10 +67,10 @@ Blocks until the subagent completes and returns its result inline. To follow up 
 
 ## How it works
 
-1. On `session_start`, templates are reloaded from disk.
+1. On `before_agent_start`, templates are reloaded from disk.
 2. When `subagent` is called, the extension resolves the template, builds an `AgentConfig`, and starts an isolated pi session.
 3. The subagent session inherits the parent's model registry and working directory but gets its own system prompt built from the template's instructions.
-4. The `subagent` tool is always excluded from subagent sessions — subagents cannot spawn further subagents.
+4. The `subagent` tool is excluded from subagent sessions unless `included_subagents` is set — only then can a subagent spawn further subagents (limited to the listed templates).
 5. A concurrency queue limits how many agents run simultaneously; excess agents are queued and started as slots free up.
 
 ## Flags
