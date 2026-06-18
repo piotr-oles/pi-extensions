@@ -1,0 +1,45 @@
+{
+  "name": "@piotr-oles/pi-cwd",
+  "version": "0.1.0",
+  "description": "Pi Agent extension: remind agent to use relative paths based on current working directory",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/piotr-oles/pi-extensions.git",
+    "directory": "packages/pi-cwd"
+  },
+  "keywords": [
+    "pi-package"
+  ],
+  "type": "module",
+  "files": [
+    "src",
+    "!src/*.test.ts"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "check": "biome ci src/",
+    "fix": "biome check --write src/"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-agent-core": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-agent-core": "^0.75.5",
+    "@earendil-works/pi-coding-agent": "^0.75.5",
+    "@marcfargas/pi-test-harness": "^0.6.1",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1"
+  }
+}
