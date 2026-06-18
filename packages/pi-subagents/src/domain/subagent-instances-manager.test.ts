@@ -166,7 +166,7 @@ describe("AgentInstancesManager", () => {
       expect(instance?.config.enabledTools).toContain("read");
     });
 
-    it("excludes subagent tool when allowedSubagents not set", async () => {
+    it("excludes subagent tool when includedSubagents not set", async () => {
       spawn({ description: "d", prompt: "p", availableTools: ["bash", "subagent"] });
       await flushMicrotasks();
 
@@ -190,8 +190,8 @@ describe("AgentInstancesManager", () => {
       expect(manager.listInstances()[0]?.config.enabledTools).toEqual(["bash"]);
     });
 
-    it("keeps subagent tool when allowedSubagents is non-empty", async () => {
-      const t = makeAgentTemplate({ allowedSubagents: ["explorer"] });
+    it("keeps subagent tool when includedSubagents is non-empty", async () => {
+      const t = makeAgentTemplate({ includedSubagents: ["explorer"] });
       manager.spawn({
         id: manager.id(`tc-${tcCounter++}`),
         ctx,
@@ -207,8 +207,8 @@ describe("AgentInstancesManager", () => {
       expect(manager.listInstances()[0]?.config.enabledTools).toContain("subagent");
     });
 
-    it("config carries allowedSubagents from template", async () => {
-      const t = makeAgentTemplate({ allowedSubagents: ["reviewer"] });
+    it("config carries includedSubagents from template", async () => {
+      const t = makeAgentTemplate({ includedSubagents: ["reviewer"] });
       manager.spawn({
         id: manager.id(`tc-${tcCounter++}`),
         ctx,
@@ -221,7 +221,7 @@ describe("AgentInstancesManager", () => {
       });
       await flushMicrotasks();
 
-      expect(manager.listInstances()[0]?.config.allowedSubagents).toEqual(["reviewer"]);
+      expect(manager.listInstances()[0]?.config.includedSubagents).toEqual(["reviewer"]);
     });
 
     it("spawned instance config reflects model and maxTurns", async () => {

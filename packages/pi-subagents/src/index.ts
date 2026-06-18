@@ -6,7 +6,7 @@ import { SubagentTemplatesManager } from "./domain/subagent-templates-manager.js
 import type { SubagentConfigEntry } from "./domain/types.js";
 import { getMaxConcurrent, registerFlags } from "./flags.js";
 import { createSubagentTool } from "./tools/subagent-tool.js";
-import { escapeXmlAttr } from "./xml.js";
+import { escapeXmlContent } from "./xml.js";
 
 export default async function piSubagents(pi: ExtensionAPI): Promise<void> {
   registerFlags(pi);
@@ -35,8 +35,10 @@ export default async function piSubagents(pi: ExtensionAPI): Promise<void> {
 
     let allowedTemplates = templatesManager.listTemplates();
     if (configEntry) {
-      const allowedSubagents = new Set(configEntry.data?.allowedSubagents ?? []);
-      allowedTemplates = allowedTemplates.filter((template) => allowedSubagents.has(template.name));
+      const includedSubagents = new Set(configEntry.data?.includedSubagents ?? []);
+      allowedTemplates = allowedTemplates.filter((template) =>
+        includedSubagents.has(template.name),
+      );
     }
     const enabledTemplates = allowedTemplates.filter((template) => template.enabled);
 
@@ -58,13 +60,17 @@ function subagentsSystemPrompt(templates: SubagentTemplate[]): string {
 
 function buildSubagentsXml(templates: SubagentTemplate[]): string {
   return [
-    "<subagents>",
+    "<available_subagents>",
     templates
-      .map(
-        (template) =>
-          `  <subagent name="${escapeXmlAttr(template.name)}" description="${escapeXmlAttr(template.description)}" />`,
+      .map((template) =>
+        [
+          `  <subagent>`,
+          `    <name>${escapeXmlContent(template.name)}</name>`,
+          `    <description>${escapeXmlContent(template.description)}</description>`,
+          `  </subagent>`,
+        ].join("\n"),
       )
       .join("\n"),
-    "</subagents>",
+    "</available_subagents>",
   ].join("\n");
 }

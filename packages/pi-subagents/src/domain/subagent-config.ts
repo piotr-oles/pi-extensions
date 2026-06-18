@@ -9,5 +9,5 @@ export interface SubagentConfig {
   readonly maxTurns?: number;
   readonly graceTurns: number;
   readonly enabledTools: string[];
-  readonly allowedSubagents?: string[];
+  readonly includedSubagents?: string[];
 }

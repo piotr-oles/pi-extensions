@@ -22,5 +22,5 @@ export type SubagentSessionEntry =
   | DoneSubagentSessionEntry;
 
 export interface SubagentConfigEntry {
-  allowedSubagents: string[];
+  includedSubagents: string[];
 }

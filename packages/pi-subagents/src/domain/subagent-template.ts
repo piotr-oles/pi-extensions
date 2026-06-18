@@ -8,7 +8,7 @@ export interface SubagentTemplate {
   readonly instructions: string;
   readonly includedTools: string[] | undefined;
   readonly includedSkills: string[] | undefined;
-  readonly allowedSubagents?: string[];
+  readonly includedSubagents?: string[];
   readonly model?: string;
   readonly thinkingLevel?: ThinkingLevel;
   readonly maxTurns?: number;

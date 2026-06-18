@@ -98,7 +98,7 @@ export class SubagentInstancesManager {
       maxTurns: maxTurns ?? template.maxTurns,
       graceTurns: graceTurns ?? template.graceTurns ?? DEFAULT_GRACE_TURNS,
       enabledTools,
-      allowedSubagents: template.allowedSubagents,
+      includedSubagents: template.includedSubagents,
     };
     const session = await this.createSession(ctx.cwd, config, resolvedModel);
     const queued = new QueuedSubagent({
@@ -208,7 +208,7 @@ export class SubagentInstancesManager {
   }
 
   private resolveEnabledTools(template: SubagentTemplate, availableTools: string[]): string[] {
-    const canSpawn = (template.allowedSubagents?.length ?? 0) > 0;
+    const canSpawn = (template.includedSubagents?.length ?? 0) > 0;
     const allowed = new Set(template.includedTools ?? availableTools);
     if (!canSpawn) {
       allowed.delete("subagent");
@@ -241,7 +241,7 @@ export class SubagentInstancesManager {
       thinkingLevel: config.thinkingLevel,
     });
     sessionManager.appendCustomEntry("pi-subagents:config", {
-      allowedSubagents: config.allowedSubagents ?? [],
+      includedSubagents: config.includedSubagents ?? [],
     } satisfies SubagentConfigEntry);
     return session;
   }

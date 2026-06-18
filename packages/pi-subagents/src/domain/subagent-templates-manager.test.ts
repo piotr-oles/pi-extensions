@@ -118,21 +118,21 @@ describe("loadCustomAgents", () => {
     expect(cfg.includedTools).toEqual(["edit", "write"]);
   });
 
-  it("parses allowed_subagents as array", async () => {
+  it("parses included_subagents as array", async () => {
     await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
     await writeFile(
       join(cwd, ".pi", "subagents", "orchestrator.md"),
-      ["---", "description: Orchestrator", "allowed_subagents: explorer, reviewer", "---"].join(
+      ["---", "description: Orchestrator", "included_subagents: explorer, reviewer", "---"].join(
         "\n",
       ),
       "utf-8",
     );
 
     const cfg = (await load(cwd)).find((t) => t.name === "orchestrator")!;
-    expect(cfg.allowedSubagents).toEqual(["explorer", "reviewer"]);
+    expect(cfg.includedSubagents).toEqual(["explorer", "reviewer"]);
   });
 
-  it("leaves allowedSubagents undefined when field absent", async () => {
+  it("leaves includedSubagents undefined when field absent", async () => {
     await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
     await writeFile(
       join(cwd, ".pi", "subagents", "basic.md"),
@@ -141,7 +141,7 @@ describe("loadCustomAgents", () => {
     );
 
     const cfg = (await load(cwd)).find((t) => t.name === "basic")!;
-    expect(cfg.allowedSubagents).toBeUndefined();
+    expect(cfg.includedSubagents).toBeUndefined();
   });
 
   it("defaults enabled to true when not specified", async () => {

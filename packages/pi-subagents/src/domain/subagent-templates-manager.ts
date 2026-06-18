@@ -109,7 +109,11 @@ export class SubagentTemplatesManager {
         continue;
       }
       const name = basename(filePath, ".md");
-      templates.set(name, parseTemplateFile(filePath, name, content, source));
+      try {
+        templates.set(name, parseTemplateFile(filePath, name, content, source));
+      } catch (error) {
+        // TODO: report it
+      }
     }
 
     return templates;
@@ -128,7 +132,7 @@ function parseTemplateFile(
     description: parseString(fm.description) ?? name,
     includedTools: parseCsvField(fm.included_tools),
     includedSkills: parseCsvField(fm.included_skills),
-    allowedSubagents: parseCsvField(fm.allowed_subagents),
+    includedSubagents: parseCsvField(fm.included_subagents),
     model: parseString(fm.model),
     thinkingLevel: parseThinkingLevel(fm.thinking),
     maxTurns: parseNonNegativeInt(fm.max_turns),
