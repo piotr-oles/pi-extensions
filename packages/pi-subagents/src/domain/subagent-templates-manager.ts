@@ -126,7 +126,7 @@ function parseTemplateFile(
   return {
     name: parseString(fm.name) || name,
     description: parseString(fm.description) ?? name,
-    excludedTools: Array.from(new Set(parseCsvField(fm.excluded_tools) ?? [])),
+    includedTools: parseCsvField(fm.included_tools),
     allowedSubagents: parseCsvField(fm.allowed_subagents),
     model: parseString(fm.model),
     thinkingLevel: parseThinkingLevel(fm.thinking),

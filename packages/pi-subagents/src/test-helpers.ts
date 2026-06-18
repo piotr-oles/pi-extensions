@@ -82,7 +82,7 @@ export function makeAgentTemplate(overrides: Partial<SubagentTemplate> = {}): Su
     description: "",
     instructions: "",
     source: "global",
-    excludedTools: [],
+    includedTools: undefined,
     enabled: true,
     filePath: undefined,
     ...overrides,

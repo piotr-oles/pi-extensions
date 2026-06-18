@@ -173,6 +173,23 @@ describe("AgentInstancesManager", () => {
       expect(manager.listInstances()[0]?.config.enabledTools).not.toContain("subagent");
     });
 
+    it("restricts tools to includedTools whitelist", async () => {
+      const t = makeAgentTemplate({ includedTools: ["bash"] });
+      manager.spawn({
+        id: manager.id(`tc-${tcCounter++}`),
+        ctx,
+        template: t,
+        description: "d",
+        prompt: "p",
+        availableTools: ["bash", "read", "edit"],
+        signal: undefined,
+        onUpdate: () => {},
+      });
+      await flushMicrotasks();
+
+      expect(manager.listInstances()[0]?.config.enabledTools).toEqual(["bash"]);
+    });
+
     it("keeps subagent tool when allowedSubagents is non-empty", async () => {
       const t = makeAgentTemplate({ allowedSubagents: ["explorer"] });
       manager.spawn({

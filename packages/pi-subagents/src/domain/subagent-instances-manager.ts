@@ -21,7 +21,6 @@ import type { Subagent, SubagentByStatus, SubagentId, SubagentStatus } from "./t
 
 const DEFAULT_THINKING_LEVEL: ThinkingLevel = "medium";
 const DEFAULT_GRACE_TURNS = 5;
-const SUBAGENT_EXCLUDED_TOOLS = new Set<string>(["subagent"]);
 
 interface SpawnParams {
   id: SubagentId;
@@ -205,12 +204,11 @@ export class SubagentInstancesManager {
 
   private resolveEnabledTools(template: SubagentTemplate, availableTools: string[]): string[] {
     const canSpawn = (template.allowedSubagents?.length ?? 0) > 0;
-    const excluded = new Set(template.excludedTools);
+    const allowed = new Set(template.includedTools ?? availableTools);
     if (!canSpawn) {
-      excluded.add('subagent');
+      allowed.delete("subagent");
     }
-
-    return availableTools.filter((t) => !excluded.has(t));
+    return availableTools.filter((t) => allowed.has(t));
   }
 
   private resolveSessionsDir(cwd: string): string {

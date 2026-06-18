@@ -93,7 +93,7 @@ describe("loadCustomAgents", () => {
     await rm(globalPath, { force: true });
   });
 
-  it("parses optional fields: model, thinking, max_turns, disallowed_tools", async () => {
+  it("parses optional fields: model, thinking, max_turns, included_tools", async () => {
     await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
     await writeFile(
       join(cwd, ".pi", "subagents", "full.md"),
@@ -103,7 +103,7 @@ describe("loadCustomAgents", () => {
         "model: anthropic/claude-haiku-4-5",
         "thinking: low",
         "max_turns: 10",
-        "excluded_tools: edit, write",
+        "included_tools: edit, write",
         "---",
         "",
         "Specialized prompt.",
@@ -115,7 +115,7 @@ describe("loadCustomAgents", () => {
     expect(cfg.model).toBe("anthropic/claude-haiku-4-5");
     expect(cfg.thinkingLevel).toBe("low");
     expect(cfg.maxTurns).toBe(10);
-    expect(cfg.excludedTools).toEqual(["edit", "write"]);
+    expect(cfg.includedTools).toEqual(["edit", "write"]);
   });
 
   it("parses allowed_subagents as array", async () => {

@@ -68,9 +68,9 @@ export class SubagentTemplateDetailsComponent implements Component {
       );
     }
 
-    if (this.template.excludedTools.length > 0) {
+    if (this.template.includedTools !== undefined) {
       this.container.addChild(
-        new DetailsRow("Excluded", this.template.excludedTools.join(", "), this.theme),
+        new DetailsRow("Included", this.template.includedTools.join(", "), this.theme),
       );
     }
 
