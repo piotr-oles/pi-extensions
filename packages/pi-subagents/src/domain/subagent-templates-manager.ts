@@ -127,6 +127,7 @@ function parseTemplateFile(
     name: parseString(fm.name) || name,
     description: parseString(fm.description) ?? name,
     includedTools: parseCsvField(fm.included_tools),
+    includedSkills: parseCsvField(fm.included_skills),
     allowedSubagents: parseCsvField(fm.allowed_subagents),
     model: parseString(fm.model),
     thinkingLevel: parseThinkingLevel(fm.thinking),

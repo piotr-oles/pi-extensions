@@ -3,6 +3,7 @@ import { showSubagentTemplatesMenu as showSubagentTemplates } from "./commands/s
 import { SubagentInstancesManager } from "./domain/subagent-instances-manager.js";
 import type { SubagentTemplate } from "./domain/subagent-template.js";
 import { SubagentTemplatesManager } from "./domain/subagent-templates-manager.js";
+import type { SubagentConfigEntry } from "./domain/types.js";
 import { getMaxConcurrent, registerFlags } from "./flags.js";
 import { createSubagentTool } from "./tools/subagent-tool.js";
 import { escapeXmlAttr } from "./xml.js";
@@ -24,30 +25,26 @@ export default async function piSubagents(pi: ExtensionAPI): Promise<void> {
   });
 
   pi.on("before_agent_start", async (event, ctx) => {
+    await templatesManager.reload();
+
     const entries = ctx.sessionManager.getEntries();
-    const allowedEntry = entries.find(
-      (e): e is CustomEntry<{ names: string[] }> =>
-        e.type === "custom" && e.customType === "pi-subagents:allowed",
+    const configEntry = entries.find(
+      (e): e is CustomEntry<SubagentConfigEntry> =>
+        e.type === "custom" && e.customType === "pi-subagents:config",
     );
 
-    if (!allowedEntry) {
-      await templatesManager.reload();
+    let allowedTemplates = templatesManager.listTemplates();
+    if (configEntry) {
+      const allowedSubagents = new Set(configEntry.data?.allowedSubagents ?? []);
+      allowedTemplates = allowedTemplates.filter((template) => allowedSubagents.has(template.name));
+    }
+    const enabledTemplates = allowedTemplates.filter((template) => template.enabled);
+
+    if (enabledTemplates.length > 0) {
       return {
-        systemPrompt: `${event.systemPrompt}\n\n${subagentsSystemPrompt(templatesManager.listTemplates())}`,
+        systemPrompt: `${event.systemPrompt}\n\n${subagentsSystemPrompt(enabledTemplates)}`,
       };
     }
-
-    const names = allowedEntry.data?.names ?? [];
-    if (names.length === 0) {
-      return { systemPrompt: event.systemPrompt };
-    }
-
-    const allowed = names
-      .map((n) => templatesManager.getTemplate(n))
-      .filter((t): t is SubagentTemplate => t !== undefined && t.enabled);
-    return {
-      systemPrompt: `${event.systemPrompt}\n\n${subagentsSystemPrompt(allowed)}`,
-    };
   });
 }
 
@@ -63,7 +60,6 @@ function buildSubagentsXml(templates: SubagentTemplate[]): string {
   return [
     "<subagents>",
     templates
-      .filter((template) => template.enabled)
       .map(
         (template) =>
           `  <subagent name="${escapeXmlAttr(template.name)}" description="${escapeXmlAttr(template.description)}" />`,

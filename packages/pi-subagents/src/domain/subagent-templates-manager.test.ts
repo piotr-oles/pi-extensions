@@ -176,4 +176,61 @@ describe("loadCustomAgents", () => {
 
     expect((await load(cwd)).find((t) => t.name === "no-desc")!.description).toBe("no-desc");
   });
+
+  it("parses included_skills as CSV array", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "with-skills.md"),
+      [
+        "---",
+        "description: Agent with skills",
+        "included_skills: tdd, refactoring, librarian",
+        "---",
+        "",
+        "Use these skills.",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "with-skills")!;
+    expect(cfg.includedSkills).toEqual(["tdd", "refactoring", "librarian"]);
+  });
+
+  it("handles whitespace in included_skills CSV", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "whitespace.md"),
+      ["---", "description: test", "included_skills: tdd , refactoring , librarian", "---"].join(
+        "\n",
+      ),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "whitespace")!;
+    expect(cfg.includedSkills).toEqual(["tdd", "refactoring", "librarian"]);
+  });
+
+  it("leaves includedSkills undefined when field absent", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "no-skills.md"),
+      ["---", "description: test", "---"].join("\n"),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "no-skills")!;
+    expect(cfg.includedSkills).toBeUndefined();
+  });
+
+  it("treats empty included_skills as undefined", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "empty-skills.md"),
+      ["---", "description: test", "included_skills: ", "---"].join("\n"),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "empty-skills")!;
+    expect(cfg.includedSkills).toBeUndefined();
+  });
 });

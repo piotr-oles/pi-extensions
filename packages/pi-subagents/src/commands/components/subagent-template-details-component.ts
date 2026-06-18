@@ -70,7 +70,13 @@ export class SubagentTemplateDetailsComponent implements Component {
 
     if (this.template.includedTools !== undefined) {
       this.container.addChild(
-        new DetailsRow("Included", this.template.includedTools.join(", "), this.theme),
+        new DetailsRow("Included tools", this.template.includedTools.join(", "), this.theme),
+      );
+    }
+
+    if (this.template.includedSkills !== undefined) {
+      this.container.addChild(
+        new DetailsRow("Included skills", this.template.includedSkills.join(", "), this.theme),
       );
     }
 

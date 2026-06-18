@@ -1,23 +1,28 @@
 import { join, resolve } from "node:path";
-import type { AgentContext, ThinkingLevel } from "@earendil-works/pi-agent-core";
+import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
 import type { Api, Model } from "@earendil-works/pi-ai";
 import {
   type AgentSession,
   createAgentSession,
-  DefaultResourceLoader,
   type ExtensionContext,
   getAgentDir,
   type ModelRegistry,
   SessionManager,
   SettingsManager,
 } from "@earendil-works/pi-coding-agent";
-import { escapeXmlContent } from "../xml.js";
 import type { DoneSubagent } from "./instance/done-subagent.js";
 import { QueuedSubagent } from "./instance/queued-subagent.js";
 import type { SubagentConfig } from "./subagent-config.js";
+import { SubagentResourceLoader } from "./subagent-resource-loader.js";
 import { SubagentStore } from "./subagent-store.js";
 import type { SubagentTemplate } from "./subagent-template.js";
-import type { Subagent, SubagentByStatus, SubagentId, SubagentStatus } from "./types.js";
+import type {
+  Subagent,
+  SubagentByStatus,
+  SubagentConfigEntry,
+  SubagentId,
+  SubagentStatus,
+} from "./types.js";
 
 const DEFAULT_THINKING_LEVEL: ThinkingLevel = "medium";
 const DEFAULT_GRACE_TURNS = 5;
@@ -224,11 +229,7 @@ export class SubagentInstancesManager {
     model: Model<Api> | undefined,
   ): Promise<AgentSession> {
     const sessionManager = SessionManager.create(cwd, this.resolveSessionsDir(cwd));
-    const resourceLoader = new DefaultResourceLoader({
-      cwd,
-      agentDir: getAgentDir(),
-      appendSystemPrompt: [this.buildSubagentSystemPrompt(config)],
-    });
+    const resourceLoader = new SubagentResourceLoader(cwd, config);
     await resourceLoader.reload();
     const { session } = await createAgentSession({
       cwd,
@@ -239,18 +240,9 @@ export class SubagentInstancesManager {
       resourceLoader,
       thinkingLevel: config.thinkingLevel,
     });
-    sessionManager.appendCustomEntry("pi-subagents:allowed", {
-      names: config.allowedSubagents ?? [],
-    });
+    sessionManager.appendCustomEntry("pi-subagents:config", {
+      allowedSubagents: config.allowedSubagents ?? [],
+    } satisfies SubagentConfigEntry);
     return session;
-  }
-
-  private buildSubagentSystemPrompt(config: SubagentConfig): string {
-    return [
-      `You're subagent "${config.name}":`,
-      `<subagent-instructions>`,
-      escapeXmlContent(config.template.instructions.trim()),
-      "</subagent-instructions>",
-    ].join("\n");
   }
 }

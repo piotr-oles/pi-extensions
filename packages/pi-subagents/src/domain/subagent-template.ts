@@ -7,6 +7,7 @@ export interface SubagentTemplate {
   readonly description: string;
   readonly instructions: string;
   readonly includedTools: string[] | undefined;
+  readonly includedSkills: string[] | undefined;
   readonly allowedSubagents?: string[];
   readonly model?: string;
   readonly thinkingLevel?: ThinkingLevel;
@@ -24,5 +25,6 @@ export const GENERAL_PURPOSE_TEMPLATE: SubagentTemplate = {
   enabled: true,
   source: "global",
   includedTools: undefined,
+  includedSkills: undefined,
   filePath: undefined,
 };
