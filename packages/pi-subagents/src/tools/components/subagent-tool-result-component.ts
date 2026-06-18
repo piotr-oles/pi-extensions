@@ -247,6 +247,15 @@ class SubagentSummaryTextComponent implements Component {
             ? getFirstLine(`${call.name} ${call.arguments.path}`)
             : getFirstLine(call.name),
         );
+      case "subagent":
+        return theme.fg(
+          "dim",
+          call.arguments.name
+            ? getFirstLine(
+                `${call.name} ${call.arguments.name} ${call.arguments.description ?? ""}`,
+              )
+            : getFirstLine(call.name),
+        );
       default:
         return theme.fg("dim", getFirstLine(call.name));
     }
