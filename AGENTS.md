@@ -23,6 +23,11 @@ Makes the agent respond in caveman mode - cuts ~75% of output tokens while keepi
 ### `pi-plan` (`packages/pi-plan`)
 Adds a `review-plan` tool that writes a named markdown plan to `~/.pi/plan/<repo>/<name>.md`, commits it to a git repo inside `~/.pi/plan/`, and shows an interactive terminal widget so the user can confirm, request changes, or reply freely before the agent proceeds. The widget also offers an **Open in [Editor]** option (Zed, VS Code, Cursor, Windsurf) detected automatically via `TERM_PROGRAM`; selecting it opens the file in the IDE and re-shows the widget without notifying the agent.
 
+### `pi-cwd` (`packages/pi-cwd`)
+Detects absolute cwd paths in `read`, `write`, `edit`, and `bash` tool calls. Appends tip to tool result reminding agent to use relative paths and showing current `cwd`. Also injects `PROMPT_INSTRUCTIONS` into system prompt at session start.
+
+Controlled by `pi-cwd` boolean flag (default: `true`).
+
 ### `pi-reflag` (`packages/pi-reflag`)
 Intercepts `bash` tool calls and rewrites `grep` → `rg` (ripgrep) and `find` → `fd` transparently before execution. Shows a user-visible toast notification on rewrite - agent never sees it.
 
