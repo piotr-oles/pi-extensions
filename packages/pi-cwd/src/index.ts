@@ -1,7 +1,4 @@
-import {
-  type ExtensionAPI,
-  isToolCallEventType,
-} from "@earendil-works/pi-coding-agent";
+import { type ExtensionAPI, isToolCallEventType } from "@earendil-works/pi-coding-agent";
 
 const PROMPT_INSTRUCTIONS =
   "Every tool, including bash, read, write, edit, runs in respect to cwd. Use relative paths in tool calls.";

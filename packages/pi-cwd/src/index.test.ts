@@ -28,10 +28,7 @@ describe("pi-cwd", { timeout: 30_000 }, () => {
       });
 
       await t.run(
-        when("Read a file", [
-          calls("read", { path: `${t.cwd}/file.ts` }),
-          says("Done."),
-        ]),
+        when("Read a file", [calls("read", { path: `${t.cwd}/file.ts` }), says("Done.")]),
       );
 
       const [record] = t.events.toolResultsFor("read");
