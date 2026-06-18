@@ -14,12 +14,12 @@ Define agents as markdown files with YAML frontmatter. Two locations are support
 
 | Location | Scope |
 |---|---|
-| `~/.pi/agents/<name>.md` | Global — available in all projects |
-| `.pi/agents/<name>.md` | Project — available in current project only |
+| `~/.pi/agents/subagents/<name>.md` | Global — available in all projects |
+| `.pi/subagents/<name>.md` | Project — available in current project only |
 
 A project template overrides a global template with the same name.
 
-**Example** `.pi/agents/coder.md`:
+**Example** `.pi/subagents/coder.md`:
 
 ```markdown
 ---
@@ -27,7 +27,7 @@ description: Specialist for writing and editing code
 model: anthropic/claude-opus-4-5
 thinking: low
 max_turns: 30
-excluded_tools: edit, write
+included_tools: bash, read, edit, write
 ---
 
 You are an expert software engineer. Focus only on the assigned task.
@@ -44,7 +44,9 @@ Write clean, well-tested code. Do not ask for clarification — make reasonable 
 | `max_turns` | number | Hard turn limit. When reached the agent is given grace turns to wrap up. |
 | `grace_turns` | number | Extra turns after `max_turns` before the agent is force-stopped. |
 | `enabled` | boolean | Set to `false` to disable this agent type without deleting the file. |
-| `excluded_tools` | string | Comma-separated list of tool names to block for this agent. |
+| `included_tools` | string | Comma-separated list of tool names available to this agent. Omit to inherit all tools from the parent session. |
+| `included_skills` | string | Comma-separated list of skill names available to this agent. Omit to inherit all skills. |
+| `included_subagents` | string | Comma-separated list of subagent template names this agent may spawn. |
 
 If no matching template is found the agent falls back to `general-purpose`, or a plain default if that is also absent.
 
@@ -52,59 +54,38 @@ If no matching template is found the agent falls back to `general-purpose`, or a
 
 ### `subagent`
 
-Spawns a subagent to handle a task.
+Spawns a subagent to handle a task, or follows up on a previously completed one.
 
 | Parameter | Type | Description |
 |---|---|---|
-| `name` | string | Name of the agent template to use. |
+| `name` | string | Name of the agent template to use. Required for both spawn and follow-up. |
+| `id` | string | ID of a done subagent to follow-up. Omit when spawning fresh. |
 | `description` | string | Short description of the task (shown in UI). |
 | `prompt` | string | Task prompt sent to the subagent. |
 
-Returns immediately with an agent ID. The parent is notified via a follow-up message when the subagent completes. Use `subagent_check` to retrieve the output.
-
-### `subagent_check`
-
-Check status and retrieve results from a background agent.
-
-| Parameter | Type | Description |
-|---|---|---|
-| `agent_id` | string | ID returned by `subagent`. |
-| `wait` | boolean | Block until the agent completes before returning. Default: `false`. |
-
-### `subagent_steer`
-
-Inject a steering message into a running background agent to redirect its work without restarting it.
-
-| Parameter | Type | Description |
-|---|---|---|
-| `agent_id` | string | ID of a currently running agent. |
-| `message` | string | Message to inject into the agent's conversation. |
+Blocks until the subagent completes and returns its result inline. To follow up on a finished subagent, call `subagent` again with the `id` returned in the previous result plus a new `prompt`.
 
 ## How it works
 
-1. On `session_start` and on the `agents` command, templates are reloaded from disk.
-2. When `subagent` is called, the extension creates an `AgentConfig` from the resolved template plus any per-call overrides, then starts an isolated pi session.
-3. The subagent session inherits the parent's model registry and working directory but gets its own system prompt built from the template's `instructions`.
-4. The `subagent`, `subagent_check`, and `subagent_steer` tools are always excluded from subagent sessions — subagents cannot spawn further subagents.
+1. On `session_start`, templates are reloaded from disk.
+2. When `subagent` is called, the extension resolves the template, builds an `AgentConfig`, and starts an isolated pi session.
+3. The subagent session inherits the parent's model registry and working directory but gets its own system prompt built from the template's instructions.
+4. The `subagent` tool is always excluded from subagent sessions — subagents cannot spawn further subagents.
 5. A concurrency queue limits how many agents run simultaneously; excess agents are queued and started as slots free up.
 
 ## Flags
 
 ```bash
 pi --pi-subagents-max-concurrent 4    # max agents running at once (default: 4)
-pi --pi-subagents-grace-turns 5       # extra turns after max-turns is hit (default: 5)
-pi --pi-subagents-default-max-turns 0 # default turn limit, 0 = unlimited (default: 0)
 ```
 
-Or via environment variables:
+Or via environment variable:
 
 ```bash
 PI_SUBAGENTS_MAX_CONCURRENT=2 pi
-PI_SUBAGENTS_GRACE_TURNS=3 pi
-PI_SUBAGENTS_DEFAULT_MAX_TURNS=20 pi
 ```
 
-## `agents` command
+## `subagent:templates` command
 
 Opens an interactive menu listing all loaded agent templates with their source (global `◦` / project `•`) and model. Run via the pi command palette.
 

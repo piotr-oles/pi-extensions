@@ -28,6 +28,19 @@ Detects absolute cwd paths in `read`, `write`, `edit`, and `bash` tool calls. Ap
 
 Controlled by `pi-cwd` boolean flag (default: `true`).
 
+### `pi-subagents` (`packages/pi-subagents`)
+Lets the agent spawn specialized subagents — each in its own isolated session with its own model, tools, skills, and instructions. Templates are markdown files with YAML frontmatter stored in `~/.pi/agents/subagents/<name>.md` (global) or `.pi/subagents/<name>.md` (project). A project template overrides a global one with the same name.
+
+Exposes a single `subagent` tool:
+- **spawn**: call with `name`, `description`, `prompt` — blocks until the subagent finishes, returns its result
+- **follow-up**: call again with the same `id` from a previous result plus a new `prompt` to continue the session
+
+Subagents cannot spawn further subagents. Concurrency is capped at `pi-subagents-max-concurrent` (default: 4); excess agents queue and start as slots free.
+
+Frontmatter fields: `description`, `model`, `thinking`, `max_turns`, `grace_turns`, `included_tools`, `included_skills`, `included_subagents`, `enabled`.
+
+The `subagent:templates` command opens an interactive terminal menu listing all loaded templates with their source and model.
+
 ### `pi-reflag` (`packages/pi-reflag`)
 Intercepts `bash` tool calls and rewrites `grep` → `rg` (ripgrep) and `find` → `fd` transparently before execution. Shows a user-visible toast notification on rewrite - agent never sees it.
 
