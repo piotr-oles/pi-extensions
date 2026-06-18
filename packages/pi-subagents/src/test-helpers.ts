@@ -97,7 +97,8 @@ export function makeAgentConfig(overrides: Partial<SubagentConfig> = {}): Subage
     thinkingLevel: "medium",
     graceTurns: 5,
     template: makeAgentTemplate(),
-    enabledTools: [],
+    includedTools: [],
+    includedSubagents: [],
     ...overrides,
   };
 }

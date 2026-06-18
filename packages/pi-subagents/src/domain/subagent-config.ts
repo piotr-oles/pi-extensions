@@ -8,6 +8,6 @@ export interface SubagentConfig {
   readonly thinkingLevel: ThinkingLevel;
   readonly maxTurns?: number;
   readonly graceTurns: number;
-  readonly enabledTools: string[];
-  readonly includedSubagents?: string[];
+  readonly includedTools: string[];
+  readonly includedSubagents: string[];
 }

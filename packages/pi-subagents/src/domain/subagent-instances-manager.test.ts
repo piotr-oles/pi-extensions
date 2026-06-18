@@ -162,15 +162,15 @@ describe("AgentInstancesManager", () => {
       await flushMicrotasks();
 
       const instance = manager.listInstances()[0];
-      expect(instance?.config.enabledTools).toContain("bash");
-      expect(instance?.config.enabledTools).toContain("read");
+      expect(instance?.config.includedTools).toContain("bash");
+      expect(instance?.config.includedTools).toContain("read");
     });
 
     it("excludes subagent tool when includedSubagents not set", async () => {
       spawn({ description: "d", prompt: "p", availableTools: ["bash", "subagent"] });
       await flushMicrotasks();
 
-      expect(manager.listInstances()[0]?.config.enabledTools).not.toContain("subagent");
+      expect(manager.listInstances()[0]?.config.includedTools).not.toContain("subagent");
     });
 
     it("restricts tools to includedTools whitelist", async () => {
@@ -187,7 +187,7 @@ describe("AgentInstancesManager", () => {
       });
       await flushMicrotasks();
 
-      expect(manager.listInstances()[0]?.config.enabledTools).toEqual(["bash"]);
+      expect(manager.listInstances()[0]?.config.includedTools).toEqual(["bash"]);
     });
 
     it("keeps subagent tool when includedSubagents is non-empty", async () => {
@@ -204,7 +204,7 @@ describe("AgentInstancesManager", () => {
       });
       await flushMicrotasks();
 
-      expect(manager.listInstances()[0]?.config.enabledTools).toContain("subagent");
+      expect(manager.listInstances()[0]?.config.includedTools).toContain("subagent");
     });
 
     it("config carries includedSubagents from template", async () => {

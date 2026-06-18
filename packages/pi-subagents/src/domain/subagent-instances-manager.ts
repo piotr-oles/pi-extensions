@@ -89,7 +89,7 @@ export class SubagentInstancesManager {
 
     const resolvedModel =
       this.resolveModel(ctx.modelRegistry, model ?? template.model) ?? ctx.model;
-    const enabledTools = this.resolveEnabledTools(template, availableTools);
+    const includedTools = this.resolveIncludedTools(template, availableTools);
     const config: SubagentConfig = {
       template: template,
       name: template.name,
@@ -97,8 +97,8 @@ export class SubagentInstancesManager {
       thinkingLevel: thinkingLevel ?? template.thinkingLevel ?? DEFAULT_THINKING_LEVEL,
       maxTurns: maxTurns ?? template.maxTurns,
       graceTurns: graceTurns ?? template.graceTurns ?? DEFAULT_GRACE_TURNS,
-      enabledTools,
-      includedSubagents: template.includedSubagents,
+      includedTools: includedTools,
+      includedSubagents: template.includedSubagents ?? [],
     };
     const session = await this.createSession(ctx.cwd, config, resolvedModel);
     const queued = new QueuedSubagent({
@@ -207,13 +207,13 @@ export class SubagentInstancesManager {
     );
   }
 
-  private resolveEnabledTools(template: SubagentTemplate, availableTools: string[]): string[] {
+  private resolveIncludedTools(template: SubagentTemplate, availableTools: string[]): string[] {
     const canSpawn = (template.includedSubagents?.length ?? 0) > 0;
-    const allowed = new Set(template.includedTools ?? availableTools);
+    const allowedTools = new Set(template.includedTools ?? availableTools);
     if (!canSpawn) {
-      allowed.delete("subagent");
+      allowedTools.delete("subagent");
     }
-    return availableTools.filter((t) => allowed.has(t));
+    return availableTools.filter((t) => allowedTools.has(t));
   }
 
   private resolveSessionsDir(cwd: string): string {
@@ -236,7 +236,7 @@ export class SubagentInstancesManager {
       sessionManager,
       settingsManager: SettingsManager.create(cwd),
       model,
-      tools: config.enabledTools,
+      tools: config.includedTools,
       resourceLoader,
       thinkingLevel: config.thinkingLevel,
     });
