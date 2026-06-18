@@ -151,10 +151,9 @@ export class SubagentStore {
 
 type SubagentMap = Map<SubagentId, SubagentEntry>;
 
-// simple implementation of a queue
+// simple implementation of a queue with id lookup
 class SubagentQueue {
   private readonly queue: Map<SubagentId, SubagentEntry> = new Map();
-  // private readonly queue: SubagentEntry[] = [];
 
   get size(): number {
     return this.queue.size;
@@ -169,15 +168,7 @@ class SubagentQueue {
   }
 
   delete(id: SubagentId): void {
-    // const entry = this.queued.get(id);
-    // if (entry) {
-    //   const index = this.queue.indexOf(entry);
-    //   if (index === -1) {
-    //     throw new Error('Unexpected SubagentQueue state.');
-    //   }
-    //   this.queue.splice(index, 1);
     this.queue.delete(id);
-    // }
   }
 
   keys() {
@@ -201,7 +192,6 @@ class SubagentQueue {
       throw new Error("Cannot push the same subagent to the queue twice.");
     }
     this.queue.set(entry.instance.id, entry);
-    // this.queue.push(entry);
   }
 
   pop(): SubagentEntry | undefined {
@@ -213,15 +203,6 @@ class SubagentQueue {
     }
     const [id, entry] = result.value;
     this.queue.delete(id);
-    // if ()
-    //   const entry = this.queue.shift();
-    // if (!entry) {
-    //   return undefined;
-    // }
-    // if (!this.queued.has(entry.instance.id)) {
-    //   throw new Error('Unexpected SubagentQueue state.');
-    // }
-    // this.queued.delete(entry.instance.id)
     return entry;
   }
 }
