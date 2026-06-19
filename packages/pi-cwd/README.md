@@ -26,17 +26,7 @@ Tool result gets reminder appended:
 
 Extension doesn't block tool execution - just reminds agent for next time.
 
-## Flags
-
-- `pi-cwd` (boolean, default: `true`) - Enable/disable extension
-
-Example:
-
-```sh
-pi --pi-cwd false
-```
-
 ## Detection
 
-- **read/write/edit**: Checks `path` parameter
+- **read/write/edit**: Checks if `path` parameter starts with cwd path.
 - **bash**: Checks if command includes absolute cwd path.
