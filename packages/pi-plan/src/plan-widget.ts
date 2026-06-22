@@ -10,17 +10,18 @@ export type PlanWidgetAnswer =
   | { type: "approve" }
   | { type: "cancel" }
   | { type: "open-in-editor" }
-  | { type: "question"; question: string };
+  | { type: "comment"; comment: string };
+
+type SelectableAction = Exclude<PlanWidgetAnswer["type"], "comment">;
 
 export class PlanWidget implements Component {
   private selectContainer: Container;
-  private questionContainer: Container;
+  private commentContainer: Container;
   private select: PlanActionSelect;
-  private questionInput: PlanQuestionInput;
-  private mode: "select" | "question" = "select";
+  private commentInput: PlanCommentInput;
+  private mode: "select" | "comment" = "select";
 
-  onSelect: (answer: PlanWidgetAnswer) => void = () => undefined;
-  onQuestion: (question: string) => void = () => undefined;
+  onAnswer: (answer: PlanWidgetAnswer) => void = () => undefined;
 
   constructor(
     private tui: TUI,
@@ -30,22 +31,21 @@ export class PlanWidget implements Component {
     editorOpened: boolean = false,
   ) {
     this.select = new PlanActionSelect(tui, theme, editor?.name ?? null, editorOpened);
+    this.select.onComment = () => {
+      this.mode = "comment";
+      tui.requestRender();
+    };
     this.select.onSelect = (item) => {
-      if (item === "question") {
-        this.mode = "question";
-        tui.requestRender();
-      } else {
-        this.onSelect({ type: item });
-      }
+      this.onAnswer({ type: item });
     };
 
-    this.questionInput = new PlanQuestionInput(tui, theme);
-    this.questionInput.onBack = () => {
+    this.commentInput = new PlanCommentInput(tui, theme);
+    this.commentInput.onBack = () => {
       this.mode = "select";
       tui.requestRender();
     };
-    this.questionInput.onSubmit = (question) => {
-      this.onQuestion(question);
+    this.commentInput.onSubmit = (comment) => {
+      this.onAnswer({ type: "comment", comment });
     };
 
     this.selectContainer = new Container();
@@ -54,29 +54,29 @@ export class PlanWidget implements Component {
     this.selectContainer.addChild(this.select);
     this.selectContainer.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
 
-    this.questionContainer = new Container();
-    this.questionContainer.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
-    this.questionContainer.addChild(new PlanHeader(theme, planPath));
-    this.questionContainer.addChild(this.questionInput);
-    this.questionContainer.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
+    this.commentContainer = new Container();
+    this.commentContainer.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
+    this.commentContainer.addChild(new PlanHeader(theme, planPath));
+    this.commentContainer.addChild(this.commentInput);
+    this.commentContainer.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
   }
 
   render(width: number) {
     return this.mode === "select"
       ? this.selectContainer.render(width)
-      : this.questionContainer.render(width);
+      : this.commentContainer.render(width);
   }
 
   invalidate() {
     this.selectContainer.invalidate();
-    this.questionContainer.invalidate();
+    this.commentContainer.invalidate();
   }
 
   handleInput(data: string) {
     if (this.mode === "select") {
       this.select.handleInput(data);
     } else {
-      this.questionInput.handleInput(data);
+      this.commentInput.handleInput(data);
     }
     this.tui.requestRender();
   }
@@ -107,7 +107,8 @@ class PlanActionSelect implements Component {
   private selectList: SelectList;
   private editorJustOpened = false;
 
-  onSelect: (value: PlanWidgetAnswer["type"]) => void = () => undefined;
+  onSelect: (value: SelectableAction) => void = () => undefined;
+  onComment: () => void = () => undefined;
 
   constructor(
     private tui: TUI,
@@ -122,11 +123,11 @@ class PlanActionSelect implements Component {
 
     const openInEditorItem = editorName
       ? [
-          {
-            value: "open-in-editor" as const,
-            label: `Open in ${editorName}`,
-          },
-        ]
+        {
+          value: "open-in-editor" as const,
+          label: `Open in ${editorName}`,
+        },
+      ]
       : [];
 
     const items = [
@@ -142,13 +143,16 @@ class PlanActionSelect implements Component {
         description: "Agent will implement the plan.",
       },
       {
-        value: "question" as const,
-        label: "Ask question",
+        value: "comment" as const,
+        label: "Comment",
       },
     ] satisfies Array<{ value: PlanWidgetAnswer["type"]; label: string; description?: string }>;
     this.selectList = new SelectList(items, Math.min(items.length, 10), {
       selectedPrefix: (text) => theme.fg("accent", text),
       selectedText: (text) => {
+        if (text.includes('Request')) {
+          return theme.fg("error", text);
+        }
         if (text.includes("Approve")) {
           return theme.fg("success", text.replace("→", "✓"));
         }
@@ -162,7 +166,13 @@ class PlanActionSelect implements Component {
       noMatch: (text) => theme.fg("warning", text),
     });
 
-    this.selectList.onSelect = (item) => this.onSelect(item.value as PlanWidgetAnswer["type"]);
+    this.selectList.onSelect = (item) => {
+      if (item.value === "comment") {
+        this.onComment();
+      } else {
+        this.onSelect(item.value as SelectableAction);
+      }
+    };
     this.selectList.onCancel = () => this.onSelect("cancel");
     this.selectList.onSelectionChange = () => {
       // reset editor just opened when user changes selection
@@ -188,13 +198,11 @@ class PlanActionSelect implements Component {
   }
 }
 
-class PlanQuestionInput implements Component, Focusable {
+class PlanCommentInput implements Component, Focusable {
   private container: Container;
   private input: Input;
 
-  focused = false;
-
-  onSubmit: (question: string) => void = () => undefined;
+  onSubmit: (comment: string) => void = () => undefined;
   onBack: () => void = () => undefined;
 
   constructor(
@@ -202,7 +210,7 @@ class PlanQuestionInput implements Component, Focusable {
     theme: Theme,
   ) {
     this.container = new Container();
-    this.container.addChild(new Text(theme.fg("accent", theme.bold("Ask a question:")), 1, 0));
+    this.container.addChild(new Text(theme.fg("accent", theme.bold("Leave a comment:")), 1, 0));
 
     this.input = new Input();
     this.input.onSubmit = (value) => {
@@ -215,14 +223,10 @@ class PlanQuestionInput implements Component, Focusable {
     this.container.addChild(this.input);
 
     this.container.addChild(new Text(theme.fg("dim", "enter submit • esc go back")));
-
-    Object.defineProperty(this, "focused", {
-      get: () => this.input.focused,
-      set: (v: boolean) => {
-        this.input.focused = v;
-      },
-    });
   }
+
+  get focused() { return this.input.focused; }
+  set focused(v: boolean) { this.input.focused = v; }
 
   render(width: number) {
     return this.container.render(width);

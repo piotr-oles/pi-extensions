@@ -131,8 +131,8 @@ describe("createReviewPlanTool - execute with UI", () => {
     expect((result.details as any).planPath).toBe(join(plansDir, "my-repo", "plan.md"));
   });
 
-  it("returns question with message when user asks a question", async () => {
-    const { ctx } = makeCtx({ type: "question", question: "What about step 2?" });
+  it("returns comment with message when user leaves a comment", async () => {
+    const { ctx } = makeCtx({ type: "comment", comment: "What about step 2?" });
     const tool = createReviewPlanTool(testExec, plansDir);
 
     const result = await tool.execute(
@@ -143,9 +143,10 @@ describe("createReviewPlanTool - execute with UI", () => {
       ctx as any,
     );
 
-    expect(result.details.result).toBe("question");
+    expect(result.details.result).toBe("comment");
     expect((result.details as any).message).toBe("What about step 2?");
     expect(textContent(result)).toContain("What about step 2?");
+    expect((result.details as any).diff).toBe("");
   });
 
   it("returns approve with empty diff when user approves without changes", async () => {
@@ -232,6 +233,32 @@ describe("createReviewPlanTool - execute with UI", () => {
     expect((result.details as any).diff).toBe("");
     expect(textContent(result)).toContain("No changes detected");
     expect(textContent(result)).toContain("ask what to change");
+  });
+
+  it("returns comment with message and diff when user edits plan while leaving a comment", async () => {
+    const planFilePath = join(plansDir, "my-repo", "plan.md");
+    const { ctx } = makeCtx(null);
+    ctx.hasUI = true;
+    ctx.ui.custom = vi.fn().mockImplementation(async () => {
+      await writeFile(planFilePath, "# Plan\n\n1. Step A\n2. NEW STEP\n");
+      return { type: "comment", comment: "Added a new step" };
+    });
+
+    const tool = createReviewPlanTool(testExec, plansDir);
+    const result = await tool.execute(
+      "id",
+      { planPath: "my-repo/plan.md" },
+      AbortSignal.timeout(5000),
+      undefined,
+      ctx as any,
+    );
+
+    expect(result.details.result).toBe("comment");
+    expect((result.details as any).message).toBe("Added a new step");
+    expect((result.details as any).diff).not.toBe("");
+    expect((result.details as any).diff).toMatch(/\+.*NEW STEP/);
+    expect(textContent(result)).toContain("Added a new step");
+    expect(textContent(result)).toContain("review_plan again");
   });
 
   it("hides working indicator before showing UI and restores it after", async () => {
