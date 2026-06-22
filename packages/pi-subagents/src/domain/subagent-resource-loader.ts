@@ -4,7 +4,6 @@ import {
   type PromptTemplate,
   type ResourceDiagnostic,
 } from "@earendil-works/pi-coding-agent";
-import { escapeXmlContent } from "../xml.js";
 import type { SubagentConfig } from "./subagent-config.js";
 
 export class SubagentResourceLoader extends DefaultResourceLoader {
@@ -38,16 +37,5 @@ export class SubagentResourceLoader extends DefaultResourceLoader {
       prompts: [],
       diagnostics: [],
     };
-  }
-
-  override getAppendSystemPrompt(): string[] {
-    const subagentSystemPropmt = [
-      `You're subagent "${this.config.name}":`,
-      `<subagent_instructions>`,
-      escapeXmlContent(this.config.template.instructions.trim()),
-      "</subagent_instructions>",
-    ].join("\n");
-
-    return [...super.getAppendSystemPrompt(), subagentSystemPropmt];
   }
 }

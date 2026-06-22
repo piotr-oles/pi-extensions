@@ -84,6 +84,11 @@ export function makeAgentTemplate(overrides: Partial<SubagentTemplate> = {}): Su
     source: "global",
     includedTools: undefined,
     includedSkills: undefined,
+    includedSubagents: undefined,
+    graceTurns: undefined,
+    maxTurns: undefined,
+    model: undefined,
+    thinkingLevel: undefined,
     enabled: true,
     filePath: undefined,
     ...overrides,
@@ -92,8 +97,7 @@ export function makeAgentTemplate(overrides: Partial<SubagentTemplate> = {}): Su
 
 export function makeAgentConfig(overrides: Partial<SubagentConfig> = {}): SubagentConfig {
   return {
-    name: "my-agent",
-    model: "claude-haiku",
+    model: undefined,
     thinkingLevel: "medium",
     graceTurns: 5,
     template: makeAgentTemplate(),

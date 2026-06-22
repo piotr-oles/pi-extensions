@@ -20,7 +20,3 @@ export type SubagentSessionEntry =
   | QueuedSubagentSessionEntry
   | RunningAgentSessionEntry
   | DoneSubagentSessionEntry;
-
-export interface SubagentConfigEntry {
-  includedSubagents: string[];
-}

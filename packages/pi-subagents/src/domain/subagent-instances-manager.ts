@@ -6,23 +6,18 @@ import {
   createAgentSession,
   type ExtensionContext,
   getAgentDir,
-  type ModelRegistry,
   SessionManager,
   SettingsManager,
 } from "@earendil-works/pi-coding-agent";
+import { SUBAGENT_INIT_ENTRY_TYPE } from "../constants.js";
 import type { DoneSubagent } from "./instance/done-subagent.js";
 import { QueuedSubagent } from "./instance/queued-subagent.js";
-import type { SubagentConfig } from "./subagent-config.js";
+import type { SubagentConfig, SubagentEntry } from "./subagent-config.js";
+import { buildModelKey, findModel } from "./subagent-model.js";
 import { SubagentResourceLoader } from "./subagent-resource-loader.js";
 import { SubagentStore } from "./subagent-store.js";
 import type { SubagentTemplate } from "./subagent-template.js";
-import type {
-  Subagent,
-  SubagentByStatus,
-  SubagentConfigEntry,
-  SubagentId,
-  SubagentStatus,
-} from "./types.js";
+import type { Subagent, SubagentByStatus, SubagentId, SubagentStatus } from "./types.js";
 
 const DEFAULT_THINKING_LEVEL: ThinkingLevel = "medium";
 const DEFAULT_GRACE_TURNS = 5;
@@ -87,13 +82,11 @@ export class SubagentInstancesManager {
       throw new Error(`Subagent with id "${id}" already exists.`);
     }
 
-    const resolvedModel =
-      this.resolveModel(ctx.modelRegistry, model ?? template.model) ?? ctx.model;
+    const resolvedModel = findModel(ctx.modelRegistry, model ?? template.model) ?? ctx.model;
     const includedTools = this.resolveIncludedTools(template, availableTools);
     const config: SubagentConfig = {
       template: template,
-      name: template.name,
-      model: resolvedModel?.name,
+      model: resolvedModel ? buildModelKey(resolvedModel.provider, resolvedModel.id) : undefined,
       thinkingLevel: thinkingLevel ?? template.thinkingLevel ?? DEFAULT_THINKING_LEVEL,
       maxTurns: maxTurns ?? template.maxTurns,
       graceTurns: graceTurns ?? template.graceTurns ?? DEFAULT_GRACE_TURNS,
@@ -129,7 +122,7 @@ export class SubagentInstancesManager {
   }: FollowUpParams): Promise<DoneSubagent> {
     const instance = this.store.get(id);
     if (!instance) {
-      throw new Error(`Unkown subagent instance with id ${id}.`);
+      throw new Error(`Unknown subagent instance with id ${id}.`);
     } else if (instance.status !== "done") {
       throw new Error(`Subagent with id ${id} is not done, can't follow-up yet.`);
     }
@@ -185,28 +178,6 @@ export class SubagentInstancesManager {
     return running.length > 0;
   }
 
-  private resolveModel(registry: ModelRegistry, name: string | undefined): Model<Api> | undefined {
-    if (!name) {
-      return undefined;
-    }
-    const models = registry.getAvailable();
-    if (!models || models.length === 0) {
-      return undefined;
-    }
-
-    const exact = models.find(
-      (model) => `${model.provider} / ${model.id}` === name || model.id === name,
-    );
-    if (exact) {
-      return exact;
-    }
-
-    const lower = name.toLowerCase();
-    return models.find(
-      (model) => model.id.toLowerCase().includes(lower) || model.name.toLowerCase().includes(lower),
-    );
-  }
-
   private resolveIncludedTools(template: SubagentTemplate, availableTools: string[]): string[] {
     const canSpawn = (template.includedSubagents?.length ?? 0) > 0;
     const allowedTools = new Set(template.includedTools ?? availableTools);
@@ -217,7 +188,9 @@ export class SubagentInstancesManager {
   }
 
   private resolveSessionsDir(cwd: string): string {
-    // ~copy-paste from pi-subagent package, no API exposed to encode cwd
+    // TODO: pi-coding-agent doesn't expose a public API for cwd encoding.
+    // This mirrors the internal implementation. If that changes, subagent sessions become orphaned.
+    // Track: expose a stable encodeSessionCwd() API upstream.
     const resolvedCwd = resolve(cwd);
     const encodedCwd = `--${resolvedCwd.replace(/^\//, "").replace(/[/\\:]/g, "-")}--`;
     return join(getAgentDir(), "sessions", "subagents", encodedCwd);
@@ -240,9 +213,9 @@ export class SubagentInstancesManager {
       resourceLoader,
       thinkingLevel: config.thinkingLevel,
     });
-    sessionManager.appendCustomEntry("pi-subagents:config", {
-      includedSubagents: config.includedSubagents ?? [],
-    } satisfies SubagentConfigEntry);
+    sessionManager.appendCustomEntry(SUBAGENT_INIT_ENTRY_TYPE, {
+      config,
+    } satisfies SubagentEntry);
     return session;
   }
 }

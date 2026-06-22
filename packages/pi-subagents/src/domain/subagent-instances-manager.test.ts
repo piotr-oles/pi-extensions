@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeAgentTemplate } from "../test-helpers.js";
 import type { DoneSubagent } from "./instance/done-subagent.js";
 import { SubagentInstancesManager } from "./subagent-instances-manager.js";
-import type { Subagent } from "./types.js";
 
 vi.mock("@earendil-works/pi-coding-agent", async (importOriginal) => {
   const original = await importOriginal<typeof import("@earendil-works/pi-coding-agent")>();
@@ -246,7 +245,7 @@ describe("AgentInstancesManager", () => {
       await flushMicrotasks();
 
       const instance = manager.listInstances()[0];
-      expect(instance?.config.model).toBe("gpt-4o");
+      expect(instance?.config.model).toBe("openai / gpt-4o");
       expect(instance?.config.maxTurns).toBe(20);
     });
   });

@@ -11,12 +11,11 @@ describe("QueuedAgentInstance", () => {
   it("carries config into the running state", () => {
     const running = makeQueued({
       config: makeAgentConfig({
-        name: "n",
         template: makeAgentTemplate({ name: "n" }),
         maxTurns: 5,
       }),
     }).run({ onUpdate: () => {}, onDone: () => {} });
-    expect(running.config.name).toBe("n");
+    expect(running.config.template.name).toBe("n");
     expect(running.config.maxTurns).toBe(5);
   });
 
