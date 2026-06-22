@@ -30,14 +30,6 @@ async function testExec(
   }
 }
 
-function textContent(result: { content: Array<{ type: string; text?: string }> }): string {
-  const first = result.content[0];
-  if (first.type !== "text" || typeof first.text !== "string") {
-    throw new Error("Expected text content");
-  }
-  return first.text;
-}
-
 function makeCtx(customReturnValue: unknown) {
   const setWorkingVisible = vi.fn();
   const custom =
@@ -112,7 +104,7 @@ describe("createReviewPlanTool - execute with UI", () => {
     );
 
     expect(result.details.result).toBe("cancel");
-    expect(textContent(result)).toContain("cancelled");
+    expect(result.content).toEqual([{ type: "text", text: "User cancelled plan review." }]);
   });
 
   it("includes planPath in cancel details", async () => {
@@ -128,7 +120,9 @@ describe("createReviewPlanTool - execute with UI", () => {
     );
 
     expect(result.details.result).toBe("cancel");
-    expect((result.details as any).planPath).toBe(join(plansDir, "my-repo", "plan.md"));
+    if (result.details.result === "cancel") {
+      expect(result.details.planPath).toBe(join(plansDir, "my-repo", "plan.md"));
+    }
   });
 
   it("returns comment with message when user leaves a comment", async () => {
@@ -144,9 +138,11 @@ describe("createReviewPlanTool - execute with UI", () => {
     );
 
     expect(result.details.result).toBe("comment");
-    expect((result.details as any).message).toBe("What about step 2?");
-    expect(textContent(result)).toContain("What about step 2?");
-    expect((result.details as any).diff).toBe("");
+    if (result.details.result === "comment") {
+      expect(result.details.message).toBe("What about step 2?");
+      expect(result.content).toEqual([{ type: "text", text: "User comment: What about step 2?" }]);
+      expect(result.details.diff).toBe("");
+    }
   });
 
   it("returns approve with empty diff when user approves without changes", async () => {
@@ -162,9 +158,12 @@ describe("createReviewPlanTool - execute with UI", () => {
     );
 
     expect(result.details.result).toBe("approve");
-    expect((result.details as any).diff).toBe("");
-    expect(textContent(result)).toContain("without changes");
-    expect(textContent(result)).toContain("Proceed with execution");
+    if (result.details.result === "approve") {
+      expect(result.details.diff).toBe("");
+      expect(result.content).toEqual([
+        { type: "text", text: 'User approved the "plan.md" plan as is. Ask user about next steps.' },
+      ]);
+    }
   });
 
   it("returns approve with diff when user edits plan before approving", async () => {
@@ -186,10 +185,20 @@ describe("createReviewPlanTool - execute with UI", () => {
     );
 
     expect(result.details.result).toBe("approve");
-    expect((result.details as any).diff).not.toBe("");
-    expect((result.details as any).diff).toMatch(/\+.*NEW STEP/);
-    expect(textContent(result)).toContain("made edits");
-    expect(textContent(result)).toContain("Address user comments");
+    if (result.details.result === "approve") {
+      expect(result.details.diff).not.toBe("");
+      expect(result.details.diff).toMatch(/\+.*NEW STEP/);
+    }
+    expect(result.content).toEqual([
+      { type: "text", text: 'User approved the "plan.md" plan and made edits:' },
+      { type: "text", text: expect.stringMatching(/\+.*NEW STEP/) },
+      {
+        type: "text",
+        text:
+          "The changes mentioned above have already been saved in the plan file.\n" +
+          "Address user comments, fixup the plan, then ask user about next steps.",
+      },
+    ]);
   });
 
   it("returns request-changes with diff when user edits plan and requests changes", async () => {
@@ -211,10 +220,20 @@ describe("createReviewPlanTool - execute with UI", () => {
     );
 
     expect(result.details.result).toBe("request-changes");
-    expect((result.details as any).diff).not.toBe("");
-    expect((result.details as any).diff).toMatch(/\+.*NEEDS CHANGE/);
-    expect(textContent(result)).toContain("Address user comments");
-    expect(textContent(result)).toContain("call review_plan again");
+    if (result.details.result === "request-changes") {
+      expect(result.details.diff).not.toBe("");
+      expect(result.details.diff).toMatch(/\+.*NEEDS CHANGE/);
+    }
+    expect(result.content).toEqual([
+      { type: "text", text: 'User edited the "plan.md" plan:' },
+      { type: "text", text: expect.stringMatching(/\+.*NEEDS CHANGE/) },
+      {
+        type: "text",
+        text:
+          "The changes mentioned above have already been saved in the plan file.\n" +
+          "Address user comments, fixup the plan, then call review_plan again.",
+      },
+    ]);
   });
 
   it("returns request-changes with empty diff when user requests changes without editing", async () => {
@@ -230,9 +249,17 @@ describe("createReviewPlanTool - execute with UI", () => {
     );
 
     expect(result.details.result).toBe("request-changes");
-    expect((result.details as any).diff).toBe("");
-    expect(textContent(result)).toContain("No changes detected");
-    expect(textContent(result)).toContain("ask what to change");
+    if (result.details.result === "request-changes") {
+      expect(result.details.diff).toBe("");
+    }
+    expect(result.content).toEqual([
+      {
+        type: "text",
+        text:
+          'No changes detected in the "plan.md" plan - matches the original. ' +
+          "Tell user you found no changes and ask what to change.",
+      },
+    ]);
   });
 
   it("returns comment with message and diff when user edits plan while leaving a comment", async () => {
@@ -254,11 +281,22 @@ describe("createReviewPlanTool - execute with UI", () => {
     );
 
     expect(result.details.result).toBe("comment");
-    expect((result.details as any).message).toBe("Added a new step");
-    expect((result.details as any).diff).not.toBe("");
-    expect((result.details as any).diff).toMatch(/\+.*NEW STEP/);
-    expect(textContent(result)).toContain("Added a new step");
-    expect(textContent(result)).toContain("review_plan again");
+    if (result.details.result === "comment") {
+      expect(result.details.message).toBe("Added a new step");
+      expect(result.details.diff).not.toBe("");
+      expect(result.details.diff).toMatch(/\+.*NEW STEP/);
+    }
+    expect(result.content).toEqual([
+      { type: "text", text: "User comment: Added a new step" },
+      { type: "text", text: 'User also edited the "plan.md" plan:' },
+      { type: "text", text: expect.stringMatching(/\+.*NEW STEP/) },
+      {
+        type: "text",
+        text:
+          "The changes mentioned above have already been saved in the plan file.\n" +
+          "Address the comment, update the plan if needed, then call review_plan again.",
+      },
+    ]);
   });
 
   it("hides working indicator before showing UI and restores it after", async () => {
