@@ -27,6 +27,7 @@ export function createSubagentTool(deps: SubagentToolDeps) {
       "Use subagent tool to delegate self-contained tasks that don't require back-and-forth.",
       "If asked to spawn multiple subagents, spawn all of them in the same turn, as they will block next turn until done.",
       "You can follow-up on subagent that finished by calling subagent tool again, but this time with returned id and follow-up prompt.",
+      "If user ask you to build/modify subagent, you can find definitions in `~/.pi/agent/subagents` and `.pi/subagents`.",
     ],
     parameters: SubagentToolParams,
     executionMode: "parallel",
@@ -48,10 +49,20 @@ export function createSubagentTool(deps: SubagentToolDeps) {
           },
         });
       } else {
+        const template = templatesManager.getTemplate(params.name);
+        if (!template) {
+          const availableSubagents = templatesManager
+            .listEnabledTemplates()
+            .map((template) => template.name)
+            .join(", ");
+          throw new Error(
+            `Subagent ${params.name} is not defined. Available subagents: ${availableSubagents}.`,
+          );
+        }
         promise = instanceManager.spawn({
           id: resolvedId,
           ctx,
-          template: templatesManager.getTemplateOrDefault(params.name),
+          template,
           prompt: params.prompt,
           description: params.description,
           availableTools,
@@ -79,9 +90,10 @@ export function createSubagentTool(deps: SubagentToolDeps) {
     },
     /** Custom rendering for tool call display */
     renderCall(params, theme, context): Component {
-      const resolvedParams = params.id
-        ? params
-        : { ...params, id: instanceManager.id(context.toolCallId) };
+      const resolvedParams =
+        params.id || context.isPartial
+          ? params
+          : { ...params, id: instanceManager.id(context.toolCallId) };
       if (!(context.lastComponent instanceof SubagentToolCallComponent)) {
         return new SubagentToolCallComponent(resolvedParams, theme, context.expanded);
       }
@@ -105,7 +117,7 @@ export function createSubagentTool(deps: SubagentToolDeps) {
 }
 
 function buildSubagentResponse(done: DoneSubagent): TextContent[] {
-  const subagent = `Subagent "${done.config.name}" with id ${done.id}`;
+  const subagent = `Subagent "${done.name}" with id ${done.id}`;
 
   switch (done.result.status) {
     case "completed":

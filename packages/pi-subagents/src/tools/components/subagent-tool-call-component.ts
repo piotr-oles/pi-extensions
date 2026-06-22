@@ -16,7 +16,9 @@ export class SubagentToolCallComponent implements Component {
   }
 
   render(width: number): string[] {
-    const { theme, expanded, params } = this;
+    const theme = this.theme;
+    const expanded = this.expanded;
+    const params = this.params;
     const toolTitle = theme.fg("toolTitle", "subagent");
     const id = params.id ? theme.fg("syntaxNumber", `#${params.id}`) : undefined;
     const name = params.name ? theme.fg("accent", params.name) : undefined;

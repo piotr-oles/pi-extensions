@@ -9,7 +9,7 @@ import type { DoneResult, ExceededLimit } from "./done-subagent.js";
 import { DoneSubagent } from "./done-subagent.js";
 import type { QueuedSubagent } from "./queued-subagent.js";
 
-export interface StartSubgentParams {
+export interface StartSubagentParams {
   instance: QueuedSubagent | DoneSubagent;
   prompt: string;
   description: string;
@@ -53,11 +53,7 @@ export class RunningSubagent {
   private readonly state: RunningAgentState;
 
   get name() {
-    return this.config.name;
-  }
-
-  get template() {
-    return this.config.template;
+    return this.config.template.name;
   }
 
   get turn() {
@@ -77,7 +73,7 @@ export class RunningSubagent {
     prompt,
     description,
     startedAt,
-  }: Pick<StartSubgentParams, "instance" | "prompt" | "description" | "startedAt">) {
+  }: Pick<StartSubagentParams, "instance" | "prompt" | "description" | "startedAt">) {
     this.id = instance.id;
     this.prompt = prompt;
     this.description = description;
@@ -100,7 +96,7 @@ export class RunningSubagent {
     startedAt,
     onUpdate,
     onDone,
-  }: StartSubgentParams): RunningSubagent {
+  }: StartSubagentParams): RunningSubagent {
     const running = new RunningSubagent({
       instance,
       prompt,
@@ -151,7 +147,7 @@ export class RunningSubagent {
     onUpdate: (running: RunningSubagent) => void,
     onDone: (done: DoneSubagent) => void,
   ): Promise<void> {
-    const { session } = this;
+    const session = this.session;
     const unsubscribe = session.subscribe(async (event: AgentSessionEvent) => {
       switch (event.type) {
         case "turn_end":

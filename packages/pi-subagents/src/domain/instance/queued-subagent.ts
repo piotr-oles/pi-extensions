@@ -34,11 +34,7 @@ export class QueuedSubagent {
   readonly session: AgentSession;
 
   get name() {
-    return this.config.name;
-  }
-
-  get template() {
-    return this.config.template;
+    return this.config.template.name;
   }
 
   constructor({ id, prompt, description, config, session }: QueuedSubagentParams) {

@@ -3,7 +3,6 @@ import { basename, join } from "node:path";
 import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
 import { getAgentDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
 import type { SubagentSource, SubagentTemplate } from "./subagent-template.js";
-import { GENERAL_PURPOSE_TEMPLATE } from "./subagent-template.js";
 import type { SubagentName } from "./types.js";
 
 export class SubagentTemplatesManager {
@@ -16,6 +15,7 @@ export class SubagentTemplatesManager {
   }
 
   private templates = new Map<SubagentName, SubagentTemplate>();
+  private enabled: Set<SubagentName> | null = null;
 
   constructor(private readonly cwd: string) {}
 
@@ -36,24 +36,34 @@ export class SubagentTemplatesManager {
     }
   }
 
+  setEnabledTemplates(names: SubagentName[] | null): void {
+    this.enabled = names ? new Set(names) : null;
+  }
+
   getTemplate(name: SubagentName): SubagentTemplate | undefined {
     const key = this.resolveName(name);
     if (!key) {
       return undefined;
     }
     const template = this.templates.get(key);
-    return template?.enabled ? template : undefined;
-  }
-
-  getTemplateOrDefault(name: SubagentName): SubagentTemplate {
-    return (
-      this.getTemplate(name) ?? this.getTemplate("general-purpose") ?? GENERAL_PURPOSE_TEMPLATE
-    );
+    if (!template?.enabled) {
+      return undefined;
+    }
+    if (this.enabled !== null && !this.enabled.has(template.name)) {
+      return undefined;
+    }
+    return template;
   }
 
   listTemplates(): SubagentTemplate[] {
     return Array.from(this.templates.values()).sort(
       (templateA, templateB) => this.scoreTemplate(templateB) - this.scoreTemplate(templateA),
+    );
+  }
+
+  listEnabledTemplates(): SubagentTemplate[] {
+    return this.listTemplates().filter(
+      (t) => t.enabled && (this.enabled === null || this.enabled.has(t.name)),
     );
   }
 
@@ -111,7 +121,7 @@ export class SubagentTemplatesManager {
       const name = basename(filePath, ".md");
       try {
         templates.set(name, parseTemplateFile(filePath, name, content, source));
-      } catch (error) {
+      } catch (_error) {
         // TODO: report it
       }
     }

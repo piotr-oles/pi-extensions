@@ -41,7 +41,7 @@ export class SubagentToolResultComponent implements Component {
   }
 
   render(width: number): string[] {
-    const { expanded } = this;
+    const expanded = this.expanded;
     if (expanded) {
       return [
         ...this.border.render(width),
@@ -115,7 +115,7 @@ class SubagentDetailsComponent implements Component {
   }
 
   render(width: number): string[] {
-    const { entry } = this;
+    const entry = this.entry;
 
     switch (entry.status) {
       case "queued":
@@ -131,7 +131,8 @@ class SubagentDetailsComponent implements Component {
   }
 
   private footerText(): string {
-    const { entry, theme } = this;
+    const entry = this.entry;
+    const theme = this.theme;
     if (entry.sessionFile) {
       return `${theme.fg("muted", `To open this session:`)} pi --session ${formatFilePath(entry.sessionFile)}`;
     }
@@ -186,7 +187,7 @@ class SubagentSummaryTextComponent implements Component {
   invalidate() {}
 
   private text(): string {
-    const { entry } = this;
+    const entry = this.entry;
     switch (entry.status) {
       case "queued":
         return this.queuedText();
@@ -194,16 +195,18 @@ class SubagentSummaryTextComponent implements Component {
         return this.runningText(entry);
       case "done":
         return this.doneText(entry);
+      default:
+        return "";
     }
   }
 
   private queuedText(): string {
-    const { theme } = this;
+    const theme = this.theme;
     return theme.fg("dim", "queued");
   }
 
   private runningText(running: RunningAgentSessionEntry): string {
-    const { theme } = this;
+    const theme = this.theme;
     const parts: string[] = [];
     parts.push(theme.fg("dim", formatUsage(running.usage)));
     if (running.lastMessage) {
@@ -216,7 +219,7 @@ class SubagentSummaryTextComponent implements Component {
   }
 
   private lastActivity(message: AssistantMessage): string | undefined {
-    const { theme } = this;
+    const theme = this.theme;
     const tail = message.content.at(-1);
     if (!tail) {
       return undefined;
@@ -234,7 +237,7 @@ class SubagentSummaryTextComponent implements Component {
   }
 
   private toolActivity(call: ToolCall): string | undefined {
-    const { theme } = this;
+    const theme = this.theme;
     switch (call.name) {
       case "bash":
         return theme.fg("dim", getFirstLine(call.arguments.command || "bash"));
@@ -262,7 +265,7 @@ class SubagentSummaryTextComponent implements Component {
   }
 
   private doneText(done: DoneSubagentSessionEntry): string {
-    const { theme } = this;
+    const theme = this.theme;
     const parts: string[] = [];
     if (done.result.status === "error") {
       parts.push(theme.fg("error", done.result.error));
@@ -334,7 +337,8 @@ class SubagentIconComponent implements Component {
   }
 
   private icon(): string {
-    const { theme, entry } = this;
+    const theme = this.theme;
+    const entry = this.entry;
 
     switch (entry.status) {
       case "queued":
@@ -357,6 +361,8 @@ class SubagentIconComponent implements Component {
             return theme.fg("error", "✗");
         }
       }
+      default:
+        return "";
     }
   }
 }

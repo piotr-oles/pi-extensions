@@ -25,7 +25,7 @@ export class SubagentTemplatesListComponent implements Component {
 
   handleInput(data: string): void {
     const kb = getKeybindings();
-    const { rows } = this;
+    const rows = this.rows;
 
     if (kb.matches(data, "tui.select.up")) {
       rows[this.selectedIndex]?.setSelected(false);
@@ -47,13 +47,13 @@ export class SubagentTemplatesListComponent implements Component {
 
   render(width: number): string[] {
     const lines: string[] = [];
-    const { rows, maxVisible } = this;
+    const rows = this.rows;
 
     const startIndex = Math.max(
       0,
-      Math.min(this.selectedIndex - Math.floor(maxVisible / 2), rows.length - maxVisible),
+      Math.min(this.selectedIndex - Math.floor(this.maxVisible / 2), rows.length - this.maxVisible),
     );
-    const endIndex = Math.min(startIndex + maxVisible, rows.length);
+    const endIndex = Math.min(startIndex + this.maxVisible, rows.length);
 
     for (let i = startIndex; i < endIndex; i++) {
       const row = rows[i];

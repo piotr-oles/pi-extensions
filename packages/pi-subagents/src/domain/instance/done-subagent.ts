@@ -48,12 +48,8 @@ export class DoneSubagent {
   readonly session: AgentSession;
   readonly turns: number;
 
-  get name() {
-    return this.config.name;
-  }
-
-  get template() {
-    return this.config.template;
+  get name(): string {
+    return this.config.template.name;
   }
 
   get duration(): number {

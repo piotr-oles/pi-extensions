@@ -8,23 +8,12 @@ export interface SubagentTemplate {
   readonly instructions: string;
   readonly includedTools: string[] | undefined;
   readonly includedSkills: string[] | undefined;
-  readonly includedSubagents?: string[];
-  readonly model?: string;
-  readonly thinkingLevel?: ThinkingLevel;
-  readonly maxTurns?: number;
-  readonly graceTurns?: number;
+  readonly includedSubagents: string[] | undefined;
+  readonly model: string | undefined;
+  readonly thinkingLevel: ThinkingLevel | undefined;
+  readonly maxTurns: number | undefined;
+  readonly graceTurns: number | undefined;
   readonly enabled: boolean;
   readonly source: SubagentSource;
   readonly filePath: string | undefined;
 }
-
-export const GENERAL_PURPOSE_TEMPLATE: SubagentTemplate = {
-  name: "general-purpose",
-  description: "General-purpose agent",
-  instructions: "",
-  enabled: true,
-  source: "global",
-  includedTools: undefined,
-  includedSkills: undefined,
-  filePath: undefined,
-};
