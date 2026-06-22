@@ -91,7 +91,7 @@ export function createReviewPlanTool(
           break;
         }
 
-        editor?.open(planPath).catch(() => { });
+        editor?.open(planPath).catch(() => {});
         editorOpened = true;
       }
 
@@ -111,24 +111,24 @@ export function createReviewPlanTool(
           return {
             content: [
               {
-                type: 'text',
-                text: `User comment: ${result.comment}`
+                type: "text",
+                text: `User comment: ${result.comment}`,
               },
               {
                 type: "text",
-                text: `User also edited the "${planName}" plan:`
+                text: `User also edited the "${planName}" plan:`,
               },
               {
                 type: "text",
-                text: diff
+                text: diff,
               },
               {
-                type: 'text',
+                type: "text",
                 text: [
                   "The changes mentioned above have already been saved in the plan file.",
                   "Address the comment, update the plan if needed, then call review_plan again.",
-                ].join('\n')
-              }
+                ].join("\n"),
+              },
             ],
             details: { result: "comment", planPath, message: result.comment, diff },
           };
@@ -148,19 +148,19 @@ export function createReviewPlanTool(
             content: [
               {
                 type: "text",
-                text: `User approved the "${planName}" plan and made edits:`
+                text: `User approved the "${planName}" plan and made edits:`,
               },
               {
-                type: 'text',
-                text: diff
+                type: "text",
+                text: diff,
               },
               {
-                type: 'text',
+                type: "text",
                 text: [
                   "The changes mentioned above have already been saved in the plan file.",
-                  "Address user comments, fixup the plan, then ask user about next steps."
-                ].join('\n')
-              }
+                  "Address user comments, fixup the plan, then ask user about next steps.",
+                ].join("\n"),
+              },
             ],
             details: { result: "approve", planPath, diff },
           };
@@ -185,19 +185,19 @@ export function createReviewPlanTool(
             content: [
               {
                 type: "text",
-                text: `User edited the "${planName}" plan:`
+                text: `User edited the "${planName}" plan:`,
               },
               {
-                type: 'text',
+                type: "text",
                 text: diff,
               },
               {
-                type: 'text',
+                type: "text",
                 text: [
                   "The changes mentioned above have already been saved in the plan file.",
                   "Address user comments, fixup the plan, then call review_plan again.",
-                ].join('\n')
-              }
+                ].join("\n"),
+              },
             ],
             details: { result: "request-changes", planPath, diff },
           };

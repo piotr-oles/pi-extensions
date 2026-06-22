@@ -123,11 +123,11 @@ class PlanActionSelect implements Component {
 
     const openInEditorItem = editorName
       ? [
-        {
-          value: "open-in-editor" as const,
-          label: `Open in ${editorName}`,
-        },
-      ]
+          {
+            value: "open-in-editor" as const,
+            label: `Open in ${editorName}`,
+          },
+        ]
       : [];
 
     const items = [
@@ -150,7 +150,7 @@ class PlanActionSelect implements Component {
     this.selectList = new SelectList(items, Math.min(items.length, 10), {
       selectedPrefix: (text) => theme.fg("accent", text),
       selectedText: (text) => {
-        if (text.includes('Request')) {
+        if (text.includes("Request")) {
           return theme.fg("error", text);
         }
         if (text.includes("Approve")) {
@@ -225,8 +225,12 @@ class PlanCommentInput implements Component, Focusable {
     this.container.addChild(new Text(theme.fg("dim", "enter submit • esc go back")));
   }
 
-  get focused() { return this.input.focused; }
-  set focused(v: boolean) { this.input.focused = v; }
+  get focused() {
+    return this.input.focused;
+  }
+  set focused(v: boolean) {
+    this.input.focused = v;
+  }
 
   render(width: number) {
     return this.container.render(width);
