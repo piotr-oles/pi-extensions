@@ -1,6 +1,6 @@
 {
   "name": "@piotr-oles/pi-cwd",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Pi Agent extension: remind agent to use relative paths based on current working directory",
   "repository": {
     "type": "git",
