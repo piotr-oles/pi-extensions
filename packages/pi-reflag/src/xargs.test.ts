@@ -56,6 +56,44 @@ describe("xargs HOF — xargs prefix", () => {
   });
 });
 
+describe("xargs HOF — leading xargs flags", () => {
+  it("skips single xargs flag -r before subcommand", () => {
+    expect(xargsGrep({ name: "xargs", args: ["-r", "grep", "-l", "pattern"] })).toEqual({
+      name: "xargs",
+      args: ["-r", "rg", "-l", "pattern"],
+    });
+  });
+
+  it("skips multiple xargs flags before subcommand", () => {
+    expect(xargsGrep({ name: "xargs", args: ["-r", "-t", "grep", "pattern"] })).toEqual({
+      name: "xargs",
+      args: ["-r", "-t", "rg", "pattern"],
+    });
+  });
+
+  it("skips -0 flag before subcommand", () => {
+    expect(xargsGrep({ name: "xargs", args: ["-0", "grep", "pattern"] })).toEqual({
+      name: "xargs",
+      args: ["-0", "rg", "pattern"],
+    });
+  });
+
+  it("skips -n N (flag with arg) before subcommand", () => {
+    expect(xargsGrep({ name: "xargs", args: ["-n", "10", "grep", "pattern"] })).toEqual({
+      name: "xargs",
+      args: ["-n", "10", "rg", "pattern"],
+    });
+  });
+
+  it("returns undefined when only xargs flags, no subcommand", () => {
+    expect(xargsGrep({ name: "xargs", args: ["-r", "-t"] })).toBeUndefined();
+  });
+
+  it("returns undefined when xargs flags followed by non-matching subcommand", () => {
+    expect(xargsGrep({ name: "xargs", args: ["-r", "find", "."] })).toBeUndefined();
+  });
+});
+
 describe("xargs HOF — unrelated commands untouched", () => {
   it("ignores echo", () => {
     expect(xargsGrep({ name: "echo", args: ["hello"] })).toBeUndefined();

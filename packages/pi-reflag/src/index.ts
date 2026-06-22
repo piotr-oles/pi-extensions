@@ -30,5 +30,5 @@ export default function piReflag(pi: ExtensionAPI): void {
 }
 
 function isVerbose(pi: ExtensionAPI) {
-  return pi.getFlag("pi-reflag-verbose") || process.env.PI_REFLAG_VERBOSE === "true";
+  return pi.getFlag("pi-reflag-verbose");
 }

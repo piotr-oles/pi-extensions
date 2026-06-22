@@ -229,4 +229,22 @@ describe("BRE conversion via shell", () => {
   it("BRE alternation: \\| converted to | within original shell quoting", async () => {
     expect(await rewriteBash("grep 'foo\\|bar' file.txt")).toEqual("rg 'foo|bar' file.txt");
   });
+
+  it("literal ( escaped to \\(", async () => {
+    expect(await rewriteBash('grep "foo(bar)" file.txt')).toEqual('rg "foo\\(bar\\)" file.txt');
+  });
+
+  it("literal | escaped to \\|", async () => {
+    expect(await rewriteBash('grep "a|b" file.txt')).toEqual('rg "a\\|b" file.txt');
+  });
+
+  it("-E: ERE pattern parens not escaped", async () => {
+    expect(await rewriteBash('grep -E "foo(bar)" file.txt')).toEqual('rg "foo(bar)" file.txt');
+  });
+
+  it("BRE \\| and literal ( mixed", async () => {
+    expect(await rewriteBash('grep "maxTurns\\|\\.run(" file')).toEqual(
+      'rg "maxTurns|\\.run\\(" file',
+    );
+  });
 });

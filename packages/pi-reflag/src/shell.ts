@@ -9,6 +9,7 @@ const COMMAND_REWRITES = [grep, find];
 interface BashCommand extends Command {
   startIndex: number;
   endIndex: number;
+  redirectText: string;
 }
 
 export async function rewriteBash(bash: string): Promise<string> {
@@ -34,6 +35,7 @@ export async function rewriteBash(bash: string): Promise<string> {
         newBash =
           newBash.slice(0, command.startIndex) +
           stringifyCommand(newCommand) +
+          (command.redirectText ? " " + command.redirectText : "") +
           newBash.slice(command.endIndex);
         break;
       }
@@ -72,11 +74,17 @@ function* extractCommands(node: SyntaxNode): Generator<BashCommand> {
         return;
       }
 
+      const redirectText = node.children
+        .filter((child) => child.type.includes("redirect"))
+        .map((child) => child.text)
+        .join(" ");
+
       yield {
         startIndex: node.startIndex,
         endIndex: node.endIndex,
         name: nameNode?.text ?? "",
         args: argNodes.map((n) => n.text),
+        redirectText,
       };
       return;
     }
@@ -84,7 +92,7 @@ function* extractCommands(node: SyntaxNode): Generator<BashCommand> {
     default: {
       // traverse AST from right to left
       // this way earlier positions stay valid as we replace later ones
-      for (let i = node.childCount; i >= 0; i--) {
+      for (let i = node.childCount - 1; i >= 0; i--) {
         const child = node.child(i);
         if (child) {
           yield* extractCommands(child);
