@@ -12,7 +12,7 @@
     "typecheck": "pnpm -r run typecheck",
     "check": "pnpm -r run check",
     "fix": "pnpm -r run fix",
-    "validate:release": "pnpm --filter './packages/*' --workspace-concurrency=1 exec semantic-release-monorepo --dry-run"
+    "validate:release": "pnpm --filter './packages/*' --workspace-concurrency=1 exec -- semantic-release -e semantic-release-monorepo --dry-run"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",

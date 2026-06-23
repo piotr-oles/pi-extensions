@@ -35,7 +35,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
       - name: Release packages
-        run: pnpm --filter './packages/*' --workspace-concurrency=1 exec semantic-release-monorepo
+        run: pnpm --filter './packages/*' --workspace-concurrency=1 run release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
