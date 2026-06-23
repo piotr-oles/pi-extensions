@@ -6,6 +6,8 @@ import type { Command } from "./types.js";
 
 const COMMAND_REWRITES = [grep, find];
 
+const REDIRECT_NODE_TYPES = new Set(["file_redirect", "heredoc_redirect", "herestring_redirect"]);
+
 interface BashCommand extends Command {
   startIndex: number;
   endIndex: number;
@@ -72,6 +74,11 @@ function* extractCommands(node: SyntaxNode): Generator<BashCommand> {
         return;
       }
 
+      if (node.children.some((child) => REDIRECT_NODE_TYPES.has(child.type))) {
+        // skip commands where redirect appears inside (e.g. "> /dev/null cmd args")
+        return;
+      }
+
       yield {
         startIndex: node.startIndex,
         endIndex: node.endIndex,
@@ -84,7 +91,7 @@ function* extractCommands(node: SyntaxNode): Generator<BashCommand> {
     default: {
       // traverse AST from right to left
       // this way earlier positions stay valid as we replace later ones
-      for (let i = node.childCount; i >= 0; i--) {
+      for (let i = node.childCount - 1; i >= 0; i--) {
         const child = node.child(i);
         if (child) {
           yield* extractCommands(child);

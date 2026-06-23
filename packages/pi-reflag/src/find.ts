@@ -17,57 +17,73 @@ export const find: CommandRewrite = xargs((command) => {
   }
 });
 
-function translateDays(val: string): string[] {
+function translateDuration(val: string, unit: "d" | "min"): string[] | undefined {
   if (val.startsWith("-")) {
-    return ["--changed-within", `${val.slice(1)}d`];
+    return ["--changed-within", `${val.slice(1)}${unit}`];
   }
   if (val.startsWith("+")) {
-    return ["--changed-before", `${val.slice(1)}d`];
+    return ["--changed-before", `${val.slice(1)}${unit}`];
   }
-  return ["--changed-within", `${val}d`];
+  // Unsigned means "exactly N days/mins ago" — fd has no equivalent, bail
+  return undefined;
 }
 
-function translateMins(val: string): string[] {
-  if (val.startsWith("-")) {
-    return ["--changed-within", `${val.slice(1)}min`];
+function translateSize(val: string): string | undefined {
+  // find 'c' = bytes; fd 'b' = bytes
+  if (val.endsWith("c")) {
+    return `${val.slice(0, -1)}b`;
   }
-  if (val.startsWith("+")) {
-    return ["--changed-before", `${val.slice(1)}min`];
+  // find 'k' = 512-byte blocks; fd 'k' = 1024 bytes — semantically different, bail
+  if (val.endsWith("k")) {
+    return undefined;
   }
-  return ["--changed-within", `${val}min`];
+  return val;
 }
 
-export function translateFindArgs(args: string[]): string[] | undefined {
-  const translated: string[] = [];
-  const paths: string[] = [];
-  const globPatterns: string[] = [];
-  let regexPattern: string | null = null;
+function parseExecArgs(
+  args: string[],
+  startIndex: number,
+): { execArgs: string[]; isBatch: boolean; endIndex: number } {
   const execArgs: string[] = [];
-  let caseInsensitive = false;
-
-  // fd excludes hidden files by default; find includes them
-  translated.push("-H");
-
-  let i = 0;
-
-  // Phase 1: leading find-level options before path args (-L, -H, -P)
+  let i = startIndex;
+  let isBatch = false;
   while (i < args.length) {
-    const arg = args[i];
+    if (args[i] === ";" || args[i] === "\\;") {
+      i++;
+      break;
+    }
+    if (args[i] === "+") {
+      isBatch = true;
+      i++;
+      break;
+    }
+    execArgs.push(args[i]);
+    i++;
+  }
+  return { execArgs, isBatch, endIndex: i };
+}
+
+function collectLeadingOptions(args: string[]): { options: string[]; cursor: number } {
+  const options: string[] = [];
+  let cursor = 0;
+  while (cursor < args.length) {
+    const arg = args[cursor];
     if (arg === "-L" || arg === "-follow") {
-      translated.push("-L");
-      i++;
+      options.push("-L");
+      cursor++;
     } else if (arg === "-H" || arg === "-P") {
-      // -H (find) = follow command-line symlinks; already added fd's -H above
-      // -P = no symlink follow (fd default)
-      i++;
+      cursor++;
     } else {
       break;
     }
   }
+  return { options, cursor };
+}
 
-  // Phase 2: collect path arguments (stop at first expression)
-  while (i < args.length) {
-    const arg = args[i];
+function collectPaths(args: string[], cursor: number): { paths: string[]; cursor: number } {
+  const paths: string[] = [];
+  while (cursor < args.length) {
+    const arg = args[cursor];
     if (arg.startsWith("-") || arg === "!" || arg === "(" || arg === ")") {
       break;
     }
@@ -75,10 +91,32 @@ export function translateFindArgs(args: string[]): string[] | undefined {
     if (arg !== ".") {
       paths.push(arg);
     }
-    i++;
+    cursor++;
   }
+  return { paths, cursor };
+}
 
-  // Phase 3: process expressions
+interface ExpressionResult {
+  translated: string[];
+  globPatterns: string[];
+  regexPattern: string | null;
+  execArgs: string[];
+  caseInsensitive: boolean;
+  hasIname: boolean;
+  hasName: boolean;
+}
+
+function translateExpressions(args: string[], cursor: number): ExpressionResult | undefined {
+  const translated: string[] = [];
+  const globPatterns: string[] = [];
+  let regexPattern: string | null = null;
+  const execArgs: string[] = [];
+  let caseInsensitive = false;
+  let hasIname = false;
+  let hasName = false;
+
+  let i = cursor;
+
   while (i < args.length) {
     const arg = args[i];
 
@@ -103,24 +141,30 @@ export function translateFindArgs(args: string[]): string[] | undefined {
 
     // ! -path PAT or -not -path PAT → strip glob anchors and exclude
     if ((arg === "!" || arg === "-not") && i + 2 < args.length && args[i + 1] === "-path") {
-      const pat = args[i + 2].replace(/^\*\//, "").replace(/\/\*$/, "").replace(/\*$/, "");
+      const pat = args[i + 2]
+        .replace(/^\.\//, "")
+        .replace(/^\*\//, "")
+        .replace(/\/\*$/, "")
+        .replace(/\*$/, "");
       translated.push("-E", pat);
       i += 3;
       continue;
     }
 
+    // ! or -not followed by anything other than -name/-path → bail
     if (arg === "!" || arg === "-not") {
-      i++;
-      continue;
+      return undefined;
     }
 
     if (arg === "-name" && i + 1 < args.length) {
+      hasName = true;
       globPatterns.push(args[i + 1]);
       i += 2;
       continue;
     }
 
     if (arg === "-iname" && i + 1 < args.length) {
+      hasIname = true;
       caseInsensitive = true;
       globPatterns.push(args[i + 1]);
       i += 2;
@@ -159,7 +203,11 @@ export function translateFindArgs(args: string[]): string[] | undefined {
     }
 
     if (arg === "-size" && i + 1 < args.length) {
-      translated.push("-S", args[i + 1]);
+      const sizeVal = translateSize(args[i + 1]);
+      if (sizeVal === undefined) {
+        return undefined;
+      }
+      translated.push("-S", sizeVal);
       i += 2;
       continue;
     }
@@ -170,16 +218,34 @@ export function translateFindArgs(args: string[]): string[] | undefined {
       continue;
     }
 
-    if ((arg === "-mtime" || arg === "-atime" || arg === "-ctime") && i + 1 < args.length) {
-      translated.push(...translateDays(args[i + 1]));
+    if (arg === "-mtime" && i + 1 < args.length) {
+      const dur = translateDuration(args[i + 1], "d");
+      if (!dur) {
+        return undefined;
+      }
+      translated.push(...dur);
       i += 2;
       continue;
     }
 
-    if ((arg === "-mmin" || arg === "-amin" || arg === "-cmin") && i + 1 < args.length) {
-      translated.push(...translateMins(args[i + 1]));
+    // -atime and -ctime track access/inode-change time; fd only tracks mtime → bail
+    if (arg === "-atime" || arg === "-ctime") {
+      return undefined;
+    }
+
+    if (arg === "-mmin" && i + 1 < args.length) {
+      const dur = translateDuration(args[i + 1], "min");
+      if (!dur) {
+        return undefined;
+      }
+      translated.push(...dur);
       i += 2;
       continue;
+    }
+
+    // -amin and -cmin track access/inode-change time; fd only tracks mtime → bail
+    if (arg === "-amin" || arg === "-cmin") {
+      return undefined;
     }
 
     if (arg === "-user" && i + 1 < args.length) {
@@ -196,8 +262,12 @@ export function translateFindArgs(args: string[]): string[] | undefined {
 
     if (arg === "-path" && i + 1 < args.length) {
       if (i + 2 < args.length && args[i + 2] === "-prune") {
-        // -path PAT -prune → exclude directory: strip leading */ and trailing /*
-        const pat = args[i + 1].replace(/^\*\//, "").replace(/\/\*$/, "").replace(/\*$/, "");
+        // -path PAT -prune → exclude directory: strip leading ./, */ and trailing /*, *
+        const pat = args[i + 1]
+          .replace(/^\.\//, "")
+          .replace(/^\*\//, "")
+          .replace(/\/\*$/, "")
+          .replace(/\*$/, "");
         translated.push("-E", pat);
         i += 3;
         if (i < args.length && (args[i] === "-o" || args[i] === "-or")) {
@@ -211,29 +281,19 @@ export function translateFindArgs(args: string[]): string[] | undefined {
     }
 
     if (arg === "-perm" && i + 1 < args.length) {
-      // no fd equivalent
-      i += 2;
-      continue;
+      // no fd equivalent — silently dropping would change semantics → bail
+      return undefined;
+    }
+
+    // -delete has no fd equivalent and silently dropping it would be wrong → bail
+    if (arg === "-delete") {
+      return undefined;
     }
 
     if (arg === "-exec" || arg === "-execdir") {
-      const cmdArgs: string[] = [];
-      i++;
-      let batchMode = false;
-      while (i < args.length) {
-        if (args[i] === ";" || args[i] === "\\;") {
-          i++;
-          break;
-        }
-        if (args[i] === "+") {
-          batchMode = true;
-          i++;
-          break;
-        }
-        cmdArgs.push(args[i]);
-        i++;
-      }
-      execArgs.push(batchMode ? "-X" : "-x", ...cmdArgs);
+      const { execArgs: cmdArgs, isBatch, endIndex } = parseExecArgs(args, i + 1);
+      execArgs.push(isBatch ? "-X" : "-x", ...cmdArgs);
+      i = endIndex;
       continue;
     }
 
@@ -275,7 +335,7 @@ export function translateFindArgs(args: string[]): string[] | undefined {
       i++;
       continue;
     }
-    if (arg === "-prune" || arg === "-depth" || arg === "-daystart" || arg === "-delete") {
+    if (arg === "-prune" || arg === "-depth" || arg === "-daystart") {
       i++;
       continue;
     }
@@ -287,24 +347,56 @@ export function translateFindArgs(args: string[]): string[] | undefined {
     i++;
   }
 
+  return { translated, globPatterns, regexPattern, execArgs, caseInsensitive, hasIname, hasName };
+}
+
+export function translateFindArgs(args: string[]): string[] | undefined {
+  const result: string[] = ["-H"];
+
+  const leading = collectLeadingOptions(args);
+  result.push(...leading.options);
+
+  const pathsResult = collectPaths(args, leading.cursor);
+  const { paths } = pathsResult;
+
+  const exprResult = translateExpressions(args, pathsResult.cursor);
+  if (!exprResult) {
+    return undefined;
+  }
+
+  const { translated, globPatterns, regexPattern, execArgs, caseInsensitive, hasIname, hasName } =
+    exprResult;
+
+  // fd can't do per-pattern case sensitivity → bail when -iname and -name are mixed
+  if (hasIname && hasName) {
+    return undefined;
+  }
+
+  // Comma in any pattern would corrupt brace expansion → bail
+  if (globPatterns.some((p) => p.includes(","))) {
+    return undefined;
+  }
+
+  result.push(...translated);
+
   if (caseInsensitive) {
-    translated.push("-i");
+    result.push("-i");
   }
 
   // glob patterns take priority over regex pattern
   if (globPatterns.length === 1) {
-    translated.push("-g", globPatterns[0]);
+    result.push("-g", globPatterns[0]);
   } else if (globPatterns.length > 1) {
-    translated.push("-g", `{${globPatterns.join(",")}}`);
+    result.push("-g", `{${globPatterns.join(",")}}`);
   } else if (regexPattern !== null) {
-    translated.push(regexPattern);
+    result.push(regexPattern);
   } else if (paths.length > 0) {
     // fd requires a pattern before path args; "." matches everything
-    translated.push(".");
+    result.push(".");
   }
 
-  translated.push(...paths);
-  translated.push(...execArgs);
+  result.push(...paths);
+  result.push(...execArgs);
 
-  return translated;
+  return result;
 }

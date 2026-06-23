@@ -302,6 +302,46 @@ describe("BRE to ERE conversion", () => {
   });
 });
 
+describe("BRE literal chars escaped for ERE", () => {
+  it("literal ( and ) escaped", () => {
+    expect(t(["foo(bar)", "file.txt"])).toEqual(["foo\\(bar\\)", "file.txt"]);
+  });
+
+  it("literal | escaped", () => {
+    expect(t(["a|b", "file.txt"])).toEqual(["a\\|b", "file.txt"]);
+  });
+
+  it("BRE \\| alternation + literal ( in same pattern", () => {
+    expect(t(["maxTurns\\|\\.run(", "file.txt"])).toEqual(["maxTurns|\\.run\\(", "file.txt"]);
+  });
+
+  it("literal + escaped", () => {
+    expect(t(["foo+bar", "file.txt"])).toEqual(["foo\\+bar", "file.txt"]);
+  });
+
+  it("literal ? escaped", () => {
+    expect(t(["foo?bar", "file.txt"])).toEqual(["foo\\?bar", "file.txt"]);
+  });
+});
+
+describe("-E flag skips BRE conversion", () => {
+  it("-E: literal | not escaped", () => {
+    expect(t(["-E", "a|b", "file.txt"])).toEqual(["a|b", "file.txt"]);
+  });
+
+  it("-E: literal ( not escaped", () => {
+    expect(t(["-E", "foo(bar)", "file.txt"])).toEqual(["foo(bar)", "file.txt"]);
+  });
+
+  it("-E: literal + not escaped", () => {
+    expect(t(["-E", "a+b", "file.txt"])).toEqual(["a+b", "file.txt"]);
+  });
+
+  it("--extended-regexp: literal | not escaped", () => {
+    expect(t(["--extended-regexp", "a|b", "file.txt"])).toEqual(["a|b", "file.txt"]);
+  });
+});
+
 describe("fixed strings skip BRE conversion", () => {
   it("-F suppresses BRE conversion on positional pattern", () => {
     expect(t(["-F", "foo\\|bar", "file.txt"])).toEqual(["-F", "foo\\|bar", "file.txt"]);

@@ -104,6 +104,14 @@ describe("negation", () => {
   it("-not -name PAT → -E PAT", () => {
     expect(t([".", "-not", "-name", "*.pyc"])).toEqual(["-H", "-E", "*.pyc"]);
   });
+
+  it("! -path ./build → strips leading ./ → fd -H -E build", () => {
+    expect(t([".", "!", "-path", "./build"])).toEqual(["-H", "-E", "build"]);
+  });
+
+  it("! -path ./build/* → strips leading ./ and trailing /* → fd -H -E build", () => {
+    expect(t([".", "!", "-path", "./build/*"])).toEqual(["-H", "-E", "build"]);
+  });
 });
 
 describe("type filter", () => {
@@ -215,20 +223,32 @@ describe("time filters", () => {
     expect(t([".", "-mtime", "+30"])).toEqual(["-H", "--changed-before", "30d"]);
   });
 
-  it("-atime -1 → --changed-within 1d", () => {
-    expect(t([".", "-atime", "-1"])).toEqual(["-H", "--changed-within", "1d"]);
+  it("-atime bails (access time != mtime)", () => {
+    expect(t([".", "-atime", "-1"])).toBeUndefined();
   });
 
-  it("-ctime +7 → --changed-before 7d", () => {
-    expect(t([".", "-ctime", "+7"])).toEqual(["-H", "--changed-before", "7d"]);
+  it("-ctime bails (inode change time != mtime)", () => {
+    expect(t([".", "-ctime", "+7"])).toBeUndefined();
   });
 
   it("-mmin -60 → --changed-within 60min", () => {
     expect(t([".", "-mmin", "-60"])).toEqual(["-H", "--changed-within", "60min"]);
   });
 
-  it("-amin +30 → --changed-before 30min", () => {
-    expect(t([".", "-amin", "+30"])).toEqual(["-H", "--changed-before", "30min"]);
+  it("-amin bails (access time != mtime)", () => {
+    expect(t([".", "-amin", "+30"])).toBeUndefined();
+  });
+
+  it("-cmin bails (inode change time != mtime)", () => {
+    expect(t([".", "-cmin", "-10"])).toBeUndefined();
+  });
+
+  it("-mtime 7 (unsigned) bails — semantics differ from fd", () => {
+    expect(t([".", "-mtime", "7"])).toBeUndefined();
+  });
+
+  it("-mtime 0 (unsigned) bails", () => {
+    expect(t([".", "-mtime", "0"])).toBeUndefined();
   });
 });
 
@@ -311,8 +331,8 @@ describe("misc flags", () => {
     expect(t([".", "-prune"])).toEqual(["-H"]);
   });
 
-  it("-perm silently dropped (no fd equivalent)", () => {
-    expect(t([".", "-perm", "644"])).toEqual(["-H"]);
+  it("-perm bails (no fd equivalent)", () => {
+    expect(t([".", "-perm", "-755"])).toBeUndefined();
   });
 
   it("unknown flag not forwarded to output", () => {
@@ -404,6 +424,66 @@ describe("combined real-world patterns", () => {
   });
 });
 
+describe("negation bail", () => {
+  it("! -type d bails — unsupported negation target", () => {
+    expect(t([".", "!", "-type", "d"])).toBeUndefined();
+  });
+
+  it("-not -type f bails — unsupported negation target", () => {
+    expect(t([".", "-not", "-type", "f"])).toBeUndefined();
+  });
+
+  it("! alone (no following arg) bails", () => {
+    expect(t([".", "!"])).toBeUndefined();
+  });
+});
+
+describe("comma in glob pattern", () => {
+  it("-name 'foo,bar' bails — comma corrupts brace expansion", () => {
+    expect(t([".", "-name", "foo,bar"])).toBeUndefined();
+  });
+
+  it("-name 'a,b' -o -name '*.ts' bails — comma in first pattern", () => {
+    expect(t([".", "-name", "a,b", "-o", "-name", "*.ts"])).toBeUndefined();
+  });
+});
+
+describe("mixed -iname/-name", () => {
+  it("-iname '*.TXT' -name '*.ts' bails — fd can't mix case sensitivity per pattern", () => {
+    expect(t([".", "-iname", "*.TXT", "-name", "*.ts"])).toBeUndefined();
+  });
+
+  it("-name '*.ts' -iname '*.TXT' bails — order doesn't matter", () => {
+    expect(t([".", "-name", "*.ts", "-iname", "*.TXT"])).toBeUndefined();
+  });
+
+  it("-iname alone still works", () => {
+    expect(t([".", "-iname", "*.TXT"])).toEqual(["-H", "-i", "-g", "*.TXT"]);
+  });
+
+  it("-name alone still works", () => {
+    expect(t([".", "-name", "*.ts"])).toEqual(["-H", "-g", "*.ts"]);
+  });
+});
+
+describe("size translation", () => {
+  it("-size +1c translates c → b (bytes)", () => {
+    expect(t([".", "-size", "+1c"])).toEqual(["-H", "-S", "+1b"]);
+  });
+
+  it("-size -100c translates c → b", () => {
+    expect(t([".", "-size", "-100c"])).toEqual(["-H", "-S", "-100b"]);
+  });
+
+  it("-size +1k bails — 512-byte blocks vs 1024-byte kibibytes differ", () => {
+    expect(t([".", "-size", "+1k"])).toBeUndefined();
+  });
+
+  it("-size +1M passes through unchanged", () => {
+    expect(t([".", "-size", "+1M"])).toEqual(["-H", "-S", "+1M"]);
+  });
+});
+
 describe("unknown flags", () => {
   it("-samefile reported as unknown", () => {
     expect(t([".", "-samefile", "other.txt"])).toBeUndefined();
@@ -439,6 +519,10 @@ describe("unknown flags", () => {
     expect(t([".", "-prune"])).toEqual(["-H"]);
     expect(t([".", "-depth"])).toEqual(["-H"]);
     expect(t([".", "-daystart"])).toEqual(["-H"]);
-    expect(t([".", "-delete"])).toEqual(["-H"]);
+  });
+
+  it("-delete bails — silently dropping it would execute wrong command", () => {
+    expect(t([".", "-name", "*.log", "-delete"])).toBeUndefined();
+    expect(t([".", "-delete"])).toBeUndefined();
   });
 });
