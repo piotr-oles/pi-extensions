@@ -66,6 +66,7 @@ pnpm install                  # install workspace deps
 pnpm test                     # run all tests across packages
 pnpm typecheck                # tsc --noEmit across packages
 pnpm fix                      # check and auto-fix
+pnpm validate:release         # dry-run semantic-release for all packages
 ```
 
 ## Git hooks
@@ -142,5 +143,34 @@ For publishable packages, also add `"publishConfig": { "access": "public" }` and
 
 ## CI
 
-`.github/workflows/ci.yml` - runs `test`, `typecheck`, `check` on every PR.
-`.github/workflows/release.yml` - Changesets release flow on `main`: opens a Version Packages PR while changesets are pending, publishes to npm once merged.
+`.github/workflows/ci.yml` - runs `test`, `typecheck`, `check`, and dry-run release on every PR.
+`.github/workflows/release.yml` - semantic-release on push to `main`; each package releases independently.
+
+## Releases
+
+Releases are automated via semantic-release on push to `main`. Each package releases independently based on commits that touch it.
+
+Conventional commit format is required and enforced by commitlint (commit-msg hook via lefthook):
+
+- `fix:` → patch
+- `feat:` → minor
+- `feat!:` / `BREAKING CHANGE:` → major
+- `chore:`, `docs:`, `refactor:`, `test:` → no release
+
+Tag format: `@piotr-oles/<pkg>@<version>`. Each package gets its own `CHANGELOG.md`.
+
+Dry run (no publish, no tags): `pnpm validate:release`
+
+### Migration note
+
+Before first semantic-release run on a new repo, create tags for existing package versions so semantic-release knows the baseline:
+
+```bash
+git tag @piotr-oles/pi-caveman@0.1.0
+git tag @piotr-oles/pi-cwd@0.3.0
+git tag @piotr-oles/pi-fence@0.1.0
+git tag @piotr-oles/pi-plan@0.2.0
+git tag @piotr-oles/pi-reflag@0.3.0
+git tag @piotr-oles/pi-subagents@0.2.0
+git push --tags
+```

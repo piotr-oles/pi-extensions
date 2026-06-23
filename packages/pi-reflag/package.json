@@ -29,7 +29,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "check": "biome ci src/",
-    "fix": "biome check --write src/"
+    "fix": "biome check --write src/",
+    "release": "semantic-release-monorepo"
   },
   "dependencies": {
     "web-tree-sitter": "^0.26.9"

@@ -29,7 +29,8 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "check": "biome ci src/",
-    "fix": "biome check --write src/"
+    "fix": "biome check --write src/",
+    "release": "semantic-release-monorepo"
   },
   "peerDependencies": {
     "@earendil-works/pi-agent-core": "*",

@@ -1,7 +1,7 @@
 {
   "name": "@piotr-oles/pi-caveman",
   "version": "0.1.0",
-  "description": "Pi Agent extension: respond in caveman mode — cut ~75% output tokens while keeping full technical accuracy",
+  "description": "Pi Agent extension: respond in caveman mode \u2014 cut ~75% output tokens while keeping full technical accuracy",
   "repository": {
     "type": "git",
     "url": "https://github.com/piotr-oles/pi-extensions.git",
@@ -29,7 +29,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "check": "biome ci src/",
-    "fix": "biome check --write src/"
+    "fix": "biome check --write src/",
+    "release": "semantic-release-monorepo"
   },
   "peerDependencies": {
     "@earendil-works/pi-agent-core": "*",
