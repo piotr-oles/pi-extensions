@@ -4,3 +4,4 @@ coverage/
 *.tsbuildinfo
 .sem/
 .DS_Store
+kanban/

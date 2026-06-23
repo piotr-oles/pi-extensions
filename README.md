@@ -25,6 +25,16 @@ pnpm fix            # auto-fix lint and format issues
 
 Each package has its own `README.md` with installation and usage instructions.
 
+### Git hooks
+
+Pre-commit hooks run biome check, typecheck, and tests via [Lefthook](https://github.com/evilmartians/lefthook). After cloning, create the hook once:
+
+```bash
+mkdir -p .git/hooks && printf '#!/usr/bin/env bash\nset -euo pipefail\npnpm lefthook run pre-commit\n' > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+```
+
+> The extra setup step is needed because a global `core.hooksPath` intercepts git hooks and delegates to `.git/hooks/` — lefthook cannot auto-install there.
+
 ## Adding a new extension
 
 1. `mkdir packages/<name>`
