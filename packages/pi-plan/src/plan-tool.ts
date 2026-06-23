@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { basename, join } from "node:path";
 import type { ExtensionAPI, Theme, ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { renderDiff } from "@earendil-works/pi-coding-agent";
-import { type Component, Container, Text } from "@earendil-works/pi-tui";
+import { type Component, Container, Spacer, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { detectEditor } from "./editor.js";
 import { commitFile, computeGitDiff, ensureGitRepo } from "./git.js";
@@ -23,10 +23,20 @@ const ReviewPlanParams = Type.Object({
 export type PlanReviewToolDetails =
   | { result: "approve"; planPath: string; diff: string }
   | { result: "request-changes"; planPath: string; diff: string }
-  | { result: "question"; planPath: string; message?: string }
+  | { result: "comment"; planPath: string; message: string; diff: string }
   | { result: "cancel"; planPath?: string };
 
 const PLANS_DIR = join(homedir(), ".pi", "plan");
+
+async function commitAndDiff(
+  exec: ExecFn,
+  plansDir: string,
+  relPath: string,
+  action: string,
+): Promise<string> {
+  const changed = await commitFile(exec, plansDir, relPath, action);
+  return changed ? computeGitDiff(exec, plansDir, relPath) : "";
+}
 
 export function createReviewPlanTool(
   exec: ExecFn,
@@ -72,8 +82,7 @@ export function createReviewPlanTool(
       while (true) {
         result = await ctx.ui.custom<PlanWidgetAnswer>((tui, theme, _kb, done) => {
           const planWidget = new PlanWidget(tui, theme, planPath, editor, editorOpened);
-          planWidget.onSelect = (answer) => done(answer);
-          planWidget.onQuestion = (question) => done({ type: "question", question });
+          planWidget.onAnswer = (answer) => done(answer);
 
           return planWidget;
         });
@@ -95,26 +104,62 @@ export function createReviewPlanTool(
         };
       }
 
-      if (result.type === "question") {
-        return {
-          content: [{ type: "text", text: `User question: ${result.question}` }],
-          details: { result: "question", planPath, message: result.question },
-        };
-      }
-
-      if (result.type === "approve") {
-        const confirmed = await commitFile(exec, plansDir, relPath, `approve: ${planName}`);
-        const diff = confirmed ? await computeGitDiff(exec, plansDir, relPath) : "";
+      if (result.type === "comment") {
+        const diff = await commitAndDiff(exec, plansDir, relPath, `comment: ${planName}`);
 
         if (diff !== "") {
           return {
             content: [
               {
                 type: "text",
-                text:
-                  `User approved the "${planName}" plan and made edits:\n\n${diff}\n\n` +
-                  "The changes mentioned above has been already saved in the plan file.\n" +
-                  "Address user comments, fixup the plan, then proceed with plan execution.",
+                text: `User comment: ${result.comment}`,
+              },
+              {
+                type: "text",
+                text: `User also edited the "${planName}" plan:`,
+              },
+              {
+                type: "text",
+                text: diff,
+              },
+              {
+                type: "text",
+                text: [
+                  "The changes mentioned above have already been saved in the plan file.",
+                  "Address the comment, update the plan if needed, then call review_plan again.",
+                ].join("\n"),
+              },
+            ],
+            details: { result: "comment", planPath, message: result.comment, diff },
+          };
+        }
+
+        return {
+          content: [{ type: "text", text: `User comment: ${result.comment}` }],
+          details: { result: "comment", planPath, message: result.comment, diff },
+        };
+      }
+
+      if (result.type === "approve") {
+        const diff = await commitAndDiff(exec, plansDir, relPath, `approve: ${planName}`);
+
+        if (diff !== "") {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `User approved the "${planName}" plan and made edits:`,
+              },
+              {
+                type: "text",
+                text: diff,
+              },
+              {
+                type: "text",
+                text: [
+                  "The changes mentioned above have already been saved in the plan file.",
+                  "Address user comments, fixup the plan, then ask user about next steps.",
+                ].join("\n"),
               },
             ],
             details: { result: "approve", planPath, diff },
@@ -125,7 +170,7 @@ export function createReviewPlanTool(
           content: [
             {
               type: "text",
-              text: `User approved the "${planName}" plan without changes. Proceed with execution.`,
+              text: `User approved the "${planName}" plan as is. Ask user about next steps.`,
             },
           ],
           details: { result: "approve", planPath, diff },
@@ -133,18 +178,25 @@ export function createReviewPlanTool(
       }
 
       if (result.type === "request-changes") {
-        const changed = await commitFile(exec, plansDir, relPath, `request-changes: ${planName}`);
-        const diff = changed ? await computeGitDiff(exec, plansDir, relPath) : "";
+        const diff = await commitAndDiff(exec, plansDir, relPath, `request-changes: ${planName}`);
 
         if (diff !== "") {
           return {
             content: [
               {
                 type: "text",
-                text:
-                  `User edited the "${planName}" plan:\n\n${diff}\n\n` +
-                  "The changes mentioned above has been already saved in the plan file.\n" +
+                text: `User edited the "${planName}" plan:`,
+              },
+              {
+                type: "text",
+                text: diff,
+              },
+              {
+                type: "text",
+                text: [
+                  "The changes mentioned above have already been saved in the plan file.",
                   "Address user comments, fixup the plan, then call review_plan again.",
+                ].join("\n"),
               },
             ],
             details: { result: "request-changes", planPath, diff },
@@ -213,6 +265,8 @@ class PlanReviewResult implements Component {
   constructor(theme: Theme, details: PlanReviewToolDetails) {
     this.container = new Container();
 
+    this.container.addChild(new Spacer(1));
+
     switch (details.result) {
       case "approve": {
         if (details.diff !== "") {
@@ -235,10 +289,13 @@ class PlanReviewResult implements Component {
         }
         break;
       }
-      case "question": {
+      case "comment": {
         this.container.addChild(
-          new Text(`${theme.fg("accent", `Question: `)}${details.message ?? ""}`, 0, 0),
+          new Text(`${theme.fg("accent", "Comment: ")}${details.message}`, 0, 0),
         );
+        if (details.diff !== "") {
+          this.container.addChild(new Text(renderDiff(details.diff), 0, 1));
+        }
         break;
       }
       default: {
@@ -248,10 +305,7 @@ class PlanReviewResult implements Component {
   }
 
   render(width: number) {
-    return [
-      "", // add empty line on top
-      ...this.container.render(width),
-    ];
+    return this.container.render(width);
   }
 
   invalidate() {
