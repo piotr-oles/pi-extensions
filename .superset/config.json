@@ -1,0 +1,6 @@
+{
+  "setup": [
+    "pnpm install",
+    "mkdir -p .git/hooks && printf '#!/usr/bin/env bash\\nset -euo pipefail\\npnpm lefthook run pre-commit\\n' > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit"
+  ]
+}
