@@ -68,6 +68,24 @@ pnpm typecheck                # tsc --noEmit across packages
 pnpm fix                      # check and auto-fix
 ```
 
+## Git hooks
+
+Pre-commit runs biome check, typecheck, and tests in parallel via Lefthook (`lefthook.yml` at root). Hook config is committed; the `.git/hooks/pre-commit` wrapper is not (lives outside version control).
+
+After clone:
+
+```bash
+mkdir -p .git/hooks && printf '#!/usr/bin/env bash\nset -euo pipefail\npnpm lefthook run pre-commit\n' > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+```
+
+Run hooks manually:
+
+```bash
+pnpm lefthook run pre-commit
+```
+
+> A global `core.hooksPath` may intercept hooks and delegate to `.git/hooks/` via a `run-local-hooks` shim. Lefthook cannot auto-install into a custom hooks path, so the wrapper is created manually.
+
 ## Conventions
 
 ### No fence/divider comments
