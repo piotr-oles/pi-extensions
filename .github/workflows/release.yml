@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
 
+<<<<<<< Updated upstream
+=======
+concurrency: ${{ github.workflow }}
+
+>>>>>>> Stashed changes
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -17,6 +22,15 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+<<<<<<< Updated upstream
+=======
+
+    permissions:
+      contents: write # create git tags and commits
+      pull-requests: write # open / update the Version Packages PR
+      id-token: write # npm provenance
+
+>>>>>>> Stashed changes
     steps:
       - uses: actions/checkout@v4
         with:
