@@ -6,10 +6,15 @@ import type { Command } from "./types.js";
 
 const COMMAND_REWRITES = [grep, find];
 
+const REDIRECT_NODE_TYPES = new Set([
+  "file_redirect",
+  "heredoc_redirect",
+  "herestring_redirect",
+]);
+
 interface BashCommand extends Command {
   startIndex: number;
   endIndex: number;
-  redirectText: string;
 }
 
 export async function rewriteBash(bash: string): Promise<string> {
@@ -35,7 +40,6 @@ export async function rewriteBash(bash: string): Promise<string> {
         newBash =
           newBash.slice(0, command.startIndex) +
           stringifyCommand(newCommand) +
-          (command.redirectText ? " " + command.redirectText : "") +
           newBash.slice(command.endIndex);
         break;
       }
@@ -74,17 +78,16 @@ function* extractCommands(node: SyntaxNode): Generator<BashCommand> {
         return;
       }
 
-      const redirectText = node.children
-        .filter((child) => child.type.includes("redirect"))
-        .map((child) => child.text)
-        .join(" ");
+      if (node.children.some((child) => REDIRECT_NODE_TYPES.has(child.type))) {
+        // skip commands where redirect appears inside (e.g. "> /dev/null cmd args")
+        return;
+      }
 
       yield {
         startIndex: node.startIndex,
         endIndex: node.endIndex,
         name: nameNode?.text ?? "",
         args: argNodes.map((n) => n.text),
-        redirectText,
       };
       return;
     }
