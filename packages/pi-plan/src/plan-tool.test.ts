@@ -161,7 +161,10 @@ describe("createReviewPlanTool - execute with UI", () => {
     if (result.details.result === "approve") {
       expect(result.details.diff).toBe("");
       expect(result.content).toEqual([
-        { type: "text", text: 'User approved the "plan.md" plan as is. Ask user about next steps.' },
+        {
+          type: "text",
+          text: 'User approved the "plan.md" plan as is. Ask user about next steps.',
+        },
       ]);
     }
   });
