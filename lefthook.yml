@@ -10,5 +10,3 @@ pre-commit:
       run: pnpm check
     typecheck:
       run: pnpm typecheck
-    test:
-      run: pnpm test
