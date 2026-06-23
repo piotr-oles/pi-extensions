@@ -49,23 +49,3 @@ jobs:
       - name: Test
         run: pnpm test
 
-  dry-run-release:
-    name: Dry run release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-        with:
-          run_install: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Dry run release
-        run: pnpm validate:release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

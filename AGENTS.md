@@ -161,16 +161,3 @@ Tag format: `@piotr-oles/<pkg>@<version>`. Each package gets its own `CHANGELOG.
 
 Dry run (no publish, no tags): `pnpm validate:release`
 
-### Migration note
-
-Before first semantic-release run on a new repo, create tags for existing package versions so semantic-release knows the baseline:
-
-```bash
-git tag @piotr-oles/pi-caveman@0.1.0
-git tag @piotr-oles/pi-cwd@0.3.0
-git tag @piotr-oles/pi-fence@0.1.0
-git tag @piotr-oles/pi-plan@0.2.0
-git tag @piotr-oles/pi-reflag@0.3.0
-git tag @piotr-oles/pi-subagents@0.2.0
-git push --tags
-```
