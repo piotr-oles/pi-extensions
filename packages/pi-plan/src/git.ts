@@ -12,8 +12,6 @@ export function getRepoName(cwd: string): string {
 export async function ensureGitRepo(exec: ExecFn, dir: string): Promise<void> {
   if (!existsSync(join(dir, ".git"))) {
     await exec("git", ["init"], { cwd: dir });
-    await exec("git", ["config", "user.email", "pi@local"], { cwd: dir });
-    await exec("git", ["config", "user.name", "pi"], { cwd: dir });
   }
 }
 

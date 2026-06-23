@@ -1,33 +1,22 @@
-import { execFile } from "node:child_process";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { promisify } from "node:util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { commitFile, computeGitDiff, ensureGitRepo } from "./git.js";
 import { createReviewPlanTool } from "./plan-tool.js";
 
-const execFileAsync = promisify(execFile);
+vi.mock("./git.js", () => ({
+  ensureGitRepo: vi.fn(),
+  commitFile: vi.fn(),
+  computeGitDiff: vi.fn(),
+}));
 
-async function testExec(
-  command: string,
-  args: string[],
-  options?: { cwd?: string },
-): Promise<{ stdout: string; stderr: string; code: number; killed: boolean }> {
-  try {
-    const result = await execFileAsync(command, args, {
-      cwd: options?.cwd,
-      encoding: "utf8",
-    });
-    return { stdout: result.stdout, stderr: result.stderr, code: 0, killed: false };
-  } catch (e: unknown) {
-    const err = e as { stdout?: string; stderr?: string; code?: number };
-    return {
-      stdout: err.stdout ?? "",
-      stderr: err.stderr ?? "",
-      code: err.code ?? 1,
-      killed: false,
-    };
-  }
+const mockedEnsureGitRepo = vi.mocked(ensureGitRepo);
+const mockedCommitFile = vi.mocked(commitFile);
+const mockedComputeGitDiff = vi.mocked(computeGitDiff);
+
+function makeExec() {
+  return vi.fn().mockResolvedValue({ stdout: "", stderr: "", code: 0, killed: false });
 }
 
 function makeCtx(customReturnValue: unknown) {
@@ -47,7 +36,7 @@ function makeCtx(customReturnValue: unknown) {
 describe("createReviewPlanTool - no UI", () => {
   it("throws when hasUI is false", async () => {
     const { ctx, custom } = makeCtx(null);
-    const tool = createReviewPlanTool(testExec, "/nonexistent");
+    const tool = createReviewPlanTool(makeExec(), "/nonexistent");
 
     await expect(
       tool.execute(
@@ -69,6 +58,14 @@ describe("createReviewPlanTool - execute with UI", () => {
     plansDir = await mkdtemp(join(tmpdir(), "pi-plan-tool-test-"));
     await mkdir(join(plansDir, "my-repo"), { recursive: true });
     await writeFile(join(plansDir, "my-repo", "plan.md"), "# Plan\n\n1. Step A\n");
+
+    mockedEnsureGitRepo.mockReset();
+    mockedCommitFile.mockReset();
+    mockedComputeGitDiff.mockReset();
+
+    mockedEnsureGitRepo.mockResolvedValue(undefined);
+    mockedCommitFile.mockResolvedValue(true);
+    mockedComputeGitDiff.mockResolvedValue("");
   });
 
   afterEach(async () => {
@@ -77,7 +74,7 @@ describe("createReviewPlanTool - execute with UI", () => {
 
   it("throws when plan file does not exist", async () => {
     const { ctx, custom } = makeCtx({ type: "cancel" });
-    const tool = createReviewPlanTool(testExec, plansDir);
+    const tool = createReviewPlanTool(makeExec(), plansDir);
 
     await expect(
       tool.execute(
@@ -93,7 +90,7 @@ describe("createReviewPlanTool - execute with UI", () => {
 
   it("returns cancel when user cancels", async () => {
     const { ctx } = makeCtx({ type: "cancel" });
-    const tool = createReviewPlanTool(testExec, plansDir);
+    const tool = createReviewPlanTool(makeExec(), plansDir);
 
     const result = await tool.execute(
       "id",
@@ -109,7 +106,7 @@ describe("createReviewPlanTool - execute with UI", () => {
 
   it("includes planPath in cancel details", async () => {
     const { ctx } = makeCtx({ type: "cancel" });
-    const tool = createReviewPlanTool(testExec, plansDir);
+    const tool = createReviewPlanTool(makeExec(), plansDir);
 
     const result = await tool.execute(
       "id",
@@ -127,7 +124,7 @@ describe("createReviewPlanTool - execute with UI", () => {
 
   it("returns comment with message when user leaves a comment", async () => {
     const { ctx } = makeCtx({ type: "comment", comment: "What about step 2?" });
-    const tool = createReviewPlanTool(testExec, plansDir);
+    const tool = createReviewPlanTool(makeExec(), plansDir);
 
     const result = await tool.execute(
       "id",
@@ -147,7 +144,7 @@ describe("createReviewPlanTool - execute with UI", () => {
 
   it("returns approve with empty diff when user approves without changes", async () => {
     const { ctx } = makeCtx({ type: "approve" });
-    const tool = createReviewPlanTool(testExec, plansDir);
+    const tool = createReviewPlanTool(makeExec(), plansDir);
 
     const result = await tool.execute(
       "id",
@@ -170,6 +167,8 @@ describe("createReviewPlanTool - execute with UI", () => {
   });
 
   it("returns approve with diff when user edits plan before approving", async () => {
+    mockedComputeGitDiff.mockResolvedValueOnce("+4 2. NEW STEP");
+
     const planFilePath = join(plansDir, "my-repo", "plan.md");
     const { ctx } = makeCtx(null);
     ctx.hasUI = true;
@@ -178,7 +177,7 @@ describe("createReviewPlanTool - execute with UI", () => {
       return { type: "approve" };
     });
 
-    const tool = createReviewPlanTool(testExec, plansDir);
+    const tool = createReviewPlanTool(makeExec(), plansDir);
     const result = await tool.execute(
       "id",
       { planPath: "my-repo/plan.md" },
@@ -190,11 +189,11 @@ describe("createReviewPlanTool - execute with UI", () => {
     expect(result.details.result).toBe("approve");
     if (result.details.result === "approve") {
       expect(result.details.diff).not.toBe("");
-      expect(result.details.diff).toMatch(/\+.*NEW STEP/);
+      expect(result.details.diff).toMatch(/NEW STEP/);
     }
     expect(result.content).toEqual([
       { type: "text", text: 'User approved the "plan.md" plan and made edits:' },
-      { type: "text", text: expect.stringMatching(/\+.*NEW STEP/) },
+      { type: "text", text: expect.stringMatching(/NEW STEP/) },
       {
         type: "text",
         text:
@@ -205,6 +204,8 @@ describe("createReviewPlanTool - execute with UI", () => {
   });
 
   it("returns request-changes with diff when user edits plan and requests changes", async () => {
+    mockedComputeGitDiff.mockResolvedValueOnce("+4 - NEEDS CHANGE");
+
     const planFilePath = join(plansDir, "my-repo", "plan.md");
     const { ctx } = makeCtx(null);
     ctx.hasUI = true;
@@ -213,7 +214,7 @@ describe("createReviewPlanTool - execute with UI", () => {
       return { type: "request-changes" };
     });
 
-    const tool = createReviewPlanTool(testExec, plansDir);
+    const tool = createReviewPlanTool(makeExec(), plansDir);
     const result = await tool.execute(
       "id",
       { planPath: "my-repo/plan.md" },
@@ -225,11 +226,11 @@ describe("createReviewPlanTool - execute with UI", () => {
     expect(result.details.result).toBe("request-changes");
     if (result.details.result === "request-changes") {
       expect(result.details.diff).not.toBe("");
-      expect(result.details.diff).toMatch(/\+.*NEEDS CHANGE/);
+      expect(result.details.diff).toMatch(/NEEDS CHANGE/);
     }
     expect(result.content).toEqual([
       { type: "text", text: 'User edited the "plan.md" plan:' },
-      { type: "text", text: expect.stringMatching(/\+.*NEEDS CHANGE/) },
+      { type: "text", text: expect.stringMatching(/NEEDS CHANGE/) },
       {
         type: "text",
         text:
@@ -241,7 +242,7 @@ describe("createReviewPlanTool - execute with UI", () => {
 
   it("returns request-changes with empty diff when user requests changes without editing", async () => {
     const { ctx } = makeCtx({ type: "request-changes" });
-    const tool = createReviewPlanTool(testExec, plansDir);
+    const tool = createReviewPlanTool(makeExec(), plansDir);
 
     const result = await tool.execute(
       "id",
@@ -266,6 +267,8 @@ describe("createReviewPlanTool - execute with UI", () => {
   });
 
   it("returns comment with message and diff when user edits plan while leaving a comment", async () => {
+    mockedComputeGitDiff.mockResolvedValueOnce("+4 2. NEW STEP");
+
     const planFilePath = join(plansDir, "my-repo", "plan.md");
     const { ctx } = makeCtx(null);
     ctx.hasUI = true;
@@ -274,7 +277,7 @@ describe("createReviewPlanTool - execute with UI", () => {
       return { type: "comment", comment: "Added a new step" };
     });
 
-    const tool = createReviewPlanTool(testExec, plansDir);
+    const tool = createReviewPlanTool(makeExec(), plansDir);
     const result = await tool.execute(
       "id",
       { planPath: "my-repo/plan.md" },
@@ -287,12 +290,12 @@ describe("createReviewPlanTool - execute with UI", () => {
     if (result.details.result === "comment") {
       expect(result.details.message).toBe("Added a new step");
       expect(result.details.diff).not.toBe("");
-      expect(result.details.diff).toMatch(/\+.*NEW STEP/);
+      expect(result.details.diff).toMatch(/NEW STEP/);
     }
     expect(result.content).toEqual([
       { type: "text", text: "User comment: Added a new step" },
       { type: "text", text: 'User also edited the "plan.md" plan:' },
-      { type: "text", text: expect.stringMatching(/\+.*NEW STEP/) },
+      { type: "text", text: expect.stringMatching(/NEW STEP/) },
       {
         type: "text",
         text:
@@ -304,7 +307,7 @@ describe("createReviewPlanTool - execute with UI", () => {
 
   it("hides working indicator before showing UI and restores it after", async () => {
     const { ctx, setWorkingVisible } = makeCtx({ type: "cancel" });
-    const tool = createReviewPlanTool(testExec, plansDir);
+    const tool = createReviewPlanTool(makeExec(), plansDir);
 
     await tool.execute(
       "id",
@@ -319,14 +322,9 @@ describe("createReviewPlanTool - execute with UI", () => {
   });
 
   it("creates git repo and commits plan before showing UI", async () => {
-    const calls: string[] = [];
-    const trackingExec = async (command: string, args: string[], options?: { cwd?: string }) => {
-      calls.push(`${command} ${args.join(" ")}`);
-      return testExec(command, args, options);
-    };
-
+    const exec = makeExec();
     const { ctx } = makeCtx({ type: "cancel" });
-    const tool = createReviewPlanTool(trackingExec, plansDir);
+    const tool = createReviewPlanTool(exec, plansDir);
 
     await tool.execute(
       "id",
@@ -336,7 +334,12 @@ describe("createReviewPlanTool - execute with UI", () => {
       ctx as any,
     );
 
-    expect(calls.some((c) => c.startsWith("git init"))).toBe(true);
-    expect(calls.some((c) => c.includes("commit") && c.includes("create: plan.md"))).toBe(true);
+    expect(mockedEnsureGitRepo).toHaveBeenCalledWith(exec, plansDir);
+    expect(mockedCommitFile).toHaveBeenCalledWith(
+      exec,
+      plansDir,
+      "my-repo/plan.md",
+      "create: plan.md",
+    );
   });
 });

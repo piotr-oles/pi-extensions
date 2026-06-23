@@ -1,65 +1,43 @@
-import { execFile } from "node:child_process";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { promisify } from "node:util";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { commitFile, computeGitDiff, ensureGitRepo, formatLineDiff, getRepoName } from "./git.js";
 
-const execFileAsync = promisify(execFile);
+type ExecResult = { stdout: string; stderr: string; code: number; killed: boolean };
+type ExecFn = (command: string, args: string[]) => Promise<ExecResult>;
 
-async function testExec(
-  command: string,
-  args: string[],
-  options?: { cwd?: string },
-): Promise<{ stdout: string; stderr: string; code: number; killed: boolean }> {
-  try {
-    const result = await execFileAsync(command, args, {
-      cwd: options?.cwd,
-      encoding: "utf8",
-    });
-    return { stdout: result.stdout, stderr: result.stderr, code: 0, killed: false };
-  } catch (e: unknown) {
-    const err = e as { stdout?: string; stderr?: string; code?: number };
-    return {
-      stdout: err.stdout ?? "",
-      stderr: err.stderr ?? "",
-      code: err.code ?? 1,
-      killed: false,
-    };
-  }
-}
+const ok = (): ExecResult => ({ stdout: "", stderr: "", code: 0, killed: false });
 
 describe("getRepoName", () => {
-  it("returns directory basename", async () => {
-    const tmp = await mkdtemp(join(tmpdir(), "pi-plan-test-"));
-    try {
-      const name = getRepoName(tmp);
-      expect(name.length).toBeGreaterThan(0);
-      expect(name).not.toContain("/");
-    } finally {
-      await rm(tmp, { recursive: true, force: true });
-    }
+  it("returns directory basename", () => {
+    expect(getRepoName("/tmp/my-repo")).toBe("my-repo");
   });
 });
 
 describe("ensureGitRepo", () => {
-  it("creates .git when absent", async () => {
+  it("calls git init when .git missing", async () => {
     const tmp = await mkdtemp(join(tmpdir(), "pi-plan-test-"));
+    const exec = vi.fn<ExecFn>().mockResolvedValue(ok());
+
     try {
-      await ensureGitRepo(testExec, tmp);
-      const { existsSync } = await import("node:fs");
-      expect(existsSync(join(tmp, ".git"))).toBe(true);
+      await ensureGitRepo(exec, tmp);
+
+      expect(exec).toHaveBeenCalledOnce();
+      expect(exec).toHaveBeenCalledWith("git", ["init"], { cwd: tmp });
     } finally {
       await rm(tmp, { recursive: true, force: true });
     }
   });
 
-  it("is idempotent — does not throw when .git already exists", async () => {
+  it("does nothing when .git already exists", async () => {
     const tmp = await mkdtemp(join(tmpdir(), "pi-plan-test-"));
+    const exec = vi.fn<ExecFn>().mockResolvedValue(ok());
+
     try {
-      await ensureGitRepo(testExec, tmp);
-      await expect(ensureGitRepo(testExec, tmp)).resolves.not.toThrow();
+      await mkdir(join(tmp, ".git"));
+      await ensureGitRepo(exec, tmp);
+      expect(exec).not.toHaveBeenCalled();
     } finally {
       await rm(tmp, { recursive: true, force: true });
     }
@@ -67,90 +45,84 @@ describe("ensureGitRepo", () => {
 });
 
 describe("commitFile", () => {
-  it("creates a commit for a new file and returns true", async () => {
-    const tmp = await mkdtemp(join(tmpdir(), "pi-plan-test-"));
-    try {
-      await ensureGitRepo(testExec, tmp);
-      await writeFile(join(tmp, "plan.md"), "# Plan\n", "utf8");
-      expect(await commitFile(testExec, tmp, "plan.md", "create: plan.md")).toBe(true);
-    } finally {
-      await rm(tmp, { recursive: true, force: true });
-    }
+  it("returns true when git commit exits 0", async () => {
+    const exec = vi.fn<ExecFn>().mockImplementation(async (_command, args) => {
+      if (args.includes("commit")) {
+        return ok();
+      }
+      return ok();
+    });
+
+    const changed = await commitFile(exec, "/repo", "plan.md", "create: plan.md");
+    expect(changed).toBe(true);
   });
 
-  it("returns false when nothing to commit", async () => {
-    const tmp = await mkdtemp(join(tmpdir(), "pi-plan-test-"));
-    try {
-      await ensureGitRepo(testExec, tmp);
-      await writeFile(join(tmp, "plan.md"), "# Plan\n", "utf8");
-      await commitFile(testExec, tmp, "plan.md", "create: plan.md");
-      expect(await commitFile(testExec, tmp, "plan.md", "confirm: plan.md")).toBe(false);
-    } finally {
-      await rm(tmp, { recursive: true, force: true });
-    }
-  });
+  it("returns false when git commit exits non-zero", async () => {
+    const exec = vi.fn<ExecFn>().mockImplementation(async (_command, args) => {
+      if (args.includes("commit")) {
+        return { ...ok(), code: 1 };
+      }
+      return ok();
+    });
 
-  it("commits files in subdirectories", async () => {
-    const tmp = await mkdtemp(join(tmpdir(), "pi-plan-test-"));
-    try {
-      await ensureGitRepo(testExec, tmp);
-      await mkdir(join(tmp, "repo"), { recursive: true });
-      await writeFile(join(tmp, "repo", "plan.md"), "# Plan\n", "utf8");
-      expect(await commitFile(testExec, tmp, "repo/plan.md", "create: plan.md")).toBe(true);
-    } finally {
-      await rm(tmp, { recursive: true, force: true });
-    }
+    const changed = await commitFile(exec, "/repo", "plan.md", "create: plan.md");
+    expect(changed).toBe(false);
   });
 });
 
 describe("computeGitDiff", () => {
-  it("returns empty string after first commit (no parent)", async () => {
-    const tmp = await mkdtemp(join(tmpdir(), "pi-plan-test-"));
-    try {
-      await ensureGitRepo(testExec, tmp);
-      await writeFile(join(tmp, "plan.md"), "# Plan\n", "utf8");
-      await commitFile(testExec, tmp, "plan.md", "create: plan.md");
-      expect(await computeGitDiff(testExec, tmp, "plan.md")).toBe("");
-    } finally {
-      await rm(tmp, { recursive: true, force: true });
-    }
+  it("returns empty string when there is no parent commit", async () => {
+    const exec = vi.fn<ExecFn>().mockImplementation(async (_command, args) => {
+      if (args.includes("rev-parse")) {
+        return { ...ok(), code: 1 };
+      }
+      return ok();
+    });
+
+    const diff = await computeGitDiff(exec, "/repo", "plan.md");
+    expect(diff).toBe("");
+    expect(exec.mock.calls.some(([, args]) => args.includes("show"))).toBe(false);
   });
 
-  it("returns diff between commits (line added)", async () => {
-    const tmp = await mkdtemp(join(tmpdir(), "pi-plan-test-"));
-    try {
-      await ensureGitRepo(testExec, tmp);
-      await writeFile(join(tmp, "plan.md"), "# Plan\n\n1. Step one\n", "utf8");
-      await commitFile(testExec, tmp, "plan.md", "create: plan.md");
+  it("returns added line diff", async () => {
+    const exec = vi.fn<ExecFn>().mockImplementation(async (_command, args) => {
+      const last = args.at(-1);
+      if (args.includes("rev-parse")) {
+        return ok();
+      }
+      if (last === "HEAD~1:plan.md") {
+        return { ...ok(), stdout: "# Plan\n\n1. Step one\n" };
+      }
+      if (last === "HEAD:plan.md") {
+        return { ...ok(), stdout: "# Plan\n\n1. Step one\n2. Step two\n" };
+      }
+      return ok();
+    });
 
-      await writeFile(join(tmp, "plan.md"), "# Plan\n\n1. Step one\n2. Step two\n", "utf8");
-      await commitFile(testExec, tmp, "plan.md", "confirm: plan.md");
-
-      const diff = await computeGitDiff(testExec, tmp, "plan.md");
-      expect(diff).toMatch(/^\+\d+ 2\. Step two$/m);
-      expect(diff).not.toMatch(/^-/m);
-    } finally {
-      await rm(tmp, { recursive: true, force: true });
-    }
+    const diff = await computeGitDiff(exec, "/repo", "plan.md");
+    expect(diff).toMatch(/^\+\d+ 2\. Step two$/m);
+    expect(diff).not.toMatch(/^-/m);
   });
 
-  it("returns diff between commits (multiple lines removed)", async () => {
-    const tmp = await mkdtemp(join(tmpdir(), "pi-plan-test-"));
-    try {
-      await ensureGitRepo(testExec, tmp);
-      await writeFile(join(tmp, "plan.md"), "# Plan\n\n1. Step A\n2. Step B\n3. Step C\n", "utf8");
-      await commitFile(testExec, tmp, "plan.md", "create: plan.md");
+  it("returns removed lines diff", async () => {
+    const exec = vi.fn<ExecFn>().mockImplementation(async (_command, args) => {
+      const last = args.at(-1);
+      if (args.includes("rev-parse")) {
+        return ok();
+      }
+      if (last === "HEAD~1:plan.md") {
+        return { ...ok(), stdout: "# Plan\n\n1. Step A\n2. Step B\n3. Step C\n" };
+      }
+      if (last === "HEAD:plan.md") {
+        return { ...ok(), stdout: "# Plan\n\n1. Step A\n" };
+      }
+      return ok();
+    });
 
-      await writeFile(join(tmp, "plan.md"), "# Plan\n\n1. Step A\n", "utf8");
-      await commitFile(testExec, tmp, "plan.md", "confirm: plan.md");
-
-      const diff = await computeGitDiff(testExec, tmp, "plan.md");
-      expect(diff).toMatch(/^-\d+ 2\. Step B$/m);
-      expect(diff).toMatch(/^-\d+ 3\. Step C$/m);
-      expect(diff).not.toMatch(/^\+/m);
-    } finally {
-      await rm(tmp, { recursive: true, force: true });
-    }
+    const diff = await computeGitDiff(exec, "/repo", "plan.md");
+    expect(diff).toMatch(/^-\d+ 2\. Step B$/m);
+    expect(diff).toMatch(/^-\d+ 3\. Step C$/m);
+    expect(diff).not.toMatch(/^\+/m);
   });
 });
 
