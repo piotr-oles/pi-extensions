@@ -47,13 +47,34 @@ For publishable packages add `"publishConfig": { "access": "public" }` and a `"f
 
 ## Releases
 
-Published packages are released via [Changesets](https://github.com/changesets/changesets). To cut a release:
+Releases are fully automated via [semantic-release](https://semantic-release.gitbook.io/) on every push to `main`. Each package releases independently based on commits that touch it.
+
+### Commit convention
+
+[Conventional Commits](https://www.conventionalcommits.org/) are required and enforced by [commitlint](https://commitlint.js.org/) on every commit:
+
+| Commit type | Version bump |
+|-------------|-------------|
+| `fix:` | patch (`0.0.x`) |
+| `feat:` | minor (`0.x.0`) |
+| `feat!:` or `BREAKING CHANGE:` footer | major (`x.0.0`) |
+| `chore:`, `docs:`, `refactor:`, `test:` | no release |
+
+Scoping is optional but encouraged: `feat(pi-fence): add rust support`.
+
+### What happens on merge
+
+1. CI checks which packages have relevant commits since their last tag
+2. For each such package: bumps version, updates `CHANGELOG.md`, publishes to npm, creates a GitHub Release
+3. Version bumps are committed back to `main` with `[skip ci]`
+
+Tags follow the format `@piotr-oles/<pkg>@<version>`, e.g. `@piotr-oles/pi-fence@0.2.0`.
+
+### Dry run
 
 ```bash
-pnpm changeset   # describe your change, then commit the generated file
+pnpm validate:release   # preview what would release without publishing
 ```
-
-Once the changeset is merged to `main`, CI opens a **Version Packages** PR that bumps versions and updates changelogs. Merging that PR triggers the publish to npm automatically.
 
 ## License
 

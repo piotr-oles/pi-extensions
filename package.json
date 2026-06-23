@@ -12,13 +12,20 @@
     "typecheck": "pnpm -r run typecheck",
     "check": "pnpm -r run check",
     "fix": "pnpm -r run fix",
-    "changeset": "changeset",
-    "version": "changeset version",
-    "release": "pnpm install --frozen-lockfile && changeset publish"
+    "validate:release": "pnpm --filter './packages/*' --workspace-concurrency=1 exec -- semantic-release -e semantic-release-monorepo --dry-run"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
-    "@changesets/cli": "^2.31.0",
-    "lefthook": "^2.1.9"
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^12.0.8",
+    "@semantic-release/npm": "^13.1.5",
+    "@semantic-release/release-notes-generator": "^14.1.1",
+    "lefthook": "^2.1.9",
+    "semantic-release": "^25.0.5",
+    "semantic-release-monorepo": "^8.0.2"
   }
 }

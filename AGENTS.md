@@ -66,6 +66,7 @@ pnpm install                  # install workspace deps
 pnpm test                     # run all tests across packages
 pnpm typecheck                # tsc --noEmit across packages
 pnpm fix                      # check and auto-fix
+pnpm validate:release         # dry-run semantic-release for all packages
 ```
 
 ## Git hooks
@@ -142,5 +143,21 @@ For publishable packages, also add `"publishConfig": { "access": "public" }` and
 
 ## CI
 
-`.github/workflows/ci.yml` - runs `test`, `typecheck`, `check` on every PR.
-`.github/workflows/release.yml` - Changesets release flow on `main`: opens a Version Packages PR while changesets are pending, publishes to npm once merged.
+`.github/workflows/ci.yml` - runs `test`, `typecheck`, `check`, and dry-run release on every PR.
+`.github/workflows/release.yml` - semantic-release on push to `main`; each package releases independently.
+
+## Releases
+
+Releases are automated via semantic-release on push to `main`. Each package releases independently based on commits that touch it.
+
+Conventional commit format is required and enforced by commitlint (commit-msg hook via lefthook):
+
+- `fix:` → patch
+- `feat:` → minor
+- `feat!:` / `BREAKING CHANGE:` → major
+- `chore:`, `docs:`, `refactor:`, `test:` → no release
+
+Tag format: `@piotr-oles/<pkg>@<version>`. Each package gets its own `CHANGELOG.md`.
+
+Dry run (no publish, no tags): `pnpm validate:release`
+
