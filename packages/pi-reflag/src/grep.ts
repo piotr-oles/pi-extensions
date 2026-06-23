@@ -16,34 +16,24 @@ export const grep: CommandRewrite = xargs((command) => {
   }
 });
 
+const BRE_META = new Set(["(", ")", "{", "}", "|", "+", "?"]);
+
 function convertBreToEre(pattern: string): string {
-  return (
-    pattern
-      // Step 1: BRE escaped metacharacters → placeholders (become ERE metacharacters)
-      .replace(/\\\(/g, "\x00LPAREN\x00")
-      .replace(/\\\)/g, "\x00RPAREN\x00")
-      .replace(/\\\|/g, "\x00PIPE\x00")
-      .replace(/\\\+/g, "\x00PLUS\x00")
-      .replace(/\\\?/g, "\x00QMARK\x00")
-      .replace(/\\\{/g, "\x00LBRACE\x00")
-      .replace(/\\\}/g, "\x00RBRACE\x00")
-      // Step 2: remaining unescaped chars are literals in BRE but metacharacters in ERE
-      .replace(/\(/g, "\\(")
-      .replace(/\)/g, "\\)")
-      .replace(/\|/g, "\\|")
-      .replace(/\+/g, "\\+")
-      .replace(/\?/g, "\\?")
-      .replace(/\{/g, "\\{")
-      .replace(/\}/g, "\\}")
-      // Step 3: restore placeholders as ERE metacharacters
-      .replace(/\x00LPAREN\x00/g, "(")
-      .replace(/\x00RPAREN\x00/g, ")")
-      .replace(/\x00PIPE\x00/g, "|")
-      .replace(/\x00PLUS\x00/g, "+")
-      .replace(/\x00QMARK\x00/g, "?")
-      .replace(/\x00LBRACE\x00/g, "{")
-      .replace(/\x00RBRACE\x00/g, "}")
-  );
+  let result = "";
+  let i = 0;
+  while (i < pattern.length) {
+    if (pattern[i] === "\\" && i + 1 < pattern.length && BRE_META.has(pattern[i + 1])) {
+      result += pattern[i + 1]; // \( in BRE → ( in ERE
+      i += 2;
+    } else if (BRE_META.has(pattern[i])) {
+      result += `\\${pattern[i]}`; // ( in BRE → \( in ERE
+      i++;
+    } else {
+      result += pattern[i];
+      i++;
+    }
+  }
+  return result;
 }
 
 function hasExtendedFlag(args: string[]): boolean {
