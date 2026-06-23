@@ -6,11 +6,7 @@ import type { Command } from "./types.js";
 
 const COMMAND_REWRITES = [grep, find];
 
-const REDIRECT_NODE_TYPES = new Set([
-  "file_redirect",
-  "heredoc_redirect",
-  "herestring_redirect",
-]);
+const REDIRECT_NODE_TYPES = new Set(["file_redirect", "heredoc_redirect", "herestring_redirect"]);
 
 interface BashCommand extends Command {
   startIndex: number;
