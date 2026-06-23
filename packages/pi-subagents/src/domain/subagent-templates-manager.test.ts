@@ -233,4 +233,93 @@ describe("loadCustomAgents", () => {
     const cfg = (await load(cwd)).find((t) => t.name === "empty-skills")!;
     expect(cfg.includedSkills).toBeUndefined();
   });
+
+  it("parses YAML block array for included_tools", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "yaml-block-tools.md"),
+      [
+        "---",
+        "description: test",
+        "included_tools:",
+        "  - edit",
+        "  - write",
+        "  - bash",
+        "---",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "yaml-block-tools")!;
+    expect(cfg.includedTools).toEqual(["edit", "write", "bash"]);
+  });
+
+  it("parses YAML flow array for included_tools", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "yaml-flow-tools.md"),
+      ["---", "description: test", "included_tools: [edit, write, bash]", "---"].join("\n"),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "yaml-flow-tools")!;
+    expect(cfg.includedTools).toEqual(["edit", "write", "bash"]);
+  });
+
+  it("parses YAML block array for included_skills", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "yaml-block-skills.md"),
+      ["---", "description: test", "included_skills:", "  - tdd", "  - refactoring", "---"].join(
+        "\n",
+      ),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "yaml-block-skills")!;
+    expect(cfg.includedSkills).toEqual(["tdd", "refactoring"]);
+  });
+
+  it("parses YAML block array for included_subagents", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "yaml-block-subagents.md"),
+      [
+        "---",
+        "description: test",
+        "included_subagents:",
+        "  - explorer",
+        "  - reviewer",
+        "---",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "yaml-block-subagents")!;
+    expect(cfg.includedSubagents).toEqual(["explorer", "reviewer"]);
+  });
+
+  it("treats empty YAML array as undefined", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "empty-arr.md"),
+      ["---", "description: test", "included_tools: []", "---"].join("\n"),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "empty-arr")!;
+    expect(cfg.includedTools).toBeUndefined();
+  });
+
+  it("parses quoted max_turns string as integer", async () => {
+    await mkdir(join(cwd, ".pi", "subagents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "subagents", "quoted-turns.md"),
+      ["---", "description: test", 'max_turns: "10"', "---"].join("\n"),
+      "utf-8",
+    );
+
+    const cfg = (await load(cwd)).find((t) => t.name === "quoted-turns")!;
+    expect(cfg.maxTurns).toBe(10);
+  });
 });
