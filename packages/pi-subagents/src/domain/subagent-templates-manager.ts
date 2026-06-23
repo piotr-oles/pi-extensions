@@ -140,9 +140,9 @@ function parseTemplateFile(
   return {
     name: parseString(fm.name) || name,
     description: parseString(fm.description) ?? name,
-    includedTools: parseCsvField(fm.included_tools),
-    includedSkills: parseCsvField(fm.included_skills),
-    includedSubagents: parseCsvField(fm.included_subagents),
+    includedTools: parseStringsArrayField(fm.included_tools),
+    includedSkills: parseStringsArrayField(fm.included_skills),
+    includedSubagents: parseStringsArrayField(fm.included_subagents),
     model: parseString(fm.model),
     thinkingLevel: parseThinkingLevel(fm.thinking),
     maxTurns: parseNonNegativeInt(fm.max_turns),
@@ -177,10 +177,25 @@ function parseString(value: unknown): string | undefined {
 }
 
 function parseNonNegativeInt(value: unknown): number | undefined {
-  return typeof value === "number" && value >= 0 ? value : undefined;
+  if (typeof value === "number" && value >= 0) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const n = Number(value.trim());
+    if (Number.isInteger(n) && n >= 0) {
+      return n;
+    }
+  }
+  return undefined;
 }
 
-function parseCsvField(value: unknown): string[] | undefined {
+function parseStringsArrayField(value: unknown): string[] | undefined {
+  if (Array.isArray(value)) {
+    const items = value
+      .map((item) => (typeof item === "string" ? item.trim() : ""))
+      .filter(Boolean);
+    return items.length > 0 ? items : undefined;
+  }
   const str = parseString(value)?.trim();
   if (!str || str === "none") {
     return undefined;

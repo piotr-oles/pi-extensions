@@ -39,6 +39,22 @@ Subagents cannot spawn further subagents. Concurrency is capped at `pi-subagents
 
 Frontmatter fields: `description`, `model`, `thinking`, `max_turns`, `grace_turns`, `included_tools`, `included_skills`, `included_subagents`, `enabled`.
 
+List fields (`included_tools`, `included_skills`, `included_subagents`) accept YAML array syntax (preferred) or CSV string (backward compat):
+
+```yaml
+# preferred — idiomatic YAML
+included_tools:
+  - edit
+  - write
+  - bash
+
+# also accepted — flow array
+included_tools: [edit, write, bash]
+
+# also accepted — CSV string (legacy)
+included_tools: edit, write, bash
+```
+
 The `subagent:templates` command opens an interactive terminal menu listing all loaded templates with their source and model.
 
 ### `pi-reflag` (`packages/pi-reflag`)
