@@ -8,14 +8,16 @@
 import type { CommandRewrite } from "./types.js";
 import { xargs } from "./xargs.js";
 
-export const find: CommandRewrite = xargs((command) => {
-  if (command.name === "find") {
-    const args = translateFindArgs(command.args);
-    if (args) {
-      return { name: "fd", args };
+export function createFind(noIgnore: boolean): CommandRewrite {
+  return xargs((command) => {
+    if (command.name === "find") {
+      const args = translateFindArgs(command.args, noIgnore);
+      if (args) {
+        return { name: "fd", args };
+      }
     }
-  }
-});
+  });
+}
 
 function translateDuration(val: string, unit: "d" | "min"): string[] | undefined {
   if (val.startsWith("-")) {
@@ -350,8 +352,11 @@ function translateExpressions(args: string[], cursor: number): ExpressionResult 
   return { translated, globPatterns, regexPattern, execArgs, caseInsensitive, hasIname, hasName };
 }
 
-export function translateFindArgs(args: string[]): string[] | undefined {
+export function translateFindArgs(args: string[], noIgnore = false): string[] | undefined {
   const result: string[] = ["-H"];
+  if (noIgnore) {
+    result.push("--no-ignore");
+  }
 
   const leading = collectLeadingOptions(args);
   result.push(...leading.options);

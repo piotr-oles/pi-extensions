@@ -1,10 +1,8 @@
 import type { Parser, Node as SyntaxNode } from "web-tree-sitter";
-import { find } from "./find.js";
+import { createFind } from "./find.js";
 import { grep } from "./grep.js";
 import { loadBashParser } from "./tree-sitter.js";
 import type { Command } from "./types.js";
-
-const COMMAND_REWRITES = [grep, find];
 
 const REDIRECT_NODE_TYPES = new Set(["file_redirect", "heredoc_redirect", "herestring_redirect"]);
 
@@ -13,7 +11,7 @@ interface BashCommand extends Command {
   endIndex: number;
 }
 
-export async function rewriteBash(bash: string): Promise<string> {
+export async function rewriteBash(bash: string, noIgnore = false): Promise<string> {
   let parser: Parser | undefined;
   try {
     parser = await loadBashParser();
@@ -28,8 +26,10 @@ export async function rewriteBash(bash: string): Promise<string> {
 
   let newBash = bash;
 
+  const rewrites = [grep, createFind(noIgnore)];
+
   for (const command of extractCommands(tree.rootNode)) {
-    for (const rewrite of COMMAND_REWRITES) {
+    for (const rewrite of rewrites) {
       const newCommand = rewrite(command);
 
       if (newCommand) {
