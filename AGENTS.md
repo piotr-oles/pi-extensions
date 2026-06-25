@@ -61,10 +61,14 @@ The `subagent:templates` command opens an interactive terminal menu listing all 
 Intercepts `bash` tool calls and rewrites `grep` → `rg` (ripgrep) and `find` → `fd` transparently before execution. Shows a user-visible toast notification on rewrite - agent never sees it.
 
 - **grep → rg**: drops `-r`/`-R`/`-E`, maps long flags, converts `--include`/`--exclude` to `-g` globs, converts BRE patterns to ERE.
-- **find → fd**: translates `-name`/`-iname` to `-g` globs (OR patterns become brace expansion), `-type`, `-maxdepth`/`-mindepth`, `-exec`/`-execdir`, `-mtime`/`-size`/`-user`/`-group` and more. Always adds `-H` (fd excludes hidden files by default, find doesn't).
+- **find → fd**: translates `-name`/`-iname` to `-g` globs (OR patterns become brace expansion), `-type`, `-maxdepth`/`-mindepth`, `-exec`/`-execdir`, `-mtime`/`-size`/`-user`/`-group` and more. Always adds `-H` (fd excludes hidden files by default, find doesn't). Adds `--no-ignore` when `pi-reflag-no-ignore` flag is set.
 - **xargs**: `xargs grep`/`xargs find` rewrites are also supported.
 
-Skips commands with subshells or variable assignments. Enable verbose logging with `pi-reflag-verbose` flag to see rewrites in the UI.
+Skips commands with subshells or variable assignments.
+
+Flags:
+- `pi-reflag-verbose` (boolean, default: false) — show a toast with original and rewritten command in the UI
+- `pi-reflag-no-ignore` (boolean, default: false) — pass `--no-ignore` to `fd` when translating `find` commands (useful when searching inside directories with their own `.gitignore`, e.g. `.venv`)
 
 ## Tech stack
 

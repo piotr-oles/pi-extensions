@@ -526,3 +526,18 @@ describe("unknown flags", () => {
     expect(t([".", "-delete"])).toBeUndefined();
   });
 });
+
+describe("noIgnore param", () => {
+  it("noIgnore=true adds --no-ignore after -H", () => {
+    expect(translateFindArgs([".", "-name", "*.py"], true)).toEqual([
+      "-H",
+      "--no-ignore",
+      "-g",
+      "*.py",
+    ]);
+  });
+
+  it("noIgnore=false (default) omits --no-ignore", () => {
+    expect(translateFindArgs([".", "-name", "*.py"])).toEqual(["-H", "-g", "*.py"]);
+  });
+});
