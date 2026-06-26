@@ -12,6 +12,7 @@ A monorepo of [pi coding agent](https://github.com/earendil-works/pi) extensions
 | [`@piotr-oles/pi-reflag`](packages/pi-reflag) | Transparently rewrites `grep` → `rg` (ripgrep) and `find` → `fd` before they execute — faster searches, zero agent behavior change |
 | [`@piotr-oles/pi-cwd`](packages/pi-cwd) | Reminds agent to use relative paths — detects absolute cwd paths in `read`/`write`/`edit`/`bash` calls and appends a tip to the tool result |
 | [`@piotr-oles/pi-subagents`](packages/pi-subagents) | Lets the agent spawn specialized subagents — each running in its own isolated session with its own model, tools, and instructions |
+| [`@piotr-oles/pi-title`](packages/pi-title) | Generates a short session title from the first user message using the active model |
 
 ## Development
 

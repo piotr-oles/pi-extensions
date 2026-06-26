@@ -57,6 +57,13 @@ included_tools: edit, write, bash
 
 The `subagent:templates` command opens an interactive terminal menu listing all loaded templates with their source and model.
 
+### `pi-title` (`packages/pi-title`)
+Generates short session title from user messages. Hooks `before_agent_start`, accumulates recent user prompts, calls `complete()` with active model in background (non-blocking), sets name via `pi.setSessionName()`. Title locks after first prompt ≥ 40 chars. Max title length: 40 chars.
+
+Exposes `/title` command to manually regenerate title from recent session context.
+
+No flags — constants are hardcoded (`MAX_TITLE_LENGTH = 40`, `MIN_PROMPT_LENGTH = 60`).
+
 ### `pi-reflag` (`packages/pi-reflag`)
 Intercepts `bash` tool calls and rewrites `grep` → `rg` (ripgrep) and `find` → `fd` transparently before execution. Shows a user-visible toast notification on rewrite - agent never sees it.
 
