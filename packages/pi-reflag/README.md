@@ -53,6 +53,7 @@ Subshell constructs (`$(…)`, `(…)`) and commands with variable assignments a
 | find expression | fd equivalent |
 |---|---|
 | (always) | `-H` added — fd excludes hidden files by default, find doesn't |
+| (auto mode) | `--no-ignore` added when searching inside a known ignored directory |
 | `-name <glob>` | `-g <glob>` |
 | `-iname <glob>` | `-i -g <glob>` |
 | `-name a -o -name b` | `-g {a,b}` (brace expansion) |
@@ -81,6 +82,29 @@ Subshell constructs (`$(…)`, `(…)`) and commands with variable assignments a
 | `-executable` | `-t x` |
 | `-xdev` / `-mount` | `--one-file-system` |
 | `-quit` | `-1` |
+
+## Ignore mode
+
+Controls when `--no-ignore` is passed to `fd` (so it searches inside `.gitignore`d directories):
+
+| Mode | Behaviour |
+|---|---|
+| `auto` (default) | adds `--no-ignore` when the search path contains a known ignored directory (e.g. `node_modules`, `.venv`, `.yarn`, `dist`, `target`, …) |
+| `no-ignore` | always adds `--no-ignore` |
+| `ignore` | never adds `--no-ignore` |
+
+```bash
+pi --pi-reflag-ignore-mode=no-ignore
+
+PI_REFLAG_IGNORE_MODE=no-ignore pi
+```
+
+<details>
+<summary>Full list of directories that trigger auto mode</summary>
+
+`node_modules`, `.yarn`, `.pnpm-store`, `.parcel-cache`, `.turbo`, `.vite`, `.cache`, `.eslintcache`, `.stylelintcache`, `.next`, `.nuxt`, `.svelte-kit`, `.vuepress`, `.output`, `.docusaurus`, `.temp`, `.serverless`, `.firebase`, `dist`, `build`, `out`, `target`, `debug`, `obj`, `artifacts`, `_deps`, `CMakeFiles`, `coverage`, `.nyc_output`, `.hypothesis`, `__pycache__`, `.pytest_cache`, `.tox`, `.nox`, `.venv`, `venv`, `.ipynb_checkpoints`, `vendor`, `.bundle`, `.gradle`, `.mvn`, `_build`, `deps`, `.git`
+
+</details>
 
 ## Verbose mode
 
