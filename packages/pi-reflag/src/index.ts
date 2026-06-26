@@ -1,4 +1,5 @@
 import { type ExtensionAPI, isToolCallEventType } from "@earendil-works/pi-coding-agent";
+import { getIgnoreMode } from "./ignore-mode.js";
 import { rewriteBash } from "./shell.js";
 
 export default function piReflag(pi: ExtensionAPI): void {
@@ -19,14 +20,7 @@ export default function piReflag(pi: ExtensionAPI): void {
     }
 
     const original = event.input.command;
-    const rewritten = await rewriteBash(
-      original,
-      (pi.getFlag("pi-reflag-ignore-mode") as string | undefined) === "ignore"
-        ? "ignore"
-        : (pi.getFlag("pi-reflag-ignore-mode") as string | undefined) === "no-ignore"
-          ? "no-ignore"
-          : "auto",
-    );
+    const rewritten = await rewriteBash(original, getIgnoreMode(pi));
 
     if (rewritten === original) {
       return undefined;
