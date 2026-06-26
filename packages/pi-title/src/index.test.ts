@@ -130,9 +130,8 @@ describe("pi-title", { timeout: 30_000 }, () => {
       const { text } = content0;
       expect(text).toMatchInlineSnapshot(`
         "You are naming a conversation session. Based on the user message below, produce a single short title (max 40 characters, no quotes). Be specific — mention the main topic. Use sentence case.
-        <user_messages>
-        Add dark mode toggle to the user settings page with system preference detection
-        </user_messages>"
+        User messages:
+        <message>Add dark mode toggle to the user settings page with system preference detection</message>"
       `);
     });
 
@@ -149,11 +148,10 @@ describe("pi-title", { timeout: 30_000 }, () => {
       const { text } = content1;
       expect(text).toMatchInlineSnapshot(`
         "You are naming a conversation session. Based on the user message below, produce a single short title (max 40 characters, no quotes). Be specific — mention the main topic. Use sentence case.
-        <user_messages>
-        short msg
+        User messages:
+        <message>short msg</message>
+        <message>another msg</message>
 
-        another msg
-        </user_messages>
         The current title is "Generated title" — refine it if you now have better context, otherwise keep it."
       `);
     });

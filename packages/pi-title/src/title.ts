@@ -29,11 +29,11 @@ export async function generateSessionTitle({
               type: "text" as const,
               text: [
                 `You are naming a conversation session. Based on the user message below, produce a single short title (max ${maxLength} characters, no quotes). Be specific — mention the main topic. Use sentence case.`,
-                "<user_messages>",
-                userPrompts.join("\n\n"),
-                "</user_messages>",
+                "",
+                "User messages:",
+                ...userPrompts.map((userPrompt) => `<message>${userPrompt}</message>`),
                 previousTitle
-                  ? `The current title is "${previousTitle}" — refine it if you now have better context, otherwise keep it.`
+                  ? `\nThe current title is "${previousTitle}" — refine it if you now have better context, otherwise keep it.`
                   : null,
               ]
                 .filter(Boolean)
