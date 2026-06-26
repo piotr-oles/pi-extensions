@@ -58,7 +58,7 @@ included_tools: edit, write, bash
 The `subagent:templates` command opens an interactive terminal menu listing all loaded templates with their source and model.
 
 ### `pi-title` (`packages/pi-title`)
-Generates short session title from user messages. Hooks `before_agent_start`, accumulates recent user prompts, calls `complete()` with active model in background (non-blocking), sets name via `pi.setSessionName()`. Title locks after first prompt ≥ 40 chars. Max title length: 40 chars.
+Generates short session title from user messages. Hooks `before_agent_start`, accumulates recent user prompts, calls `complete()` with active model in background (non-blocking), sets name via `pi.setSessionName()`. Title locks once total accumulated user prompt content (current + previous messages) reaches 40 chars. Max title length: 40 chars.
 
 Exposes `/title` command to manually regenerate title from recent session context.
 

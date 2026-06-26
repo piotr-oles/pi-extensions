@@ -98,7 +98,8 @@ export default function piTitle(pi: ExtensionAPI) {
       }
     })();
 
-    if (userPrompt.length >= MAX_TITLE_LENGTH) {
+    const totalLength = userPrompts.reduce((sum, p) => sum + p.length, 0);
+    if (totalLength >= MAX_TITLE_LENGTH) {
       state.hasNamed = true;
     }
   });

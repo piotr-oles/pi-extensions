@@ -15,7 +15,7 @@ pi install npm:@piotr-oles/pi-title
 ## Behavior
 
 - Hooks `before_agent_start` — fires every turn until title is locked in.
-- Title locks after first message that is ≥ 40 chars (prompt long enough to be specific).
+- Title locks once total accumulated user prompt content (current + previous messages) reaches 40 chars.
 - Generates title in background — agent starts immediately, no added latency.
 - Uses same model and API key as active session.
 - Sets session name via `pi.setSessionName()`.
