@@ -120,6 +120,45 @@ describe("pi-title", { timeout: 30_000 }, () => {
     });
   });
 
+  describe("complete() call arguments", () => {
+    it("sends system prompt with user message on first turn", async () => {
+      t = await createTestSession({ extensionFactories: [piTitle] });
+      await t.run(when(LONG_MESSAGE, [says("Done.")]));
+      await vi.waitFor(() => expect(mockComplete).toHaveBeenCalledOnce());
+
+      const content0 = mockComplete.mock.calls[0][1].messages[0].content[0] as { text: string };
+      const { text } = content0;
+      expect(text).toMatchInlineSnapshot(`
+        "You are naming a conversation session. Based on the user message below, produce a single short title (max 40 characters, no quotes). Be specific — mention the main topic. Use sentence case.
+        <user_messages>
+        Add dark mode toggle to the user settings page with system preference detection
+        </user_messages>"
+      `);
+    });
+
+    it("includes accumulated prompts and previous title on subsequent turn", async () => {
+      t = await createTestSession({ extensionFactories: [piTitle] });
+      await t.run(when("short msg", [says("Done.")]));
+      await vi.waitFor(() => expect(sessionName()).toBe("Generated title"));
+
+      mockComplete.mockClear();
+      await t.run(when("another msg", [says("Done.")]));
+      await vi.waitFor(() => expect(mockComplete).toHaveBeenCalledOnce());
+
+      const content1 = mockComplete.mock.calls[0][1].messages[0].content[0] as { text: string };
+      const { text } = content1;
+      expect(text).toMatchInlineSnapshot(`
+        "You are naming a conversation session. Based on the user message below, produce a single short title (max 40 characters, no quotes). Be specific — mention the main topic. Use sentence case.
+        <user_messages>
+        short msg
+
+        another msg
+        </user_messages>
+        The current title is "Generated title" — refine it if you now have better context, otherwise keep it."
+      `);
+    });
+  });
+
   describe("/title command", () => {
     it("is registered on extension load", async () => {
       t = await createTestSession({ extensionFactories: [piTitle] });
