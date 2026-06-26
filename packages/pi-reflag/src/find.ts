@@ -8,10 +8,89 @@
 import type { CommandRewrite } from "./types.js";
 import { xargs } from "./xargs.js";
 
-export function createFind(noIgnore: boolean): CommandRewrite {
+export type IgnoreMode = "ignore" | "no-ignore" | "auto";
+
+export const KNOWN_IGNORED_DIRS: string[] = [
+  // Node.js / JavaScript package managers
+  "node_modules",
+  ".yarn",
+  ".pnpm-store",
+
+  // Bundler / tool caches
+  ".parcel-cache",
+  ".turbo",
+  ".vite",
+  ".cache",
+  ".eslintcache",
+  ".stylelintcache",
+
+  // Framework build outputs
+  ".next",
+  ".nuxt",
+  ".svelte-kit",
+  ".vuepress",
+  ".output",
+  ".docusaurus",
+  ".temp",
+  ".serverless",
+  ".firebase",
+
+  // Generic build outputs
+  "dist",
+  "build",
+  "out",
+  "target",
+  "debug",
+  "obj",
+  "artifacts",
+  "_deps",
+  "CMakeFiles",
+
+  // Test coverage
+  "coverage",
+  ".nyc_output",
+  ".hypothesis",
+
+  // Python
+  "__pycache__",
+  ".pytest_cache",
+  ".tox",
+  ".nox",
+  ".venv",
+  "venv",
+  ".ipynb_checkpoints",
+
+  // Ruby / PHP
+  "vendor",
+  ".bundle",
+
+  // JVM build tools
+  ".gradle",
+  ".mvn",
+
+  // Elixir
+  "_build",
+  "deps",
+
+  // Version control internals
+  ".git",
+];
+
+export function shouldDisableIgnore(paths: string[], mode: IgnoreMode): boolean {
+  if (mode === "no-ignore") {
+    return true;
+  }
+  if (mode === "ignore") {
+    return false;
+  }
+  const ignoredSet = new Set(KNOWN_IGNORED_DIRS);
+  return paths.some((p) => p.split(/[/\\]/).some((component) => ignoredSet.has(component)));
+}
+
+export function createFind(ignoreMode: IgnoreMode): CommandRewrite {
   return xargs((command) => {
     if (command.name === "find") {
-      const args = translateFindArgs(command.args, noIgnore);
+      const args = translateFindArgs(command.args, ignoreMode);
       if (args) {
         return { name: "fd", args };
       }
@@ -352,9 +431,15 @@ function translateExpressions(args: string[], cursor: number): ExpressionResult 
   return { translated, globPatterns, regexPattern, execArgs, caseInsensitive, hasIname, hasName };
 }
 
-export function translateFindArgs(args: string[], noIgnore = false): string[] | undefined {
+export function translateFindArgs(
+  args: string[],
+  ignoreMode: IgnoreMode = "auto",
+): string[] | undefined {
   const result: string[] = ["-H"];
-  if (noIgnore) {
+
+  const leadingForPaths = collectLeadingOptions(args);
+  const pathsForDetection = collectPaths(args, leadingForPaths.cursor).paths;
+  if (shouldDisableIgnore(pathsForDetection, ignoreMode)) {
     result.push("--no-ignore");
   }
 

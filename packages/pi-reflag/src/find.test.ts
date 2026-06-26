@@ -5,7 +5,7 @@
  *   - kluzzebass/reflag translator/find2fd/translator_test.go
  */
 import { describe, expect, it } from "vitest";
-import { translateFindArgs } from "./find.js";
+import { KNOWN_IGNORED_DIRS, shouldDisableIgnore, translateFindArgs } from "./find.js";
 
 function t(args: string[]): string[] | undefined {
   return translateFindArgs(args);
@@ -527,9 +527,56 @@ describe("unknown flags", () => {
   });
 });
 
-describe("noIgnore param", () => {
-  it("noIgnore=true adds --no-ignore after -H", () => {
-    expect(translateFindArgs([".", "-name", "*.py"], true)).toEqual([
+describe("shouldDisableIgnore", () => {
+  it("mode 'no-ignore' always returns true", () => {
+    expect(shouldDisableIgnore([], "no-ignore")).toBe(true);
+    expect(shouldDisableIgnore(["src"], "no-ignore")).toBe(true);
+    expect(shouldDisableIgnore(["node_modules"], "no-ignore")).toBe(true);
+  });
+
+  it("mode 'ignore' always returns false", () => {
+    expect(shouldDisableIgnore([], "ignore")).toBe(false);
+    expect(shouldDisableIgnore(["node_modules"], "ignore")).toBe(false);
+    expect(shouldDisableIgnore([".venv"], "ignore")).toBe(false);
+  });
+
+  it("mode 'auto' returns true when path contains known ignored dir", () => {
+    expect(shouldDisableIgnore(["node_modules"], "auto")).toBe(true);
+    expect(shouldDisableIgnore([".venv"], "auto")).toBe(true);
+    expect(shouldDisableIgnore(["__pycache__"], "auto")).toBe(true);
+    expect(shouldDisableIgnore(["/project/node_modules/pkg"], "auto")).toBe(true);
+    expect(shouldDisableIgnore(["./dist"], "auto")).toBe(true);
+  });
+
+  it("mode 'auto' returns false when no known ignored dir in paths", () => {
+    expect(shouldDisableIgnore(["src"], "auto")).toBe(false);
+    expect(shouldDisableIgnore(["."], "auto")).toBe(false);
+    expect(shouldDisableIgnore([], "auto")).toBe(false);
+    expect(shouldDisableIgnore(["/usr/local/bin"], "auto")).toBe(false);
+  });
+
+  it("mode 'auto' returns true when any of multiple paths matches", () => {
+    expect(shouldDisableIgnore(["src", "node_modules"], "auto")).toBe(true);
+  });
+
+  it("KNOWN_IGNORED_DIRS includes expected ecosystems", () => {
+    for (const dir of [
+      "node_modules",
+      ".venv",
+      "__pycache__",
+      "dist",
+      "target",
+      ".git",
+      "vendor",
+    ]) {
+      expect(KNOWN_IGNORED_DIRS).toContain(dir);
+    }
+  });
+});
+
+describe("ignoreMode param", () => {
+  it("'no-ignore' adds --no-ignore after -H", () => {
+    expect(translateFindArgs([".", "-name", "*.py"], "no-ignore")).toEqual([
       "-H",
       "--no-ignore",
       "-g",
@@ -537,7 +584,26 @@ describe("noIgnore param", () => {
     ]);
   });
 
-  it("noIgnore=false (default) omits --no-ignore", () => {
+  it("'ignore' omits --no-ignore even for known ignored dir", () => {
+    expect(translateFindArgs(["node_modules", "-name", "*.js"], "ignore")).toEqual([
+      "-H",
+      "-g",
+      "*.js",
+      "node_modules",
+    ]);
+  });
+
+  it("'auto' (default) adds --no-ignore when path is known ignored dir", () => {
+    expect(translateFindArgs(["node_modules", "-name", "*.js"])).toEqual([
+      "-H",
+      "--no-ignore",
+      "-g",
+      "*.js",
+      "node_modules",
+    ]);
+  });
+
+  it("'auto' omits --no-ignore for normal path", () => {
     expect(translateFindArgs([".", "-name", "*.py"])).toEqual(["-H", "-g", "*.py"]);
   });
 });
