@@ -8,10 +8,51 @@
 import type { CommandRewrite } from "./types.js";
 import { xargs } from "./xargs.js";
 
-export function createFind(noIgnore: boolean): CommandRewrite {
+export type IgnoreMode = "ignore" | "no-ignore" | "auto";
+
+export const KNOWN_IGNORED_DIRS: string[] = [
+  "node_modules",
+  ".git",
+  ".venv",
+  "venv",
+  "ENV",
+  "__pycache__",
+  ".pytest_cache",
+  ".tox",
+  ".next",
+  ".nuxt",
+  ".svelte-kit",
+  ".vuepress",
+  ".output",
+  ".docusaurus",
+  "dist",
+  "build",
+  "target",
+  "out",
+  "debug",
+  "obj",
+  "coverage",
+  ".nyc_output",
+  ".cache",
+  "vendor",
+  ".gradle",
+];
+
+export function shouldDisableIgnore(paths: string[], mode: IgnoreMode): boolean {
+  if (mode === "no-ignore") {
+    return true;
+  }
+  if (mode === "ignore") {
+    return false;
+  }
+  const ignoredSet = new Set(KNOWN_IGNORED_DIRS);
+  return paths.some((p) => p.split(/[/\\]/).some((component) => ignoredSet.has(component)));
+}
+
+export function createFind(ignoreMode: IgnoreMode): CommandRewrite {
   return xargs((command) => {
     if (command.name === "find") {
-      const args = translateFindArgs(command.args, noIgnore);
+      const args = translateFindArgs(command.args, ignoreMode);
       if (args) {
         return { name: "fd", args };
       }
@@ -352,9 +393,15 @@ function translateExpressions(args: string[], cursor: number): ExpressionResult 
   return { translated, globPatterns, regexPattern, execArgs, caseInsensitive, hasIname, hasName };
 }
 
-export function translateFindArgs(args: string[], noIgnore = false): string[] | undefined {
+export function translateFindArgs(
+  args: string[],
+  ignoreMode: IgnoreMode = "auto",
+): string[] | undefined {
   const result: string[] = ["-H"];
-  if (noIgnore) {
+
+  const leadingForPaths = collectLeadingOptions(args);
+  const pathsForDetection = collectPaths(args, leadingForPaths.cursor).paths;
+  if (shouldDisableIgnore(pathsForDetection, ignoreMode)) {
     result.push("--no-ignore");
   }
 

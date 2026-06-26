@@ -7,9 +7,10 @@ export default function piReflag(pi: ExtensionAPI): void {
     description: "Render how command was reflagged in the ui.",
   });
 
-  pi.registerFlag("pi-reflag-no-ignore", {
-    type: "boolean",
-    description: "Pass --no-ignore to fd when translating find commands.",
+  pi.registerFlag("pi-reflag-ignore-mode", {
+    type: "string",
+    description:
+      "Controls --no-ignore for fd when translating find commands. 'auto' adds --no-ignore when searching inside known ignored dirs (node_modules, .venv, etc). 'no-ignore' always adds it. 'ignore' never adds it.",
   });
 
   pi.on("tool_call", async (event, ctx) => {
@@ -18,7 +19,14 @@ export default function piReflag(pi: ExtensionAPI): void {
     }
 
     const original = event.input.command;
-    const rewritten = await rewriteBash(original, !!pi.getFlag("pi-reflag-no-ignore"));
+    const rewritten = await rewriteBash(
+      original,
+      (pi.getFlag("pi-reflag-ignore-mode") as string | undefined) === "ignore"
+        ? "ignore"
+        : (pi.getFlag("pi-reflag-ignore-mode") as string | undefined) === "no-ignore"
+          ? "no-ignore"
+          : "auto",
+    );
 
     if (rewritten === original) {
       return undefined;

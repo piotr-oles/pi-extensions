@@ -1,5 +1,5 @@
 import type { Parser, Node as SyntaxNode } from "web-tree-sitter";
-import { createFind } from "./find.js";
+import { createFind, type IgnoreMode } from "./find.js";
 import { grep } from "./grep.js";
 import { loadBashParser } from "./tree-sitter.js";
 import type { Command } from "./types.js";
@@ -11,7 +11,7 @@ interface BashCommand extends Command {
   endIndex: number;
 }
 
-export async function rewriteBash(bash: string, noIgnore = false): Promise<string> {
+export async function rewriteBash(bash: string, ignoreMode: IgnoreMode = "auto"): Promise<string> {
   let parser: Parser | undefined;
   try {
     parser = await loadBashParser();
@@ -26,7 +26,7 @@ export async function rewriteBash(bash: string, noIgnore = false): Promise<strin
 
   let newBash = bash;
 
-  const rewrites = [grep, createFind(noIgnore)];
+  const rewrites = [grep, createFind(ignoreMode)];
 
   for (const command of extractCommands(tree.rootNode)) {
     for (const rewrite of rewrites) {
