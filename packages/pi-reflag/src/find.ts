@@ -11,31 +11,69 @@ import { xargs } from "./xargs.js";
 export type IgnoreMode = "ignore" | "no-ignore" | "auto";
 
 export const KNOWN_IGNORED_DIRS: string[] = [
+  // Node.js / JavaScript package managers
   "node_modules",
-  ".git",
-  ".venv",
-  "venv",
-  "ENV",
-  "__pycache__",
-  ".pytest_cache",
-  ".tox",
+  ".yarn",
+  ".pnpm-store",
+
+  // Bundler / tool caches
+  ".parcel-cache",
+  ".turbo",
+  ".vite",
+  ".cache",
+  ".eslintcache",
+  ".stylelintcache",
+
+  // Framework build outputs
   ".next",
   ".nuxt",
   ".svelte-kit",
   ".vuepress",
   ".output",
   ".docusaurus",
+  ".temp",
+  ".serverless",
+  ".firebase",
+
+  // Generic build outputs
   "dist",
   "build",
-  "target",
   "out",
+  "target",
   "debug",
   "obj",
+  "artifacts",
+  "_deps",
+  "CMakeFiles",
+
+  // Test coverage
   "coverage",
   ".nyc_output",
-  ".cache",
+  ".hypothesis",
+
+  // Python
+  "__pycache__",
+  ".pytest_cache",
+  ".tox",
+  ".nox",
+  ".venv",
+  "venv",
+  ".ipynb_checkpoints",
+
+  // Ruby / PHP
   "vendor",
+  ".bundle",
+
+  // JVM build tools
   ".gradle",
+  ".mvn",
+
+  // Elixir
+  "_build",
+  "deps",
+
+  // Version control internals
+  ".git",
 ];
 
 export function shouldDisableIgnore(paths: string[], mode: IgnoreMode): boolean {
