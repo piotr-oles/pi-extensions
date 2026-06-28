@@ -1,0 +1,12 @@
+[
+  {
+    "label": "pnpm install",
+    "command": "pnpm install",
+    "args": [],
+    "hooks": [
+      "create_worktree"
+    ],
+    "reveal": "no_focus",
+    "hide": "on_success",
+  },
+]
