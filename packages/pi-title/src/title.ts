@@ -4,8 +4,8 @@ interface GenerateSessionTitleParams {
   userPrompts: string[];
   maxLength: number;
   model: Model<Api>;
-  apiKey?: string;
-  headers?: Record<string, string>;
+  apiKey: string | undefined;
+  headers: Record<string, string> | undefined;
   signal?: AbortSignal;
   previousTitle?: string;
 }
