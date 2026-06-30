@@ -14,6 +14,8 @@ export async function generateSessionTitle({
   userPrompts,
   maxLength,
   model,
+  apiKey,
+  headers,
   signal,
   previousTitle,
 }: GenerateSessionTitleParams): Promise<string | undefined> {
@@ -43,7 +45,7 @@ export async function generateSessionTitle({
         },
       ],
     },
-    { signal },
+    { signal, apiKey, headers },
   );
 
   const title = response.content

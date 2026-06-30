@@ -94,10 +94,14 @@ export default function piTitle(pi: ExtensionAPI) {
     const { signal } = state.autoGenController;
     void (async () => {
       try {
+        const model = getModel(ctx);
+        const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
         const title = await generateSessionTitle({
           userPrompts,
           maxLength: MAX_TITLE_LENGTH,
           model: getModel(ctx),
+          apiKey: auth.ok ? auth.apiKey : undefined,
+          headers: auth.ok ? auth.headers : undefined,
           signal,
           previousTitle: pi.getSessionName(),
         });
