@@ -1,6 +1,6 @@
 import { createTestSession, says, type TestSession, when } from "@marcfargas/pi-test-harness";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import piTitle, { MAX_TITLE_LENGTH, MIN_PROMPT_LENGTH } from "./index.js";
+import piTitle, { MAX_TITLE_LENGTH, MIN_PROMPT_LENGTH, PI_TITLE_CUSTOM_TYPE } from "./index.js";
 
 vi.mock("@earendil-works/pi-ai", () => ({
   complete: vi.fn(),
@@ -38,6 +38,12 @@ describe("pi-title", { timeout: 30_000 }, () => {
 
   function sessionName() {
     return t.session.sessionManager.getSessionName() as string | undefined;
+  }
+
+  function lockEntries() {
+    return t.session.sessionManager
+      .getEntries()
+      .filter((e: any) => e.type === "custom" && e.customType === PI_TITLE_CUSTOM_TYPE);
   }
 
   function registeredCommand(name: string) {
@@ -79,6 +85,24 @@ describe("pi-title", { timeout: 30_000 }, () => {
       expect(mockComplete).toHaveBeenCalledOnce();
     });
 
+    it("persists a lock marker once prompt length reaches MAX_TITLE_LENGTH", async () => {
+      t = await createTestSession({ extensionFactories: [piTitle] });
+
+      await t.run(when(THRESHOLD_MESSAGE, [says("Done.")]));
+
+      await vi.waitFor(() => expect(lockEntries().length).toBe(1));
+      expect(lockEntries()[0].data).toEqual({ title: "Generated title" });
+    });
+
+    it("does not persist a lock marker while below threshold", async () => {
+      t = await createTestSession({ extensionFactories: [piTitle] });
+
+      await t.run(when("hi", [says("Hello!")]));
+
+      await vi.waitFor(() => expect(sessionName()).toBe("Generated title"));
+      expect(lockEntries()).toHaveLength(0);
+    });
+
     it("strips quotes from generated title", async () => {
       mockComplete.mockResolvedValue(fakeTitle('"Add dark mode"'));
 
@@ -117,6 +141,30 @@ describe("pi-title", { timeout: 30_000 }, () => {
       await vi.waitFor(() => expect(mockComplete).toHaveBeenCalledOnce());
       expect(sessionName()).toBeUndefined();
       expect(t.events.uiCallsFor("notify").length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("session_shutdown", () => {
+    it("aborts in-flight generation so a late title never lands", async () => {
+      let resolveComplete: ((value: unknown) => void) | undefined;
+      mockComplete.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveComplete = resolve;
+          }) as any,
+      );
+
+      t = await createTestSession({ extensionFactories: [piTitle] });
+      await t.run(when("hi", [says("Hello!")]));
+      await vi.waitFor(() => expect(mockComplete).toHaveBeenCalledOnce());
+
+      await t.session.extensionRunner.emit({ type: "session_shutdown", reason: "new" });
+
+      resolveComplete?.(fakeTitle("Late title"));
+      await new Promise((r) => setTimeout(r, 20));
+
+      expect(sessionName()).toBeUndefined();
+      expect(lockEntries()).toHaveLength(0);
     });
   });
 

@@ -4,8 +4,8 @@ interface GenerateSessionTitleParams {
   userPrompts: string[];
   maxLength: number;
   model: Model<Api>;
-  apiKey?: string;
-  headers?: Record<string, string>;
+  apiKey: string | undefined;
+  headers: Record<string, string> | undefined;
   signal?: AbortSignal;
   previousTitle?: string;
 }
@@ -14,6 +14,8 @@ export async function generateSessionTitle({
   userPrompts,
   maxLength,
   model,
+  apiKey,
+  headers,
   signal,
   previousTitle,
 }: GenerateSessionTitleParams): Promise<string | undefined> {
@@ -43,7 +45,7 @@ export async function generateSessionTitle({
         },
       ],
     },
-    { signal },
+    { signal, apiKey, headers },
   );
 
   const title = response.content

@@ -8,25 +8,18 @@ import { generateSessionTitle } from "./title.js";
 
 export const MAX_TITLE_LENGTH = 40;
 export const MIN_PROMPT_LENGTH = 60;
-
-interface SessionTitleState {
-  hasNamed: boolean;
-  currentTitle: string | undefined;
-  autoGenController: AbortController | null;
-  cmdController: AbortController | null;
-}
-
-function createSessionState(): SessionTitleState {
-  return {
-    hasNamed: false,
-    currentTitle: undefined,
-    autoGenController: null,
-    cmdController: null,
-  };
-}
+export const PI_TITLE_CUSTOM_TYPE = "pi-title";
 
 export default function piTitle(pi: ExtensionAPI) {
-  const state = createSessionState();
+  let autoGenController: AbortController | null;
+  let cmdController: AbortController | null;
+
+  pi.on("session_shutdown", () => {
+    autoGenController?.abort();
+    cmdController?.abort();
+    autoGenController = null;
+    cmdController = null;
+  });
 
   pi.registerCommand("title", {
     description: "Regenerate session title from recent prompts",
@@ -37,26 +30,28 @@ export default function piTitle(pi: ExtensionAPI) {
         throw new Error("No prompts yet — can't generate title.");
       }
 
-      state.autoGenController?.abort();
-      state.cmdController?.abort();
-      state.cmdController = new AbortController();
-      const { signal } = state.cmdController;
+      autoGenController?.abort();
+      cmdController?.abort();
+      cmdController = new AbortController();
+      const { signal } = cmdController;
 
       try {
+        const { model, apiKey, headers } = await getModel(ctx);
         const title = await generateSessionTitle({
           userPrompts,
           maxLength: MAX_TITLE_LENGTH,
-          model: getModel(ctx),
+          model,
+          apiKey,
+          headers,
           signal,
-          previousTitle: state.currentTitle,
+          previousTitle: pi.getSessionName(),
         });
         if (!title) {
           throw new Error("Model returned empty title.");
         }
-        state.currentTitle = title;
         pi.setSessionName(title);
+        pi.appendEntry(PI_TITLE_CUSTOM_TYPE, { title });
         ctx.ui.notify(`Title set: "${title}"`);
-        state.hasNamed = true;
       } catch (error) {
         if (!signal.aborted) {
           throw error;
@@ -67,27 +62,34 @@ export default function piTitle(pi: ExtensionAPI) {
 
   pi.on("before_agent_start", (event, ctx) => {
     const userPrompt = event.prompt.trim();
-    if (!userPrompt || state.hasNamed) {
+    if (!userPrompt || isLocked(ctx)) {
       return;
     }
 
     const userPrompts = [...getRecentUserPrompts(ctx, MIN_PROMPT_LENGTH), userPrompt];
+    const totalLength = userPrompts.reduce((sum, p) => sum + p.length, 0);
+    const shouldLock = totalLength >= MAX_TITLE_LENGTH;
 
-    state.autoGenController?.abort();
-    state.autoGenController = new AbortController();
-    const { signal } = state.autoGenController;
+    autoGenController?.abort();
+    autoGenController = new AbortController();
+    const { signal } = autoGenController;
     void (async () => {
       try {
+        const { model, apiKey, headers } = await getModel(ctx);
         const title = await generateSessionTitle({
           userPrompts,
           maxLength: MAX_TITLE_LENGTH,
-          model: getModel(ctx),
+          model,
+          apiKey,
+          headers,
           signal,
-          previousTitle: state.currentTitle,
+          previousTitle: pi.getSessionName(),
         });
-        if (title) {
-          state.currentTitle = title;
+        if (title && !signal.aborted) {
           pi.setSessionName(title);
+          if (shouldLock) {
+            pi.appendEntry(PI_TITLE_CUSTOM_TYPE, { title });
+          }
         }
       } catch (error) {
         if (!signal.aborted) {
@@ -97,20 +99,25 @@ export default function piTitle(pi: ExtensionAPI) {
         }
       }
     })();
-
-    const totalLength = userPrompts.reduce((sum, p) => sum + p.length, 0);
-    if (totalLength >= MAX_TITLE_LENGTH) {
-      state.hasNamed = true;
-    }
   });
 }
 
-function getModel(ctx: ExtensionContext): Model<Api> {
+interface GetModelResult {
+  model: Model<Api>;
+  apiKey?: string;
+  headers?: Record<string, string>;
+}
+async function getModel(ctx: ExtensionContext): Promise<GetModelResult> {
   const model = ctx.model;
   if (!model) {
     throw new Error("No model in the context.");
   }
-  return model;
+  const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
+  if (!auth.ok) {
+    throw new Error(`Cannot authenticate the model ${model.provider}/${model.name}.`);
+  }
+
+  return { model, apiKey: auth.apiKey, headers: auth.headers };
 }
 
 function getRecentUserPrompts(ctx: ExtensionContext, minLength: number): string[] {
@@ -142,4 +149,15 @@ function getRecentUserPrompts(ctx: ExtensionContext, minLength: number): string[
   }
 
   return recent.reverse();
+}
+
+/**
+ * Whether pi-title has finished naming the current session. Derived from the
+ * session itself (a persisted custom entry) so it resets automatically on /new,
+ * /resume, and /fork instead of leaking across sessions via closure state.
+ */
+function isLocked(ctx: ExtensionContext): boolean {
+  return ctx.sessionManager
+    .getEntries()
+    .some((entry) => entry.type === "custom" && entry.customType === PI_TITLE_CUSTOM_TYPE);
 }
