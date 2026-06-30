@@ -60,6 +60,8 @@ The `subagent:templates` command opens an interactive terminal menu listing all 
 ### `pi-title` (`packages/pi-title`)
 Generates short session title from user messages. Hooks `before_agent_start`, accumulates recent user prompts, calls `complete()` with active model in background (non-blocking), sets name via `pi.setSessionName()`. Title locks once total accumulated user prompt content (current + previous messages) reaches 40 chars. Max title length: 40 chars.
 
+Lock state is derived from the session, not in-memory closure state: when the title locks, a `custom` session entry (`customType: "pi-title"`) is persisted via `pi.appendEntry()`. "Already named?" is recomputed each turn by scanning `ctx.sessionManager.getEntries()` for that entry, so `/new`, `/resume`, and `/fork` reset cleanly (a fresh session has no marker) without leaking title state across sessions. `previousTitle` (for refinement) is read from `pi.getSessionName()`. A `session_shutdown` handler aborts in-flight generation so a late title never lands in the next session.
+
 Exposes `/title` command to manually regenerate title from recent session context.
 
 No flags — constants are hardcoded (`MAX_TITLE_LENGTH = 40`, `MIN_PROMPT_LENGTH = 60`).
