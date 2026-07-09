@@ -13,7 +13,7 @@ export default function piCwd(pi: ExtensionAPI) {
         event.systemPrompt,
         "",
         "",
-        "Every tool, including bash, read, write, edit, runs in respect to cwd. Use relative paths in tool calls including bash commands.",
+        "Every tool call (inlcuding bash, read, write, edit) runs from the initial cwd. A `cd` in one bash call does NOT persist to the next call — each starts fresh from the initial cwd. Do not repeat `cd`. Use relative paths.",
       ].join("\n"),
     };
   });
@@ -54,7 +54,7 @@ export default function piCwd(pi: ExtensionAPI) {
           ...(event.content ?? []),
           {
             type: "text",
-            text: `Absolute cwd path in tool call — you MUST use relative paths. Current cwd: ${ctx.cwd}`,
+            text: `Absolute cwd path detected — use relative paths. Each tool call starts from the initial cwd (${ctx.cwd}); a \`cd\` does not persist across calls, so don't repeat it.`,
           },
         ],
       };
