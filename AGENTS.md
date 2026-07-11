@@ -20,6 +20,9 @@ Uses [tree-sitter](https://tree-sitter.github.io/) to parse comment nodes. Suppo
 ### `pi-caveman` (`packages/pi-caveman`)
 Makes the agent respond in caveman mode - cuts ~75% of output tokens while keeping full technical accuracy. Injects a level-specific instruction file into the system prompt at session start. Level is controlled by the `pi-caveman` flag (`lite`, `full`, `ultra`, or `off`; default: `full`).
 
+### `pi-yagni` (`packages/pi-yagni`)
+Injects YAGNI ("You Aren't Gonna Need It") discipline into the system prompt at session start. Gives the agent a decision ladder (build only if needed, reuse before writing, stdlib/platform/existing-dep before new code, one line if possible) plus rules against speculative generality and premature abstraction. No configuration — enabled whenever installed. Structured like `pi-caveman` (single instruction file injected via `before_agent_start`) but with no level flag.
+
 ### `pi-plan` (`packages/pi-plan`)
 Adds a `review-plan` tool that writes a named markdown plan to `~/.pi/plan/<repo>/<name>.md`, commits it to a git repo inside `~/.pi/plan/`, and shows an interactive terminal widget so the user can confirm, request changes, or reply freely before the agent proceeds. The widget also offers an **Open in [Editor]** option (Zed, VS Code, Cursor, Windsurf) detected automatically via `TERM_PROGRAM`; selecting it opens the file in the IDE and re-shows the widget without notifying the agent.
 
