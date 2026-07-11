@@ -25,7 +25,7 @@ describe("pi-cwd", { timeout: 30_000 }, () => {
     describe("read tool", () => {
       it("appends tip when path is absolute", async () => {
         t = await createTestSession({
-          extensionFactories: [piCwd],
+          extensionFactories: [cwdExtension("warn")],
           mockTools: { read: "file content" },
         });
 
@@ -35,13 +35,13 @@ describe("pi-cwd", { timeout: 30_000 }, () => {
 
         const [record] = t.events.toolResultsFor("read");
         expect(record.text).toContain("file content");
-        expect(record.text).toContain("Absolute cwd path in tool call");
+        expect(record.text).toContain("Absolute cwd path detected");
         expect(record.text).toContain(t.cwd);
       });
 
       it("no tip when path is relative", async () => {
         t = await createTestSession({
-          extensionFactories: [piCwd],
+          extensionFactories: [cwdExtension("warn")],
           mockTools: { read: "file content" },
         });
 
@@ -55,7 +55,7 @@ describe("pi-cwd", { timeout: 30_000 }, () => {
     describe("write tool", () => {
       it("appends tip when path is absolute", async () => {
         t = await createTestSession({
-          extensionFactories: [piCwd],
+          extensionFactories: [cwdExtension("warn")],
           mockTools: { write: "Written." },
         });
 
@@ -67,12 +67,12 @@ describe("pi-cwd", { timeout: 30_000 }, () => {
         );
 
         const [result] = t.events.toolResultsFor("write");
-        expect(result.text).toContain("Absolute cwd path in tool call");
+        expect(result.text).toContain("Absolute cwd path detected");
       });
 
       it("no tip when path is relative", async () => {
         t = await createTestSession({
-          extensionFactories: [piCwd],
+          extensionFactories: [cwdExtension("warn")],
           mockTools: { write: "Written." },
         });
 
@@ -91,7 +91,7 @@ describe("pi-cwd", { timeout: 30_000 }, () => {
     describe("edit tool", () => {
       it("appends tip when path is absolute", async () => {
         t = await createTestSession({
-          extensionFactories: [piCwd],
+          extensionFactories: [cwdExtension("warn")],
           mockTools: { edit: "Edited." },
         });
 
@@ -103,14 +103,14 @@ describe("pi-cwd", { timeout: 30_000 }, () => {
         );
 
         const [result] = t.events.toolResultsFor("edit");
-        expect(result.text).toContain("Absolute cwd path in tool call");
+        expect(result.text).toContain("Absolute cwd path detected");
       });
     });
 
     describe("bash tool", () => {
       it("appends tip when command contains absolute path", async () => {
         t = await createTestSession({
-          extensionFactories: [piCwd],
+          extensionFactories: [cwdExtension("warn")],
           mockTools: { bash: "output" },
         });
 
@@ -119,12 +119,12 @@ describe("pi-cwd", { timeout: 30_000 }, () => {
         );
 
         const [result] = t.events.toolResultsFor("bash");
-        expect(result.text).toContain("Absolute cwd path in tool call");
+        expect(result.text).toContain("Absolute cwd path detected");
       });
 
       it("no tip when command uses only relative paths", async () => {
         t = await createTestSession({
-          extensionFactories: [piCwd],
+          extensionFactories: [cwdExtension("warn")],
           mockTools: { bash: "output" },
         });
 
