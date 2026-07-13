@@ -25,6 +25,8 @@ const openPr = JSON.stringify({
   mergeable: "MERGEABLE",
   reviewDecision: "APPROVED",
   statusCheckRollup: [{ status: "COMPLETED", conclusion: "SUCCESS" }],
+  additions: 42,
+  deletions: 10,
 });
 
 describe("parsePullRequest", () => {
@@ -36,7 +38,15 @@ describe("parsePullRequest", () => {
       ci: "success",
       merge: "clean",
       review: "approved",
+      additions: 42,
+      deletions: 10,
     });
+  });
+
+  it("defaults additions/deletions to 0 when absent", () => {
+    const pr = parsePullRequest(JSON.stringify({ number: 1, url: "u" }));
+    expect(pr?.additions).toBe(0);
+    expect(pr?.deletions).toBe(0);
   });
 
   it("derives lifecycle from state and isDraft", () => {

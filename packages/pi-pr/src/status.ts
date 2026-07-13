@@ -69,21 +69,32 @@ function styleLabel(
  * a clickable `#n` link, both colored by lifecycle (merged is purple, tuned to
  * the terminal `background`; closed is red).
  *
- * For active PRs (draft/open) the link is followed by the CI glyph `●` (always
- * shown, `none` dim so its position stays stable) and two conditional glyphs: a
- * red conflict `‼` when the PR can't merge, and a review verdict (`✓` green
- * approved, `✗` red changes-requested; nothing for `review_required`/`none`).
+ * For active PRs (draft/open) the link is followed by the diff stat (`+42 -10`,
+ * additions green / deletions red) then the CI glyph `●` (always shown, `none`
+ * dim so its position stays stable) and two conditional glyphs: a red conflict
+ * `‼` when the PR can't merge, and a review verdict (`✓` green approved, `✗`
+ * red changes-requested; nothing for `review_required`/`none`).
  *
- * Merged and closed PRs are terminal states, so they drop the conflict and
- * review glyphs and show the CI glyph only when CI failed.
+ * Merged and closed PRs are terminal states, so they drop the diff stat,
+ * conflict, and review glyphs and show the CI glyph only when CI failed.
  */
 export function renderStatus(pr: PullRequest, theme: ThemeLike, background: Background): string {
   const link = renderLink(pr, theme, background);
-  const dots = isTerminalLifecycle(pr.lifecycle)
-    ? renderBrokenCI(pr, theme)
-    : [renderCI(pr, theme), renderConflict(pr, theme), renderReview(pr, theme)].join("");
+  if (isTerminalLifecycle(pr.lifecycle)) {
+    const brokenCI = renderBrokenCI(pr, theme);
+    return brokenCI ? `${link} ${brokenCI}` : link;
+  }
+  const dots = [renderCI(pr, theme), renderConflict(pr, theme), renderReview(pr, theme)].join("");
+  return [link, renderDiffStat(pr, theme), dots].filter(Boolean).join(" ");
+}
 
-  return dots ? `${link} ${dots}` : link;
+function renderDiffStat(pr: PullRequest, theme: ThemeLike): string {
+  if (pr.additions === 0 && pr.deletions === 0) {
+    return "";
+  }
+  const added = theme.fg("toolDiffAdded", `+${pr.additions}`);
+  const removed = theme.fg("toolDiffRemoved", `-${pr.deletions}`);
+  return `${added} ${removed}`;
 }
 
 function renderLink(pr: PullRequest, theme: ThemeLike, background: Background) {

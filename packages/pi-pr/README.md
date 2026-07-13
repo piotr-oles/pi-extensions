@@ -2,22 +2,22 @@
 
 A [pi coding agent](https://github.com/earendil-works/pi) extension that shows
 the current branch's GitHub pull request in the footer: a lifecycle letter and a
-clickable `#n` link, the CI status, a conflict alarm when the PR can't merge
-cleanly, and the review verdict. Merged and closed PRs collapse to just the
-letter and number (plus a red CI dot if CI broke).
+clickable `#n` link, the diff stat (`+42 -10`), the CI status, a conflict alarm
+when the PR can't merge cleanly, and the review verdict. Merged and closed PRs
+collapse to just the letter and number (plus a red CI dot if CI broke).
 
 
 ```
-approved:          model (branch)  …  O #123 ●✓
-changes requested: model (branch)  …  O #123 ●✗
-review pending:    model (branch)  …  O #123 ●
-conflict:          model (branch)  …  O #123 ●‼✗
-draft:             model (branch)  …  D #123 ●
+approved:          model (branch)  …  O #123 +42 -10 ●✓
+changes requested: model (branch)  …  O #123 +42 -10 ●✗
+review pending:    model (branch)  …  O #123 +42 -10 ●
+conflict:          model (branch)  …  O #123 +42 -10 ●‼✗
+draft:             model (branch)  …  D #123 +42 -10 ●
 merged (ok):       model (branch)  …  M #123
 merged (ci broke): model (branch)  …  M #123 ●
 closed:            model (branch)  …  C #123
-                                      ^^^^^^ ^^^
-                                      link   indicators
+                                      ^^^^^^ ^^^^^^^ ^^^
+                                      link   diffstat indicators
 ```
 
 ## What it does
@@ -34,6 +34,9 @@ the footer without waiting for the next poll tick.
   open = default text, closed = red, merged = purple. Merged uses a raw
   256-color purple tuned to the terminal background (from `COLORFGBG`): a bright
   lilac on dark, a deeper purple on light — since no theme token is purple.
+- **diff stat** — for active PRs only, additions (`+42`, green) and deletions
+  (`-10`, red) from the PR. Hidden when the PR has no changes, and dropped for
+  merged/closed PRs.
 - **`●` CI** — aggregated check rollup: success = green, failure = red,
   running = yellow, none = dim. For active PRs it is always rendered (`none` dim
   so its position stays stable). Merged and closed PRs are terminal states, so

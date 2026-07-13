@@ -15,6 +15,8 @@ const base: PullRequest = {
   ci: "success",
   merge: "clean",
   review: "approved",
+  additions: 42,
+  deletions: 10,
 };
 
 function pr(overrides: Partial<PullRequest>): PullRequest {
@@ -89,16 +91,30 @@ describe("renderStatus", () => {
     expect(render(pr({ lifecycle: "merged" }), "light")).toContain("\x1b[38;5;92mM #42\x1b[0m");
   });
 
-  it("drops conflict/review glyphs for terminal states and shows CI only when broken", () => {
+  it("drops diff stat/conflict/review glyphs for terminal states and shows CI only when broken", () => {
     for (const lifecycle of ["merged", "closed"] as const) {
       const green = render(pr({ lifecycle, ci: "success", merge: "conflict", review: "approved" }));
       expect(green).not.toContain("●");
       expect(green).not.toContain("‼");
       expect(green).not.toContain("✓");
+      expect(green).not.toContain("+42");
 
       const broken = render(pr({ lifecycle, ci: "failure" }));
       expect(broken).toContain("[error]●");
     }
+  });
+
+  it("shows the diff stat for active PRs, additions green and deletions red", () => {
+    const out = render(pr({ lifecycle: "open", additions: 42, deletions: 10 }));
+    expect(out).toContain("[toolDiffAdded]+42");
+    expect(out).toContain("[toolDiffRemoved]-10");
+    // between the link and the CI dot
+    expect(out.indexOf("+42")).toBeLessThan(out.indexOf("●"));
+    expect(render(pr({ lifecycle: "draft" }))).toContain("[toolDiffAdded]+42");
+  });
+
+  it("omits the diff stat when a PR has no changes", () => {
+    expect(render(pr({ additions: 0, deletions: 0 }))).not.toContain("+0");
   });
 
   it("wraps #n in an OSC 8 link to the PR url", () => {
