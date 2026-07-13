@@ -55,7 +55,7 @@ describe("pi-bash-timeout", { timeout: 30_000 }, () => {
     expect(bash.executed[0]?.timeout).toBe(30);
   });
 
-  it("preserves an explicit timeout above the advisory max (no hard cap)", async () => {
+  it("caps an explicit timeout above the maximum", async () => {
     const bash = captureExec();
     t = await createTestSession({
       extensionFactories: [(pi: any) => piBashTimeout(pi)],
@@ -66,7 +66,7 @@ describe("pi-bash-timeout", { timeout: 30_000 }, () => {
       when("run", [calls("bash", { command: "sleep 9999", timeout: 9999 }), says("done")]),
     );
 
-    expect(bash.executed[0]?.timeout).toBe(9999);
+    expect(bash.executed[0]?.timeout).toBe(600);
   });
 
   it("treats a non-positive timeout as missing and injects the default", async () => {
@@ -125,6 +125,7 @@ describe("pi-bash-timeout before_agent_start", () => {
     const result = handler?.({ systemPrompt: "base prompt" });
     expect(result?.systemPrompt).toContain("base prompt");
     expect(result?.systemPrompt).toContain("Bash Tool Timeout Policy");
-    expect(result?.systemPrompt).toContain("Default timeout: 120s (2 min)");
+    expect(result?.systemPrompt).toContain("Default timeout: 120s");
+    expect(result?.systemPrompt).toContain("Maximum timeout: 600s");
   });
 });

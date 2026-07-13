@@ -13,7 +13,7 @@ Ported from [`code-yeongyu/pi-bash-timeout`](https://github.com/code-yeongyu/pi-
 | `timeout` omitted | inject default |
 | `timeout <= 0` | treated as missing, inject default |
 | `timeout` in range | preserved |
-| `timeout` above max | preserved (max is advisory, not a hard cap) |
+| `timeout` above max | capped to max |
 
 Non-`bash` tool calls are never touched.
 
@@ -24,12 +24,23 @@ Both pi flags and env vars are supported. Precedence: **flag > env var > built-i
 | Setting | Flag | Env var | Default |
 |---------|------|---------|---------|
 | Default timeout (s) | `pi-bash-timeout-default` | `PI_BASH_DEFAULT_TIMEOUT_SECONDS` | `120` |
-| Advisory max (s) | `pi-bash-timeout-max` | `PI_BASH_MAX_TIMEOUT_SECONDS` | `600` |
+| Maximum timeout (s) | `pi-bash-timeout-max` | `PI_BASH_MAX_TIMEOUT_SECONDS` | `600` |
 
-The max value only appears in prompt guidance; explicit `timeout` values are never capped. If `max` resolves lower than `default`, it is raised to `default`.
+Explicit `timeout` values above max are capped. If `max` resolves lower than `default`, it is raised to `default`.
 
 Env var names match `senpi-mono` for compatibility.
 
-## License
+## Development
 
-MIT
+```bash
+pnpm install
+pnpm test
+pnpm typecheck
+pnpm check
+```
+
+To test changes manually, pass the source entry point directly to pi:
+
+```bash
+pi -e packages/pi-bash-timeout/src/index.ts
+```
