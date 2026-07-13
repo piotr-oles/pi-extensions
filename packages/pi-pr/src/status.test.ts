@@ -22,12 +22,8 @@ function pr(overrides: Partial<PullRequest>): PullRequest {
 }
 
 describe("renderStatus", () => {
-  function render(input: PullRequest): string {
-    const out = renderStatus(input, theme);
-    if (out === undefined) {
-      throw new Error("expected a rendered status");
-    }
-    return out;
+  function render(input: PullRequest, background: "dark" | "light" = "dark"): string {
+    return renderStatus(input, theme, background);
   }
 
   it("renders CI before the review verdict", () => {
@@ -84,12 +80,25 @@ describe("renderStatus", () => {
   it("shows a lifecycle letter before #n, colored by lifecycle", () => {
     expect(render(pr({ lifecycle: "draft" }))).toContain("[dim]D #42");
     expect(render(pr({ lifecycle: "open" }))).toContain("[text]O #42");
-    // Merged uses a raw 256-color purple, not a theme token.
-    expect(render(pr({ lifecycle: "merged" }))).toContain("\x1b[38;5;99mM #42\x1b[0m");
+    expect(render(pr({ lifecycle: "closed" }))).toContain("[error]C #42");
   });
 
-  it("renders nothing for a closed PR", () => {
-    expect(renderStatus(pr({ lifecycle: "closed" }), theme)).toBeUndefined();
+  it("tunes the merged purple to the terminal background", () => {
+    // Merged uses a raw 256-color purple, not a theme token: brighter on dark.
+    expect(render(pr({ lifecycle: "merged" }), "dark")).toContain("\x1b[38;5;141mM #42\x1b[0m");
+    expect(render(pr({ lifecycle: "merged" }), "light")).toContain("\x1b[38;5;92mM #42\x1b[0m");
+  });
+
+  it("drops conflict/review glyphs for terminal states and shows CI only when broken", () => {
+    for (const lifecycle of ["merged", "closed"] as const) {
+      const green = render(pr({ lifecycle, ci: "success", merge: "conflict", review: "approved" }));
+      expect(green).not.toContain("●");
+      expect(green).not.toContain("‼");
+      expect(green).not.toContain("✓");
+
+      const broken = render(pr({ lifecycle, ci: "failure" }));
+      expect(broken).toContain("[error]●");
+    }
   });
 
   it("wraps #n in an OSC 8 link to the PR url", () => {

@@ -3,7 +3,8 @@
 A [pi coding agent](https://github.com/earendil-works/pi) extension that shows
 the current branch's GitHub pull request in the footer: a lifecycle letter and a
 clickable `#n` link, the CI status, a conflict alarm when the PR can't merge
-cleanly, and the review verdict.
+cleanly, and the review verdict. Merged and closed PRs collapse to just the
+letter and number (plus a red CI dot if CI broke).
 
 
 ```
@@ -12,7 +13,9 @@ changes requested: model (branch)  …  O #123 ●✗
 review pending:    model (branch)  …  O #123 ●
 conflict:          model (branch)  …  O #123 ●‼✗
 draft:             model (branch)  …  D #123 ●
-merged:            model (branch)  …  M #123 ●
+merged (ok):       model (branch)  …  M #123
+merged (ci broke): model (branch)  …  M #123 ●
+closed:            model (branch)  …  C #123
                                       ^^^^^^ ^^^
                                       link   indicators
 ```
@@ -26,23 +29,26 @@ the agent runs a `gh pr create` bash command, so a freshly opened PR appears in
 the footer without waiting for the next poll tick.
 
 - **lifecycle letter + `#n`** — a letter describing lifecycle (`D` draft, `O`
-  open, `M` merged) followed by the PR number, together wrapped in an OSC 8
-  hyperlink to the PR URL and colored by lifecycle: draft = dim, open = default
-  text, merged = purple (a raw 256-color escape, since no theme token is
-  purple). **Closed PRs render nothing** — the footer stays empty.
+  open, `M` merged, `C` closed) followed by the PR number, together wrapped in
+  an OSC 8 hyperlink to the PR URL and colored by lifecycle: draft = dim,
+  open = default text, closed = red, merged = purple. Merged uses a raw
+  256-color purple tuned to the terminal background (from `COLORFGBG`): a bright
+  lilac on dark, a deeper purple on light — since no theme token is purple.
 - **`●` CI** — aggregated check rollup: success = green, failure = red,
-  running = yellow, none = dim. Always rendered (`none` dim so its position
-  stays stable).
-- **`‼` conflict** — red, shown **only** when the PR has merge conflicts
-  (`clean`/`unknown` merge states render nothing).
-- **review verdict** — shown **only** when a decision exists: `✓` green when
-  approved, `✗` red when changes are requested. `review_required`/`none` render
-  nothing.
+  running = yellow, none = dim. For active PRs it is always rendered (`none` dim
+  so its position stays stable). Merged and closed PRs are terminal states, so
+  the CI dot shows **only** when CI failed (red) and is hidden otherwise.
+- **`‼` conflict** — red, shown **only** for active PRs with merge conflicts
+  (`clean`/`unknown` merge states, and terminal states, render nothing).
+- **review verdict** — shown **only** for active PRs when a decision exists: `✓`
+  green when approved, `✗` red when changes are requested.
+  `review_required`/`none` render nothing.
 
-Glyphs keep a fixed order: CI, then conflict, then review verdict. Only `●`
-always shows; the conflict and review glyphs appear/disappear with state.
+Glyphs keep a fixed order: CI, then conflict, then review verdict. On active
+PRs only `●` always shows; the conflict and review glyphs appear/disappear with
+state. Merged and closed PRs show at most the CI dot, and only when broken.
 
-When there is no PR for the branch, the PR is closed, the directory is not a
+When there is no PR for the branch, the directory is not a
 GitHub repo, `gh` is missing or unauthenticated, or any error occurs, the
 extension is silent: it clears its status and shows nothing.
 

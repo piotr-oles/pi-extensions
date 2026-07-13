@@ -4,6 +4,7 @@ import {
   type ExtensionContext,
   isBashToolResult,
 } from "@earendil-works/pi-coding-agent";
+import { detectBackground } from "./background.js";
 import { isPrCreateCommand } from "./command.js";
 import { fetchPullRequest } from "./gh.js";
 import { renderStatus } from "./status.js";
@@ -42,7 +43,10 @@ export default function piPr(pi: ExtensionAPI): void {
     controller = new AbortController();
     try {
       const pr = await fetchPullRequest(pi, controller.signal);
-      ctx.ui.setStatus(STATUS_KEY, pr ? renderStatus(pr, ctx.ui.theme) : undefined);
+      ctx.ui.setStatus(
+        STATUS_KEY,
+        pr ? renderStatus(pr, ctx.ui.theme, detectBackground()) : undefined,
+      );
     } finally {
       controller = null;
       polling = false;
