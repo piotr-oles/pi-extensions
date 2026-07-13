@@ -2,17 +2,17 @@
 
 A [pi coding agent](https://github.com/earendil-works/pi) extension that shows
 the current branch's GitHub pull request in the footer: a lifecycle letter and a
-clickable `#n` link, the diff stat (`+42 -10`), the CI status, a conflict alarm
+clickable `#n` link, the diff stat (`+42-10`), the CI status, a conflict alarm
 when the PR can't merge cleanly, and the review verdict. Merged and closed PRs
 collapse to just the letter and number (plus a red CI dot if CI broke).
 
 
 ```
-approved:          model (branch)  …  O #123 +42 -10 ●✓
-changes requested: model (branch)  …  O #123 +42 -10 ●✗
-review pending:    model (branch)  …  O #123 +42 -10 ●
-conflict:          model (branch)  …  O #123 +42 -10 ●‼✗
-draft:             model (branch)  …  D #123 +42 -10 ●
+approved:          model (branch)  …  O #123 +42-10 ●✓
+changes requested: model (branch)  …  O #123 +42-10 ●✗
+review pending:    model (branch)  …  O #123 +42-10 ●
+conflict:          model (branch)  …  O #123 +42-10 ●‼✗
+draft:             model (branch)  …  D #123 +42-10 ●
 merged (ok):       model (branch)  …  M #123
 merged (ci broke): model (branch)  …  M #123 ●
 closed:            model (branch)  …  C #123

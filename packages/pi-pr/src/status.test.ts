@@ -79,16 +79,26 @@ describe("renderStatus", () => {
     expect(out.indexOf("‼")).toBeLessThan(out.indexOf("✗"));
   });
 
-  it("shows a lifecycle letter before #n, colored by lifecycle", () => {
-    expect(render(pr({ lifecycle: "draft" }))).toContain("[dim]D #42");
-    expect(render(pr({ lifecycle: "open" }))).toContain("[text]O #42");
-    expect(render(pr({ lifecycle: "closed" }))).toContain("[error]C #42");
+  it("shows a lifecycle letter and #n link, both colored by lifecycle", () => {
+    const draft = render(pr({ lifecycle: "draft" }));
+    expect(draft).toContain("[dim]D");
+    expect(draft).toContain("[dim]#42");
+
+    const open = render(pr({ lifecycle: "open" }));
+    expect(open).toContain("[text]O");
+    expect(open).toContain("[text]#42");
+
+    const closed = render(pr({ lifecycle: "closed" }));
+    expect(closed).toContain("[error]C");
+    expect(closed).toContain("[error]#42");
   });
 
   it("tunes the merged purple to the terminal background", () => {
     // Merged uses a raw 256-color purple, not a theme token: brighter on dark.
-    expect(render(pr({ lifecycle: "merged" }), "dark")).toContain("\x1b[38;5;141mM #42\x1b[0m");
-    expect(render(pr({ lifecycle: "merged" }), "light")).toContain("\x1b[38;5;92mM #42\x1b[0m");
+    const dark = render(pr({ lifecycle: "merged" }), "dark");
+    expect(dark).toContain("\x1b[38;5;141mM\x1b[0m");
+    expect(dark).toContain("\x1b[38;5;141m#42\x1b[0m");
+    expect(render(pr({ lifecycle: "merged" }), "light")).toContain("\x1b[38;5;92m#42\x1b[0m");
   });
 
   it("drops diff stat/conflict/review glyphs for terminal states and shows CI only when broken", () => {
@@ -117,10 +127,11 @@ describe("renderStatus", () => {
     expect(render(pr({ additions: 0, deletions: 0 }))).not.toContain("+0");
   });
 
-  it("wraps #n in an OSC 8 link to the PR url", () => {
+  it("wraps #n in an OSC 8 link to the PR url, with the glyph outside the link", () => {
     const out = render(base);
     expect(out).toContain(`\x1b]8;;${base.url}\x1b\\`);
-    expect(out).toContain("[text]O #42");
+    expect(out).toContain("[text]O ");
+    expect(out).toContain("[text]#42");
     expect(out).toContain("\x1b]8;;\x1b\\");
   });
 });
