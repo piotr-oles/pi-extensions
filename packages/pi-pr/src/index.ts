@@ -1,8 +1,10 @@
-import type {
-  ExtensionAPI,
-  ExtensionCommandContext,
-  ExtensionContext,
+import {
+  type ExtensionAPI,
+  type ExtensionCommandContext,
+  type ExtensionContext,
+  isBashToolResult,
 } from "@earendil-works/pi-coding-agent";
+import { isPrCreateCommand } from "./command.js";
 import { fetchPullRequest } from "./gh.js";
 import { renderStatus } from "./status.js";
 
@@ -55,6 +57,13 @@ export default function piPr(pi: ExtensionAPI): void {
   });
 
   pi.on("session_shutdown", () => stop());
+
+  // Refresh right after the agent opens a PR so the footer updates immediately.
+  pi.on("tool_result", (event, ctx) => {
+    if (isBashToolResult(event) && isPrCreateCommand(String(event.input.command ?? ""))) {
+      void pollOnce(ctx);
+    }
+  });
 
   pi.registerCommand("pr", {
     description: "Open the current branch's PR in the browser and refresh its status",

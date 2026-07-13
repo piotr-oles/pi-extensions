@@ -19,7 +19,9 @@ conflict:          model (branch)  …  #123 ●‼✗
 
 On session start (and every poll interval after) it runs `gh pr view` for the
 current branch and renders the result via `ctx.ui.setStatus("pi-pr", …)`, which
-coexists with pi's built-in footer.
+coexists with pi's built-in footer. It also fires a one-off refresh right after
+the agent runs a `gh pr create` bash command, so a freshly opened PR appears in
+the footer without waiting for the next poll tick.
 
 - **`#n`** — the PR number, wrapped in an OSC 8 hyperlink to the PR URL, colored
   by lifecycle: draft = dim, open = default text, merged = muted, closed = error (red).
