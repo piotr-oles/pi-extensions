@@ -1,18 +1,18 @@
 # pi-pr
 
 A [pi coding agent](https://github.com/earendil-works/pi) extension that shows
-the current branch's GitHub pull request in the footer: a lifecycle glyph and a
+the current branch's GitHub pull request in the footer: a lifecycle letter and a
 clickable `#n` link, the CI status, a conflict alarm when the PR can't merge
 cleanly, and the review verdict.
 
 
 ```
-approved:          model (branch)  …  ◆ #123 ●✓
-changes requested: model (branch)  …  ◆ #123 ●✗
-review pending:    model (branch)  …  ◆ #123 ●
-conflict:          model (branch)  …  ◆ #123 ●‼✗
-draft:             model (branch)  …  ◇ #123 ●
-merged:            model (branch)  …  ◈ #123 ●
+approved:          model (branch)  …  O #123 ●✓
+changes requested: model (branch)  …  O #123 ●✗
+review pending:    model (branch)  …  O #123 ●
+conflict:          model (branch)  …  O #123 ●‼✗
+draft:             model (branch)  …  D #123 ●
+merged:            model (branch)  …  M #123 ●
                                       ^^^^^^ ^^^
                                       link   indicators
 ```
@@ -25,10 +25,11 @@ coexists with pi's built-in footer. It also fires a one-off refresh right after
 the agent runs a `gh pr create` bash command, so a freshly opened PR appears in
 the footer without waiting for the next poll tick.
 
-- **lifecycle glyph + `#n`** — a diamond describing lifecycle (`◇` draft, `◆`
-  open, `◈` merged) followed by the PR number, together wrapped in an OSC 8
+- **lifecycle letter + `#n`** — a letter describing lifecycle (`D` draft, `O`
+  open, `M` merged) followed by the PR number, together wrapped in an OSC 8
   hyperlink to the PR URL and colored by lifecycle: draft = dim, open = default
-  text, merged = muted. **Closed PRs render nothing** — the footer stays empty.
+  text, merged = purple (a raw 256-color escape, since no theme token is
+  purple). **Closed PRs render nothing** — the footer stays empty.
 - **`●` CI** — aggregated check rollup: success = green, failure = red,
   running = yellow, none = dim. Always rendered (`none` dim so its position
   stays stable).

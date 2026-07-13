@@ -12,13 +12,14 @@ const CONFLICT_GLYPH = "‼";
 const APPROVED_GLYPH = "✓";
 const CHANGES_GLYPH = "✗";
 
-// Lifecycle glyph shown before `#n`. A diamond family, distinct from the CI
-// circle: hollow = draft (not ready), filled = open (active), dotted = merged
-// (combined). Closed PRs render nothing (see renderStatus).
-const LIFECYCLE_GLYPH: Record<Exclude<PullRequest["lifecycle"], "closed">, string> = {
-  draft: "◇",
-  open: "◆",
-  merged: "◈",
+// Closed PRs render nothing, so only these three states are ever drawn.
+type VisibleLifecycle = Exclude<PullRequest["lifecycle"], "closed">;
+
+// Letter before `#n` describing lifecycle: D draft, O open, M merged.
+const LIFECYCLE_GLYPH: Record<VisibleLifecycle, string> = {
+  draft: "D",
+  open: "O",
+  merged: "M",
 };
 
 const CI_COLOR: Record<PullRequest["ci"], ThemeColor> = {
@@ -28,22 +29,31 @@ const CI_COLOR: Record<PullRequest["ci"], ThemeColor> = {
   none: "dim",
 };
 
-// Theme tokens have no "purple"; merged falls back to "muted" to stay distinct
-// from open (accent), closed (error) and draft (dim). See README.
-const LIFECYCLE_COLOR: Record<PullRequest["lifecycle"], ThemeColor> = {
-  draft: "dim",
-  open: "text",
-  merged: "muted",
-  closed: "error",
-};
+// No theme token is purple, but GitHub renders merged PRs purple. Emit a raw
+// 256-color purple (≈ GitHub's merged #875fff) for merged; draft/open use theme
+// tokens so they follow the active palette.
+const PURPLE = "\x1b[38;5;99m";
+const RESET = "\x1b[0m";
+
+function styleLabel(lifecycle: VisibleLifecycle, theme: ThemeLike, text: string): string {
+  switch (lifecycle) {
+    case "draft":
+      return theme.fg("dim", text);
+    case "open":
+      return theme.fg("text", text);
+    case "merged":
+      return `${PURPLE}${text}${RESET}`;
+  }
+}
 
 /**
  * Render a footer string for a {@link PullRequest}, or `undefined` for closed
  * PRs (nothing to act on, so the footer stays empty).
  *
- * Layout: a lifecycle glyph (`◇` draft, `◆` open, `◈` merged) then a clickable
- * `#n` link, both colored by lifecycle, followed by the CI glyph `●` (always
- * shown, `none` dim so its position stays stable), then two conditional glyphs
+ * Layout: a lifecycle letter (`D` draft, `O` open, `M` merged) then a clickable
+ * `#n` link, both colored by lifecycle (merged is purple), followed by the CI
+ * glyph `●` (always shown, `none` dim so its position stays stable), then two
+ * conditional glyphs
  * that appear only in specific states — a red conflict `‼` when the PR can't
  * merge, and a review verdict (`✓` green approved, `✗` red changes-requested;
  * nothing for `review_required`/`none`).
@@ -59,10 +69,10 @@ export function renderStatus(pr: PullRequest, theme: ThemeLike): string | undefi
 }
 
 function renderLink(pr: PullRequest, theme: ThemeLike) {
-  const color = LIFECYCLE_COLOR[pr.lifecycle];
-  const glyph = LIFECYCLE_GLYPH[pr.lifecycle as keyof typeof LIFECYCLE_GLYPH];
-  const label = theme.fg(color, `${glyph} #${pr.number}`);
-  return hyperlink(pr.url, label);
+  // Closed PRs are filtered out in renderStatus, so the cast is safe here.
+  const lifecycle = pr.lifecycle as VisibleLifecycle;
+  const label = `${LIFECYCLE_GLYPH[lifecycle]} #${pr.number}`;
+  return hyperlink(pr.url, styleLabel(lifecycle, theme, label));
 }
 
 function renderCI(pr: PullRequest, theme: ThemeLike): string {

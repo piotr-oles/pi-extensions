@@ -81,10 +81,11 @@ describe("renderStatus", () => {
     expect(out.indexOf("‼")).toBeLessThan(out.indexOf("✗"));
   });
 
-  it("shows a lifecycle glyph before #n, colored by lifecycle", () => {
-    expect(render(pr({ lifecycle: "draft" }))).toContain("[dim]◇ #42");
-    expect(render(pr({ lifecycle: "open" }))).toContain("[text]◆ #42");
-    expect(render(pr({ lifecycle: "merged" }))).toContain("[muted]◈ #42");
+  it("shows a lifecycle letter before #n, colored by lifecycle", () => {
+    expect(render(pr({ lifecycle: "draft" }))).toContain("[dim]D #42");
+    expect(render(pr({ lifecycle: "open" }))).toContain("[text]O #42");
+    // Merged uses a raw 256-color purple, not a theme token.
+    expect(render(pr({ lifecycle: "merged" }))).toContain("\x1b[38;5;99mM #42\x1b[0m");
   });
 
   it("renders nothing for a closed PR", () => {
@@ -94,7 +95,7 @@ describe("renderStatus", () => {
   it("wraps #n in an OSC 8 link to the PR url", () => {
     const out = render(base);
     expect(out).toContain(`\x1b]8;;${base.url}\x1b\\`);
-    expect(out).toContain("[text]◆ #42");
+    expect(out).toContain("[text]O #42");
     expect(out).toContain("\x1b]8;;\x1b\\");
   });
 });
