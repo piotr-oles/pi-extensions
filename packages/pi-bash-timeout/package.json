@@ -1,0 +1,45 @@
+{
+  "name": "@piotr-oles/pi-bash-timeout",
+  "version": "0.0.0",
+  "description": "Pi Agent extension: inject a default bash timeout and append timeout policy guidance to the system prompt",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/piotr-oles/pi-extensions.git",
+    "directory": "packages/pi-bash-timeout"
+  },
+  "keywords": [
+    "pi-package"
+  ],
+  "type": "module",
+  "files": [
+    "src",
+    "!src/*.test.ts"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "check": "biome ci src/",
+    "fix": "biome check --write src/",
+    "release": "semantic-release -e semantic-release-monorepo"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-agent-core": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-agent-core": "^0.75.5",
+    "@earendil-works/pi-coding-agent": "^0.75.5",
+    "@marcfargas/pi-test-harness": "^0.6.1",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1"
+  }
+}
