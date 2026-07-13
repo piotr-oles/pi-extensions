@@ -4,7 +4,7 @@ Pi Agent extension that gives the `bash` tool a sane default timeout and tells t
 
 It intercepts the host `bash` tool via the `tool_call` event and injects a default `timeout` (in seconds) when the model omits it or passes a non-positive value. It also appends a "Bash Tool Timeout Policy" section to the system prompt via `before_agent_start` so the model sets explicit timeouts for long-running commands.
 
-Ported from [`code-yeongyu/pi-bash-timeout`](https://github.com/code-yeongyu/pi-bash-timeout) and adapted to this repo (pi flags, upstream `isToolCallEventType` guard, in-place input mutation, colocated tests).
+
 
 ## Behavior
 
@@ -28,7 +28,9 @@ Both pi flags and env vars are supported. Precedence: **flag > env var > built-i
 
 Explicit `timeout` values above max are capped. If `max` resolves lower than `default`, it is raised to `default`.
 
-Env var names match `senpi-mono` for compatibility.
+## Thanks
+
+Ported from [`code-yeongyu/pi-bash-timeout`](https://github.com/code-yeongyu/pi-bash-timeout) and adapted to this repo (pi flags, upstream `isToolCallEventType` guard, in-place input mutation, colocated tests).
 
 ## Development
 
