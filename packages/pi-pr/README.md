@@ -1,18 +1,20 @@
 # pi-pr
 
 A [pi coding agent](https://github.com/earendil-works/pi) extension that shows
-the current branch's GitHub pull request in the footer: a clickable `#n` link,
-the CI status, a conflict alarm when the PR can't merge cleanly, and the review
-verdict.
+the current branch's GitHub pull request in the footer: a lifecycle glyph and a
+clickable `#n` link, the CI status, a conflict alarm when the PR can't merge
+cleanly, and the review verdict.
 
 
 ```
-approved:          model (branch)  …  #123 ●✓
-changes requested: model (branch)  …  #123 ●✗
-review pending:    model (branch)  …  #123 ●
-conflict:          model (branch)  …  #123 ●‼✗
-                                      ^^^^ ^^^
-                                      link indicators
+approved:          model (branch)  …  ◆ #123 ●✓
+changes requested: model (branch)  …  ◆ #123 ●✗
+review pending:    model (branch)  …  ◆ #123 ●
+conflict:          model (branch)  …  ◆ #123 ●‼✗
+draft:             model (branch)  …  ◇ #123 ●
+merged:            model (branch)  …  ◈ #123 ●
+                                      ^^^^^^ ^^^
+                                      link   indicators
 ```
 
 ## What it does
@@ -23,8 +25,10 @@ coexists with pi's built-in footer. It also fires a one-off refresh right after
 the agent runs a `gh pr create` bash command, so a freshly opened PR appears in
 the footer without waiting for the next poll tick.
 
-- **`#n`** — the PR number, wrapped in an OSC 8 hyperlink to the PR URL, colored
-  by lifecycle: draft = dim, open = default text, merged = muted, closed = error (red).
+- **lifecycle glyph + `#n`** — a diamond describing lifecycle (`◇` draft, `◆`
+  open, `◈` merged) followed by the PR number, together wrapped in an OSC 8
+  hyperlink to the PR URL and colored by lifecycle: draft = dim, open = default
+  text, merged = muted. **Closed PRs render nothing** — the footer stays empty.
 - **`●` CI** — aggregated check rollup: success = green, failure = red,
   running = yellow, none = dim. Always rendered (`none` dim so its position
   stays stable).
@@ -37,9 +41,9 @@ the footer without waiting for the next poll tick.
 Glyphs keep a fixed order: CI, then conflict, then review verdict. Only `●`
 always shows; the conflict and review glyphs appear/disappear with state.
 
-When there is no PR for the branch, the directory is not a GitHub repo, `gh` is
-missing or unauthenticated, or any error occurs, the extension is silent: it
-clears its status and shows nothing.
+When there is no PR for the branch, the PR is closed, the directory is not a
+GitHub repo, `gh` is missing or unauthenticated, or any error occurs, the
+extension is silent: it clears its status and shows nothing.
 
 ## Requirements
 

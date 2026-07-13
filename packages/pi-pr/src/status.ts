@@ -12,6 +12,15 @@ const CONFLICT_GLYPH = "‼";
 const APPROVED_GLYPH = "✓";
 const CHANGES_GLYPH = "✗";
 
+// Lifecycle glyph shown before `#n`. A diamond family, distinct from the CI
+// circle: hollow = draft (not ready), filled = open (active), dotted = merged
+// (combined). Closed PRs render nothing (see renderStatus).
+const LIFECYCLE_GLYPH: Record<Exclude<PullRequest["lifecycle"], "closed">, string> = {
+  draft: "◇",
+  open: "◆",
+  merged: "◈",
+};
+
 const CI_COLOR: Record<PullRequest["ci"], ThemeColor> = {
   success: "success",
   failure: "error",
@@ -29,14 +38,20 @@ const LIFECYCLE_COLOR: Record<PullRequest["lifecycle"], ThemeColor> = {
 };
 
 /**
- * Render a footer string for a {@link PullRequest}: a clickable `#n` link
- * (colored by lifecycle) followed by the CI glyph `●` (always shown, `none`
- * dim so its position stays stable), then two conditional glyphs that appear
- * only in specific states — a red conflict `‼` when the PR can't merge, and a
- * review verdict (`✓` green approved, `✗` red changes-requested; nothing for
- * `review_required`/`none`).
+ * Render a footer string for a {@link PullRequest}, or `undefined` for closed
+ * PRs (nothing to act on, so the footer stays empty).
+ *
+ * Layout: a lifecycle glyph (`◇` draft, `◆` open, `◈` merged) then a clickable
+ * `#n` link, both colored by lifecycle, followed by the CI glyph `●` (always
+ * shown, `none` dim so its position stays stable), then two conditional glyphs
+ * that appear only in specific states — a red conflict `‼` when the PR can't
+ * merge, and a review verdict (`✓` green approved, `✗` red changes-requested;
+ * nothing for `review_required`/`none`).
  */
-export function renderStatus(pr: PullRequest, theme: ThemeLike): string {
+export function renderStatus(pr: PullRequest, theme: ThemeLike): string | undefined {
+  if (pr.lifecycle === "closed") {
+    return undefined;
+  }
   const link = renderLink(pr, theme);
   const dots = [renderCI(pr, theme), renderConflict(pr, theme), renderReview(pr, theme)].join("");
 
@@ -44,7 +59,9 @@ export function renderStatus(pr: PullRequest, theme: ThemeLike): string {
 }
 
 function renderLink(pr: PullRequest, theme: ThemeLike) {
-  const label = theme.fg(LIFECYCLE_COLOR[pr.lifecycle], `#${pr.number}`);
+  const color = LIFECYCLE_COLOR[pr.lifecycle];
+  const glyph = LIFECYCLE_GLYPH[pr.lifecycle as keyof typeof LIFECYCLE_GLYPH];
+  const label = theme.fg(color, `${glyph} #${pr.number}`);
   return hyperlink(pr.url, label);
 }
 
