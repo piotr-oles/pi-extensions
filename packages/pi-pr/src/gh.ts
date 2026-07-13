@@ -7,13 +7,15 @@ export interface PullRequest {
   ci: "success" | "failure" | "running" | "none";
   merge: "clean" | "conflict" | "unknown";
   review: "approved" | "changes_requested" | "review_required" | "none";
+  additions: number;
+  deletions: number;
 }
 
 /** Minimal surface of `ExtensionAPI` needed to run gh — lets tests inject a fake. */
 export type GhExec = Pick<ExtensionAPI, "exec">;
 
 const GH_FIELDS =
-  "number,url,state,isDraft,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup";
+  "number,url,state,isDraft,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,additions,deletions";
 
 const FAILURE_CONCLUSIONS = new Set([
   "FAILURE",
@@ -69,6 +71,8 @@ interface GhPullRequest {
   mergeable?: string;
   reviewDecision?: string | null;
   statusCheckRollup?: GhCheck[];
+  additions?: number;
+  deletions?: number;
 }
 
 export function parsePullRequest(json: string): PullRequest | null {
@@ -90,6 +94,8 @@ export function parsePullRequest(json: string): PullRequest | null {
     ci: parseCi(raw.statusCheckRollup),
     merge: parseMerge(raw.mergeable),
     review: parseReview(raw.reviewDecision),
+    additions: typeof raw.additions === "number" ? raw.additions : 0,
+    deletions: typeof raw.deletions === "number" ? raw.deletions : 0,
   };
 }
 
