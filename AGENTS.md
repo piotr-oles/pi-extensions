@@ -82,6 +82,12 @@ Flags:
 - `pi-reflag-verbose` (boolean, default: false) — show a toast with original and rewritten command in the UI
 - `pi-reflag-ignore-mode` (string, default: `'auto'`) — controls when `--no-ignore` is passed to `fd`: `'auto'` adds it when the search path contains a known ignored directory (node_modules, .venv, .yarn, dist, target, …); `'no-ignore'` always adds it; `'ignore'` never adds it
 
+### `pi-pr` (`packages/pi-pr`)
+Shows the current branch's GitHub PR in the footer via `ctx.ui.setStatus("pi-pr", …)`: a clickable `#n` link (OSC 8 hyperlink to the PR URL, colored by lifecycle) plus a `●` CI-rollup glyph (always shown, colored by state, `none` dim so its position stays stable) and two conditional glyphs in fixed order: a red `‼` conflict glyph only when the PR has merge conflicts, and a review verdict only when decided (`✓` green approved, `✗` red changes-requested). Polls on a timer and also fires a one-off refresh when a `tool_result` shows the agent ran `gh pr create`, so a newly opened PR shows up immediately.
+
+Flags:
+- `pi-pr-interval` (string numeric, default: `30`) — poll interval in seconds, floored at 5s (registered as a string flag because pi flags are boolean or string only; parsed as a number at use)
+
 ## Tech stack
 
 - **Runtime**: Node.js ≥ 22.19.0, ESM throughout (`"type": "module"`)
@@ -192,4 +198,3 @@ Conventional commit format is required and enforced by commitlint (commit-msg ho
 Tag format: `@piotr-oles/<pkg>@<version>`. Each package gets its own `CHANGELOG.md`.
 
 Dry run (no publish, no tags): `pnpm validate:release`
-

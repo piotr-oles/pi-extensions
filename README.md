@@ -13,6 +13,7 @@ A monorepo of [pi coding agent](https://github.com/earendil-works/pi) extensions
 | [`@piotr-oles/pi-cwd`](packages/pi-cwd) | Reminds agent to use relative paths — detects absolute cwd paths in `read`/`write`/`edit`/`bash` calls and appends a tip to the tool result |
 | [`@piotr-oles/pi-subagents`](packages/pi-subagents) | Lets the agent spawn specialized subagents — each running in its own isolated session with its own model, tools, and instructions |
 | [`@piotr-oles/pi-title`](packages/pi-title) | Generates a short session title from the first user message using the active model |
+| [`@piotr-oles/pi-pr`](packages/pi-pr) | Shows the current branch's GitHub PR in the footer — a clickable `#n` link plus a CI status dot, a merge-conflict alarm, and a review verdict, polled in the background |
 | [`@piotr-oles/pi-yagni`](packages/pi-yagni) | Injects YAGNI discipline into the system prompt — build the minimum that works, reuse before writing, no speculative code |
 
 ## Development
