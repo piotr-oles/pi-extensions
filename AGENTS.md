@@ -88,6 +88,17 @@ Shows the current branch's GitHub PR in the footer via `ctx.ui.setStatus("pi-pr"
 Flags:
 - `pi-pr-interval` (string numeric, default: `30`) — poll interval in seconds, floored at 5s (registered as a string flag because pi flags are boolean or string only; parsed as a number at use)
 
+### `pi-bash-timeout` (`packages/pi-bash-timeout`)
+Intercepts `bash` tool calls via `tool_call` and injects a default `timeout` (seconds) when the model omits it or passes `<= 0`, mutating `event.input` in place (uses the upstream `isToolCallEventType("bash", event)` guard). Appends a "Bash Tool Timeout Policy" section to the system prompt via `before_agent_start` so the model sets explicit timeouts for long-running commands.
+
+Timeout values resolve with precedence **flag > env var > built-in**; invalid or non-positive values fall through to the next source. `maxSeconds` is advisory only (shown in prompt guidance) and is never a hard cap — explicit timeouts always pass through; it is raised to the default when lower. Flags register **without** a `default` on purpose: `getFlag` returns the registered default immediately once set, so a default would permanently shadow the env var — leaving it unset lets `getFlag` return `undefined` and the env layer take over.
+
+Ported and adapted from [`code-yeongyu/pi-bash-timeout`](https://github.com/code-yeongyu/pi-bash-timeout).
+
+Flags:
+- `pi-bash-timeout-default` (string numeric, no default; falls back to `PI_BASH_DEFAULT_TIMEOUT_SECONDS` env, then built-in `120`)
+- `pi-bash-timeout-max` (string numeric, no default; falls back to `PI_BASH_MAX_TIMEOUT_SECONDS` env, then built-in `600`)
+
 ## Tech stack
 
 - **Runtime**: Node.js ≥ 22.19.0, ESM throughout (`"type": "module"`)
