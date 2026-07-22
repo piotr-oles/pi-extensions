@@ -98,9 +98,11 @@ export function createReviewPlanTool(
       ctx.ui.setWorkingVisible(true);
 
       if (result.type === "cancel") {
+        ctx.abort();
         return {
           content: [{ type: "text", text: "User cancelled plan review." }],
           details: { result: "cancel", planPath },
+          terminate: true,
         };
       }
 
@@ -158,7 +160,7 @@ export function createReviewPlanTool(
                 type: "text",
                 text: [
                   "The changes mentioned above have already been saved in the plan file.",
-                  "Address user comments, fixup the plan, then ask user about next steps.",
+                  "Address user comments, consolidate the plan if needed, then ask user about next steps.",
                 ].join("\n"),
               },
             ],
