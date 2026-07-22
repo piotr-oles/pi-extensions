@@ -20,14 +20,17 @@ function makeExec() {
 }
 
 function makeCtx(customReturnValue: unknown) {
+  const abort = vi.fn();
   const setWorkingVisible = vi.fn();
   const custom =
     customReturnValue === null ? vi.fn() : vi.fn().mockResolvedValue(customReturnValue);
   return {
     ctx: {
       hasUI: customReturnValue !== null,
+      abort,
       ui: { setWorkingVisible, custom },
     },
+    abort,
     setWorkingVisible,
     custom,
   };
@@ -88,8 +91,8 @@ describe("createReviewPlanTool - execute with UI", () => {
     expect(custom).not.toHaveBeenCalled();
   });
 
-  it("returns cancel when user cancels", async () => {
-    const { ctx } = makeCtx({ type: "cancel" });
+  it("aborts and terminates when user cancels", async () => {
+    const { ctx, abort } = makeCtx({ type: "cancel" });
     const tool = createReviewPlanTool(makeExec(), plansDir);
 
     const result = await tool.execute(
@@ -100,6 +103,8 @@ describe("createReviewPlanTool - execute with UI", () => {
       ctx as any,
     );
 
+    expect(abort).toHaveBeenCalledOnce();
+    expect(result.terminate).toBe(true);
     expect(result.details.result).toBe("cancel");
     expect(result.content).toEqual([{ type: "text", text: "User cancelled plan review." }]);
   });
@@ -198,7 +203,7 @@ describe("createReviewPlanTool - execute with UI", () => {
         type: "text",
         text:
           "The changes mentioned above have already been saved in the plan file.\n" +
-          "Address user comments, fixup the plan, then ask user about next steps.",
+          "Address user comments, consolidate the plan if needed, then ask user about next steps.",
       },
     ]);
   });
@@ -303,6 +308,23 @@ describe("createReviewPlanTool - execute with UI", () => {
           "Address the comment, update the plan if needed, then call review_plan again.",
       },
     ]);
+  });
+
+  it("signals the agent host before showing UI", async () => {
+    const stdoutWrite = vi.spyOn(process.stdout, "write").mockReturnValue(true);
+    const { ctx } = makeCtx({ type: "approve" });
+    const tool = createReviewPlanTool(makeExec(), plansDir);
+
+    await tool.execute(
+      "id",
+      { planPath: "my-repo/plan.md" },
+      AbortSignal.timeout(5000),
+      undefined,
+      ctx as any,
+    );
+
+    expect(stdoutWrite).toHaveBeenCalledWith("\x07");
+    stdoutWrite.mockRestore();
   });
 
   it("hides working indicator before showing UI and restores it after", async () => {
