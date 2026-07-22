@@ -1,7 +1,7 @@
 {
   "name": "@piotr-oles/pi-cwd",
   "version": "0.3.0",
-  "description": "Pi Agent extension: remind agent to use relative paths based on current working directory",
+  "description": "Pi Coding Agent extension: block absolute cwd paths in tool calls",
   "repository": {
     "type": "git",
     "url": "https://github.com/piotr-oles/pi-extensions.git",
