@@ -1,6 +1,6 @@
 # pi-plan
 
-A [pi coding agent](https://github.com/earendil-works/pi) extension that adds a `review-plan` tool — lets the agent write a named markdown plan to disk and present it in an interactive terminal widget for the user to approve, request changes, or ask a question before execution begins.
+A [pi coding agent](https://github.com/earendil-works/pi) extension that adds a `review_plan` tool — lets the agent write a named markdown plan to disk and present it in an interactive terminal widget for the user to approve, request changes, or ask a question before execution begins.
 
 ## Install
 
@@ -10,28 +10,28 @@ pi install npm:@piotr-oles/pi-plan
 
 ## Usage
 
-The extension registers a `review-plan` tool. The intended workflow is:
+The extension registers a `review_plan` tool. The intended workflow is:
 
 1. The agent writes the plan file using the built-in `write` tool (path under `~/.pi/plan/<repo>/<name>.md`)
-2. The agent calls `review-plan` with the relative path
+2. The agent calls `review_plan` with the relative path
 
 Instruct the agent to follow this pattern:
 
 ```
-Write the plan file to ~/.pi/plan/<repo>/<name>.md first, then call review-plan with the relative path.
+Write the plan file to ~/.pi/plan/<repo>/<name>.md first, then call review_plan with the relative path.
 ```
 
 Or reference it in a prompt template / skill file to enforce it project-wide.
 
 ## How it works
 
-When the agent calls `review-plan`:
+When the agent calls `review_plan`:
 
 1. Ensures `~/.pi/plan/` is a git repository (initialises it on first use)
 2. Commits the plan file with message `create: <name>.md`
 3. Hides the working indicator and shows an interactive widget with the following options:
    - **Open in [Editor]** *(shown when running inside Zed, VS Code, Cursor, or Windsurf)* — opens the plan file in your IDE so you can edit it; the widget stays open so you can still approve or request changes afterwards
-   - **Request changes** — edit the file then select this; the agent gets a diff of your edits and is told to update the plan, then call `review-plan` again
+   - **Request changes** — edit the file then select this; the agent gets a diff of your edits and is told to update the plan, then call `review_plan` again
    - **Approve** — edit the file (optionally) then select this; the agent gets a diff of any edits and is told to proceed with execution
    - **Ask question** — type a free-form question; the agent receives it and can reply before you decide
 
@@ -44,7 +44,7 @@ When the agent calls `review-plan`:
 | **Open in [Editor]** | Editor opens; widget re-shows with a `✓ Opened in …` confirmation. Agent is not notified. |
 | **Approve** (no edits) | `approve` result, empty diff — told to proceed |
 | **Approve** (with edits) | `approve` result + git diff — told to address comments, fix up plan, then proceed |
-| **Request changes** (with edits) | `request-changes` result + git diff — told to address comments, update plan, call `review-plan` again |
+| **Request changes** (with edits) | `request-changes` result + git diff — told to address comments, update plan, call `review_plan` again |
 | **Request changes** (no edits) | `request-changes` result, empty diff — told to ask the user what to change |
 | **Ask question** | `question` result with the question text |
 | **Esc / cancel** | `cancel` result |
