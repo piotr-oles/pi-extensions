@@ -79,6 +79,8 @@ export function createReviewPlanTool(
       let editorOpened = false;
       let result: PlanWidgetAnswer;
 
+      // send bell signal to stdout to integrate with agent hosts
+      process.stdout.write("\x07");
       while (true) {
         result = await ctx.ui.custom<PlanWidgetAnswer>((tui, theme, _kb, done) => {
           const planWidget = new PlanWidget(tui, theme, planPath, editor, editorOpened);
