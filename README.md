@@ -6,16 +6,16 @@ A monorepo of [pi coding agent](https://github.com/earendil-works/pi) extensions
 
 | Package | Description |
 |---------|-------------|
-| [`@piotr-oles/pi-fence`](packages/pi-fence) | Detects and handles decorative fence/divider comments in written code — warn, block, or auto-remove |
-| [`@piotr-oles/pi-caveman`](packages/pi-caveman) | Makes the agent respond in caveman mode — cuts ~75% of output tokens while keeping full technical accuracy |
-| [`@piotr-oles/pi-plan`](packages/pi-plan) | Adds a `plan` tool — saves a named markdown plan to disk, opens it for review, and waits for user confirmation before proceeding |
-| [`@piotr-oles/pi-reflag`](packages/pi-reflag) | Transparently rewrites `grep` → `rg` (ripgrep) and `find` → `fd` before they execute — faster searches, zero agent behavior change |
-| [`@piotr-oles/pi-cwd`](packages/pi-cwd) | Reminds agent to use relative paths — detects absolute cwd paths in `read`/`write`/`edit`/`bash` calls and appends a tip to the tool result |
-| [`@piotr-oles/pi-subagents`](packages/pi-subagents) | Lets the agent spawn specialized subagents — each running in its own isolated session with its own model, tools, and instructions |
-| [`@piotr-oles/pi-title`](packages/pi-title) | Generates a short session title from the first user message using the active model |
-| [`@piotr-oles/pi-bell`](packages/pi-bell) | Sends a terminal bell when a UI agent run finishes. |
-| [`@piotr-oles/pi-pr`](packages/pi-pr) | Shows the current branch's GitHub PR in the footer — a clickable `#n` link plus a CI status dot, a merge-conflict alarm, and a review verdict, polled in the background |
-| [`@piotr-oles/pi-yagni`](packages/pi-yagni) | Injects YAGNI discipline into the system prompt — build the minimum that works, reuse before writing, no speculative code |
+| [`pi-fence`](packages/pi-fence) | Detects and handles decorative fence/divider comments in written code — warn, block, or auto-remove |
+| [`pi-caveman`](packages/pi-caveman) | Makes the agent respond in caveman mode — cuts ~75% of output tokens while keeping full technical accuracy |
+| [`pi-plan`](packages/pi-plan) | Adds a `plan` tool — saves a named markdown plan to disk, opens it for review, and waits for user confirmation before proceeding |
+| [`pi-reflag`](packages/pi-reflag) | Transparently rewrites `grep` → `rg` (ripgrep) and `find` → `fd` before they execute — faster searches, zero agent behavior change |
+| [`pi-cwd`](packages/pi-cwd) | Reminds agent to use relative paths — detects absolute cwd paths in `read`/`write`/`edit`/`bash` calls and appends a tip to the tool result |
+| [`pi-subagents`](packages/pi-subagents) | Lets the agent spawn specialized subagents — each running in its own isolated session with its own model, tools, and instructions |
+| [`pi-title`](packages/pi-title) | Generates a short session title from the first user message using the active model |
+| [`pi-bell`](packages/pi-bell) | Sends a terminal bell when a UI agent run finishes. |
+| [`pi-pr`](packages/pi-pr) | Shows the current branch's GitHub PR in the footer — a clickable `#n` link plus a CI status dot, a merge-conflict alarm, and a review verdict, polled in the background |
+| [`pi-yagni`](packages/pi-yagni) | Injects YAGNI discipline into the system prompt — build the minimum that works, reuse before writing, no speculative code |
 
 ## Development
 
