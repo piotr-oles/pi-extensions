@@ -112,9 +112,6 @@ export class SubagentStore {
         this.queued.delete(entry.instance.id);
         this.running.delete(entry.instance.id);
         const done = await entry.instance.abort();
-        if ((entry.instance as Subagent).status === "done") {
-          return;
-        }
         params.onDone(done);
         entry.instance = done;
         this.done.set(entry.instance.id, entry);
