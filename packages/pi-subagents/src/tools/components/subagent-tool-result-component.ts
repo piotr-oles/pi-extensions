@@ -268,7 +268,7 @@ class SubagentSummaryTextComponent implements Component {
     const theme = this.theme;
     const parts: string[] = [];
     if (done.result.status === "error") {
-      parts.push(theme.fg("error", done.result.error));
+      parts.push(theme.fg("error", getFirstLine(done.result.error)));
     }
     if (done.result.status === "aborted") {
       parts.push(theme.fg("dim", "cancelled"));
