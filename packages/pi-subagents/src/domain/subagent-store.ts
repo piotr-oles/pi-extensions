@@ -78,17 +78,14 @@ export class SubagentStore {
         entry.instance = entry.instance.run({
           onUpdate: (running: RunningSubagent) => {
             if (entry.instance.status !== "running") {
-              throw new Error(`Cannot update non-running (${entry.instance.status}) subagent.`);
+              return;
             }
             params.onUpdate(running);
             entry.instance = running;
           },
           onDone: (done: DoneSubagent) => {
-            if (entry.instance.status === "done") {
-              return; // noop
-            }
             if (entry.instance.status !== "running") {
-              throw new Error(`Cannot mark done non-running (${entry.instance.status}) subagent.`);
+              return;
             }
             this.running.delete(entry.instance.id);
             params.onDone(done);
@@ -115,6 +112,9 @@ export class SubagentStore {
         this.queued.delete(entry.instance.id);
         this.running.delete(entry.instance.id);
         const done = await entry.instance.abort();
+        if ((entry.instance as Subagent).status === "done") {
+          return;
+        }
         params.onDone(done);
         entry.instance = done;
         this.done.set(entry.instance.id, entry);
