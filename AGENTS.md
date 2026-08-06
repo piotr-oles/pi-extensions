@@ -69,6 +69,9 @@ Exposes `/title` command to manually regenerate title from recent session contex
 
 No flags — constants are hardcoded (`MAX_TITLE_LENGTH = 40`, `MIN_PROMPT_LENGTH = 60`).
 
+### `pi-bell` (`packages/pi-bell`)
+Sends a terminal bell (`\x07`) when an agent run with UI finishes. Guards on `ctx.hasUI`, so SDK-created subagents and other sessions without UI do not trigger host notifications. No configuration.
+
 ### `pi-reflag` (`packages/pi-reflag`)
 Intercepts `bash` tool calls and rewrites `grep` → `rg` (ripgrep) and `find` → `fd` transparently before execution. Shows a user-visible toast notification on rewrite - agent never sees it.
 
