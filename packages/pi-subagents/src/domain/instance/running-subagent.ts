@@ -149,6 +149,10 @@ export class RunningSubagent {
   ): Promise<void> {
     const session = this.session;
     const unsubscribe = session.subscribe(async (event: AgentSessionEvent) => {
+      if (this.state.aborted) {
+        return;
+      }
+
       switch (event.type) {
         case "turn_end":
           this.state.turn++;
