@@ -1,0 +1,42 @@
+{
+  "name": "@piotr-oles/pi-bell",
+  "version": "0.0.0",
+  "description": "Pi Coding Agent extension: notify terminal hosts when an interactive agent finishes",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/piotr-oles/pi-extensions.git",
+    "directory": "packages/pi-bell"
+  },
+  "keywords": [
+    "pi-package"
+  ],
+  "type": "module",
+  "files": [
+    "src",
+    "!src/*.test.ts"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "check": "biome ci src/",
+    "fix": "biome check --write src/",
+    "release": "semantic-release -e semantic-release-monorepo"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.75.5",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1"
+  }
+}
