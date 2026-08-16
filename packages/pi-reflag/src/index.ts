@@ -36,15 +36,19 @@ export default function piReflag(pi: ExtensionAPI): void {
           "warning",
         );
       }
-      // Wrap untranslatable commands with timeout
-      const wrapped = original.replace(
-        /^\s*(find|grep)\b/,
-        (match, cmd) => `${match.replace(cmd, '')}timeout ${timeoutSec} ${cmd}`
-      );
-      event.input.command = wrapped;
-      // Also print to stderr so LLM sees the warning
       const cmdNames = untranslatable.map(c => c.name).join("/");
-      event.input.command += ` 2>&1; echo 'pi-reflag: Use fd/rg instead of ${cmdNames} for better performance' >&2`;
+      
+      if (timeoutSec === 0) {
+        // Timeout disabled - don't run command, just show message
+        event.input.command = `echo 'pi-reflag: Use fd/rg instead of ${cmdNames} for better performance. Example: fd --perm 644' >&2 && false`;
+      } else {
+        // Run with timeout - if it times out, show the message
+        const wrapped = original.replace(
+          /^\s*(find|grep)\b/,
+          (match, cmd) => `${match.replace(cmd, '')}timeout ${timeoutSec} ${cmd}`
+        );
+        event.input.command = `${wrapped} 2>&1; rc=$?; if [ $rc -eq 124 ]; then echo '\npi-reflag: Command timed out. Use fd/rg instead of ${cmdNames} for better performance.' >&2; fi; exit $rc`;
+      }
       return undefined;
     }
 
