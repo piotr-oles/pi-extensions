@@ -8,6 +8,11 @@ export default function piReflag(pi: ExtensionAPI): void {
     description: "Render how command was reflagged in the ui.",
   });
 
+  pi.registerFlag("pi-reflag-timeout", {
+    type: "string",
+    description: "Timeout in seconds for untranslatable find/grep commands. Set to '0' to disable timeout.",
+  });
+
   pi.registerFlag("pi-reflag-ignore-mode", {
     type: "string",
     description:
@@ -22,14 +27,21 @@ export default function piReflag(pi: ExtensionAPI): void {
     const original = event.input.command;
     const { rewritten, untranslatable } = await rewriteBash(original, getIgnoreMode(pi));
 
-    // Show warnings for commands that couldn't be translated
+    // For untranslatable find/grep commands, wrap with timeout and suggest fd/rg
     if (untranslatable.length > 0) {
       for (const cmd of untranslatable) {
         ctx.ui.notify(
-          `pi-reflag: could not translate '${cmd.name}' command (unsupported flags).\nConsider using 'fd' or 'rg' directly for better performance.`,
+          `pi-reflag: '${cmd.name}' has unsupported flags and will run with 1s timeout.\nConsider using 'fd' or 'rg' directly for better performance.`,
           "warning",
         );
       }
+      // Wrap untranslatable commands with timeout
+      const wrapped = original.replace(
+        /^(find|grep)\b/,
+        `timeout ${getTimeout(pi)} $1`
+      );
+      event.input.command = wrapped;
+      return undefined;
     }
 
     if (rewritten === original) {
@@ -44,6 +56,11 @@ export default function piReflag(pi: ExtensionAPI): void {
       );
     }
   });
+}
+
+function getTimeout(pi: ExtensionAPI): number {
+  const val = pi.getFlag("pi-reflag-timeout");
+  return val ? Number(val) : 1;
 }
 
 function isVerbose(pi: ExtensionAPI) {
