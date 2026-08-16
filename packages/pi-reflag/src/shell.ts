@@ -11,41 +11,61 @@ interface BashCommand extends Command {
   endIndex: number;
 }
 
-export async function rewriteBash(bash: string, ignoreMode: IgnoreMode = "auto"): Promise<string> {
+export interface RewriteResult {
+  rewritten: string;
+  untranslatable: Array<{ name: string; args: string[] }>;
+}
+
+export async function rewriteBash(
+  bash: string,
+  ignoreMode: IgnoreMode = "auto",
+): Promise<RewriteResult> {
   let parser: Parser | undefined;
   try {
     parser = await loadBashParser();
   } catch {
-    return bash;
+    return { rewritten: bash, untranslatable: [] };
   }
 
   const tree = parser.parse(bash);
   if (!tree) {
-    return bash;
+    return { rewritten: bash, untranslatable: [] };
   }
 
   let newBash = bash;
+  const untranslatable: Array<{ name: string; args: string[] }> = [];
 
   const rewrites = [grep, createFind(ignoreMode)];
 
   for (const command of extractCommands(tree.rootNode)) {
+    // Only check find and grep for untranslatable detection
+    const isFindOrGrep = command.name === "find" || command.name === "grep";
+    
+    // Try to translate the command
+    let translatedCommand: Command | undefined;
     for (const rewrite of rewrites) {
-      const newCommand = rewrite(command);
-
-      if (newCommand) {
-        newBash =
-          newBash.slice(0, command.startIndex) +
-          stringifyCommand(newCommand) +
-          newBash.slice(command.endIndex);
+      const result = rewrite(command);
+      if (result) {
+        translatedCommand = result;
         break;
       }
+    }
+    
+    if (translatedCommand) {
+      // Command was translated - apply the rewrite
+      newBash =
+        newBash.slice(0, command.startIndex) +
+        stringifyCommand(translatedCommand) +
+        newBash.slice(command.endIndex);
+    } else if (isFindOrGrep) {
+      // find/grep command couldn't be translated - track it
+      untranslatable.push({ name: command.name, args: command.args });
     }
   }
   tree.delete();
 
-  return newBash;
+  return { rewritten: newBash, untranslatable };
 }
-
 const COMPLEX_ARG_TYPES = new Set([
   "expansion",
   "simple_expansion",

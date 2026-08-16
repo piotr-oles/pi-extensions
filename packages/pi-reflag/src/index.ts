@@ -20,7 +20,17 @@ export default function piReflag(pi: ExtensionAPI): void {
     }
 
     const original = event.input.command;
-    const rewritten = await rewriteBash(original, getIgnoreMode(pi));
+    const { rewritten, untranslatable } = await rewriteBash(original, getIgnoreMode(pi));
+
+    // Show warnings for commands that couldn't be translated
+    if (untranslatable.length > 0) {
+      for (const cmd of untranslatable) {
+        ctx.ui.notify(
+          `pi-reflag: could not translate '${cmd.name}' command (unsupported flags).\nConsider using 'fd' or 'rg' directly for better performance.`,
+          "warning",
+        );
+      }
+    }
 
     if (rewritten === original) {
       return undefined;
