@@ -11,6 +11,14 @@ The original extension silently passes through commands when translation fails. 
 
 This helps users understand why their command wasn't optimized and suggests using `fd`/`rg` directly.
 
+## Demo
+
+![pi-reflag demo](demo/pi-reflag-demo.gif)
+
+The demo shows:
+- ✅ Commands 1,3: Translated to `fd`/`rg` (supported flags)
+- ⚠️ Commands 2,4,5: Skipped translation with warning (unsupported flags: `-printf`, `--binary-files`, `-perm`)
+
 ## Install
 
 ```bash
