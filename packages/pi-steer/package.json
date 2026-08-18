@@ -1,0 +1,45 @@
+{
+  "name": "@piotr-oles/pi-steer",
+  "version": "0.1.0",
+  "description": "Pi Agent extension: steer model behavior by composing system-prompt instruction sections from individual files via a flag",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/piotr-oles/pi-extensions.git",
+    "directory": "packages/pi-steer"
+  },
+  "keywords": [
+    "pi-package"
+  ],
+  "type": "module",
+  "files": [
+    "src",
+    "!src/*.test.ts",
+    "instructions"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "check": "biome ci src/",
+    "fix": "biome check --write src/",
+    "release": "semantic-release -e semantic-release-monorepo"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-agent-core": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-agent-core": "^0.75.5",
+    "@earendil-works/pi-coding-agent": "^0.75.5",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1"
+  }
+}

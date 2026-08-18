@@ -16,6 +16,7 @@ A monorepo of [pi coding agent](https://github.com/earendil-works/pi) extensions
 | [`pi-bell`](packages/pi-bell) | Sends a terminal bell when a UI agent run finishes. |
 | [`pi-pr`](packages/pi-pr) | Shows the current branch's GitHub PR in the footer — a clickable `#n` link plus a CI status dot, a merge-conflict alarm, and a review verdict, polled in the background |
 | [`pi-yagni`](packages/pi-yagni) | Injects YAGNI discipline into the system prompt — build the minimum that works, reuse before writing, no speculative code |
+| [`pi-steer`](packages/pi-steer) | Steers model behavior by composing system-prompt instruction sections from individual files — pick which ones to load and in what order via `--pi-steer` |
 
 ## Development
 
