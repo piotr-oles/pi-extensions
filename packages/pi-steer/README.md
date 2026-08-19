@@ -15,31 +15,33 @@ pi install npm:@piotr-oles/pi-steer
 Control via the `--pi-steer` CLI flag (takes precedence) or the `PI_STEER` environment variable. Value is a comma-separated list of section names:
 
 ```bash
-pi --pi-steer think-in-code,parallel-calls   # only these two, in this order
-pi --pi-steer off                             # disable entirely
-PI_STEER=commands,technical-writing pi        # same, via env variable
-pi                                            # default: all sections, file order
+pi --pi-steer executable-reasoning,craftsmanship # only these two, in this order
+pi --pi-steer=-craftsmanship                     # all except craftsmanship
+pi --pi-steer off                                # disable entirely
+PI_STEER=yagni,ste100 pi                         # same, via env variable
+pi                                               # default: all sections, file order
 ```
 
-Default when flag is not set: **all sections** in file order.
+Default when flag is not set: **all sections** in file order. Selection and composed text are captured once per session. Resumed sessions restore their snapshot and ignore current flag, environment, and instruction-file changes.
 
 ## Sections
 
 | Name | File |
 |------|------|
-| `think-in-code` | `instructions/think-in-code.md` |
-| `parallel-calls` | `instructions/parallel-calls.md` |
-| `ask-dont-assume` | `instructions/ask-dont-assume.md` |
-| `attention-to-quality` | `instructions/attention-to-quality.md` |
-| `top-down-code-layout` | `instructions/top-down-code-layout.md` |
-| `commands` | `instructions/commands.md` |
-| `technical-writing` | `instructions/technical-writing.md` |
+| `escalate-ambiguity` | `instructions/escalate-ambiguity.md` |
+| `executable-reasoning` | `instructions/executable-reasoning.md` |
+| `yagni` | `instructions/yagni.md` |
+| `craftsmanship` | `instructions/craftsmanship.md` |
+| `progressive-disclosure` | `instructions/progressive-disclosure.md` |
+| `ste100` | `instructions/ste100.md` |
+
+Prefix a name with `-` to exclude it. An exclusion-only list starts with all sections. Use `=` after `--pi-steer` when value starts with `-`, as shown above. When inclusions and exclusions are mixed, inclusions define the initial selection and exclusions remove from it.
 
 Unknown names are dropped. Duplicates are collapsed. Empty or all-unknown input falls through to the default (all sections).
 
 ## How it works
 
-Reads each selected `instructions/<name>.md` at load, joins them with blank lines, and appends the result to the system prompt at session start via `before_agent_start`. Selection is immutable for the session.
+At session start, reads selected `instructions/<name>.md` files and stores section names plus composed text in a custom session entry. Reloaded and resumed sessions restore this exact snapshot. Before each agent run, the extension appends stored text to the system prompt.
 
 This extension is lite on context — adds only the chosen sections to the system prompt.
 

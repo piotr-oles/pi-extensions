@@ -1,47 +1,64 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { describe, expect, it } from "vitest";
-import { loadSection, parseSelection, SECTIONS } from "./sections.js";
+import { createTestSession, says, type TestSession, when } from "@marcfargas/pi-test-harness";
+import { afterEach, describe, expect, it } from "vitest";
+import piSteer from "./index.js";
+import { loadSection, SECTIONS } from "./sections.js";
 
-describe("instruction files", () => {
-  it("one .md per declared section, no orphans", () => {
-    const files = readdirSync(join(import.meta.dirname, "../instructions"))
-      .filter((f) => f.endsWith(".md"))
-      .map((f) => f.slice(0, -3))
-      .sort();
-    expect(files).toEqual([...SECTIONS].sort());
+const originalPiSteer = process.env.PI_STEER;
+
+describe("pi-steer", { timeout: 30_000 }, () => {
+  let t: TestSession;
+
+  afterEach(() => {
+    t?.dispose();
+    if (originalPiSteer === undefined) {
+      delete process.env.PI_STEER;
+    } else {
+      process.env.PI_STEER = originalPiSteer;
+    }
   });
 
-  it.each(SECTIONS)("%s.md loads and starts with its header line", (name) => {
-    const content = readFileSync(join(import.meta.dirname, `../instructions/${name}.md`), "utf-8");
-    expect(content.trim().length).toBeGreaterThan(0);
-    expect(loadSection(name)?.split("\n")[0]?.endsWith(":")).toBe(true);
-  });
-});
-
-describe("parseSelection", () => {
-  it("off / none disables", () => {
-    expect(parseSelection("off")).toEqual({ off: true, names: [] });
-    expect(parseSelection("none")).toEqual({ off: true, names: [] });
-  });
-
-  it("comma list selects subset in given order", () => {
-    expect(parseSelection("commands,think-in-code")).toEqual({
-      off: false,
-      names: ["commands", "think-in-code"],
+  it("appends all instructions to the system prompt", async () => {
+    delete process.env.PI_STEER;
+    t = await createTestSession({
+      extensionFactories: [piSteer],
+      systemPrompt: "Base system prompt",
     });
+
+    await t.run(when("Test pi-steer", [says("Done.")]));
+
+    const expectedInstructions = SECTIONS.map((name) => loadSection(name)).join("\n\n");
+    expect(t.session.agent.state.systemPrompt).toContain("Base system prompt");
+    expect(t.session.agent.state.systemPrompt).toContain(expectedInstructions);
+    expect(t.session.sessionManager.getEntries()).toContainEqual(
+      expect.objectContaining({
+        type: "custom",
+        customType: "pi-steer",
+        data: { names: [...SECTIONS], text: expectedInstructions },
+      }),
+    );
   });
 
-  it("dedupes and drops unknown names", () => {
-    expect(parseSelection("commands,commands,bogus")).toEqual({
-      off: false,
-      names: ["commands"],
+  it("restores persisted instructions after extension reload", async () => {
+    process.env.PI_STEER = "ste100";
+    t = await createTestSession({
+      extensionFactories: [piSteer],
+      systemPrompt: "Base system prompt",
     });
-  });
+    await t.run(when("First turn", [says("Done.")]));
 
-  it("empty / all-unknown returns null (fall through)", () => {
-    expect(parseSelection("")).toBeNull();
-    expect(parseSelection("bogus")).toBeNull();
-    expect(parseSelection(undefined)).toBeNull();
+    process.env.PI_STEER = "craftsmanship";
+    await t.session.reload();
+    await t.run(when("Second turn", [says("Done.")]));
+
+    expect(t.session.agent.state.systemPrompt).toContain(loadSection("ste100"));
+    expect(t.session.agent.state.systemPrompt).not.toContain(loadSection("craftsmanship"));
+    expect(
+      t.session.sessionManager
+        .getEntries()
+        .filter(
+          (entry: { type: string; customType?: string }) =>
+            entry.type === "custom" && entry.customType === "pi-steer",
+        ),
+    ).toHaveLength(1);
   });
 });
