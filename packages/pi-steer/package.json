@@ -1,11 +1,11 @@
 {
-  "name": "@piotr-oles/pi-yagni",
+  "name": "@piotr-oles/pi-steer",
   "version": "0.1.0",
-  "description": "Pi Agent extension: inject YAGNI discipline — build the minimum that works, reuse before writing, no speculative code",
+  "description": "Pi Agent extension: steer model behavior by composing system-prompt instruction sections from individual files via a flag",
   "repository": {
     "type": "git",
     "url": "https://github.com/piotr-oles/pi-extensions.git",
-    "directory": "packages/pi-yagni"
+    "directory": "packages/pi-steer"
   },
   "keywords": [
     "pi-package"
@@ -39,6 +39,7 @@
   "devDependencies": {
     "@earendil-works/pi-agent-core": "^0.75.5",
     "@earendil-works/pi-coding-agent": "^0.75.5",
+    "@marcfargas/pi-test-harness": "^0.6.1",
     "typescript": "^5.8.3",
     "vitest": "^3.2.1"
   }
