@@ -211,8 +211,9 @@ export function translateGrepArgs(args: string[]): string[] | undefined {
     }
 
     if (arg.startsWith("-") && arg.length > 2 && !/^-\d/.test(arg)) {
-      for (const c of arg.slice(1)) {
-        const flag = `-${c}`;
+      const chars = arg.slice(1);
+      for (let j = 0; j < chars.length; j++) {
+        const flag = `-${chars[j]}`;
         if (DROP_SHORT.has(flag)) {
           continue;
         }
@@ -229,7 +230,18 @@ export function translateGrepArgs(args: string[]): string[] | undefined {
           translated.push(flag);
           continue;
         }
-
+        if (PASSTHROUGH_WITH_ARG.has(flag)) {
+          // attached value: -A3 → -A 3; bare flag at cluster end takes next arg
+          translated.push(flag);
+          if (j + 1 < chars.length) {
+            translated.push(chars.slice(j + 1));
+            j = chars.length;
+          } else if (i + 1 < args.length) {
+            i++;
+            translated.push(args[i]);
+          }
+          break;
+        }
         // unknown flag - bail
         return undefined;
       }

@@ -122,6 +122,12 @@ describe("context lines", () => {
     expect(t(["-A", "3", "hello", "file.txt"])).toEqual(["-A", "3", "hello", "file.txt"]);
   });
 
+  it("attached context value -A3 splits into flag + value", () => {
+    expect(t(["-A3", "pat", "file.txt"])).toEqual(["-A", "3", "pat", "file.txt"]);
+    expect(t(["-B3", "pat"])).toEqual(["-B", "3", "pat"]);
+    expect(t(["-C2", "pat"])).toEqual(["-C", "2", "pat"]);
+  });
+
   it("before context -B", () => {
     expect(t(["-B", "2", "hello", "file.txt"])).toEqual(["-B", "2", "hello", "file.txt"]);
   });
