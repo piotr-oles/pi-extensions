@@ -104,9 +104,9 @@ Flags:
 
 ## Tech stack
 
-- **Runtime**: Node.js ≥ 22.19.0, ESM throughout (`"type": "module"`)
+- **Runtime**: Node.js ≥ 24.0.0, ESM throughout (`"type": "module"`)
 - **Language**: TypeScript 5, strict
-- **Package manager**: pnpm 10 with workspaces
+- **Package manager**: pnpm 12 with workspaces
 - **Linter/formatter**: Biome
 - **Tests**: Vitest
 - **Releases**: Changesets
