@@ -1,7 +1,7 @@
-diff --git a/dist/session.js b/dist/session.js
-index f7dc5de9be959c541ee4bab0ad1424656993bbe9..a82ffa197fea33978516c4d59a67f769f28326fa 100644
---- a/dist/session.js
-+++ b/dist/session.js
+diff --git a/node_modules/@marcfargas/pi-test-harness/dist/session.js b/node_modules/@marcfargas/pi-test-harness/dist/session.js
+index f7dc5de..a82ffa1 100644
+--- a/node_modules/@marcfargas/pi-test-harness/dist/session.js
++++ b/node_modules/@marcfargas/pi-test-harness/dist/session.js
 @@ -12,7 +12,7 @@ import * as fs from "node:fs";
  import * as path from "node:path";
  import * as os from "node:os";
@@ -49,10 +49,10 @@ index f7dc5de9be959c541ee4bab0ad1424656993bbe9..a82ffa197fea33978516c4d59a67f769
      }
      // Check for extension load errors
      if (extensionsResult.errors.length > 0) {
-diff --git a/src/session.ts b/src/session.ts
-index 83991343cb13c8297b7fc4cd04f7b910466f0edc..29fc31b9d006eee6de0fb468dbb0d3e61a86a6ef 100644
---- a/src/session.ts
-+++ b/src/session.ts
+diff --git a/node_modules/@marcfargas/pi-test-harness/src/session.ts b/node_modules/@marcfargas/pi-test-harness/src/session.ts
+index 8399134..29fc31b 100644
+--- a/node_modules/@marcfargas/pi-test-harness/src/session.ts
++++ b/node_modules/@marcfargas/pi-test-harness/src/session.ts
 @@ -20,7 +20,7 @@ import {
  	type AgentSessionEvent,
  } from "@earendil-works/pi-coding-agent";

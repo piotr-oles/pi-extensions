@@ -2,17 +2,21 @@
   "name": "pi-extensions",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "pnpm@12.4.2",
+  "packageManager": "npm@11.19.0",
   "engines": {
     "node": ">=24.0.0"
   },
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "test": "pnpm -r run test",
-    "typecheck": "pnpm -r run typecheck",
-    "check": "pnpm -r run check",
-    "fix": "pnpm -r run fix",
-    "validate:release": "pnpm --filter './packages/*' --workspace-concurrency=1 exec -- semantic-release -e semantic-release-monorepo --dry-run"
+    "test": "npm run test --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "check": "npm run check --workspaces",
+    "fix": "npm run fix --workspaces",
+    "validate:release": "npm run release --workspaces -- --dry-run",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
@@ -25,10 +29,24 @@
     "@semantic-release/npm": "^13.1.5",
     "@semantic-release/release-notes-generator": "^14.1.1",
     "lefthook": "^2.1.9",
+    "patch-package": "^8.0.1",
     "semantic-release": "^25.0.5",
     "semantic-release-monorepo": "^8.0.2"
   },
+  "overrides": {
+    "@earendil-works/pi-agent-core": "0.80.10",
+    "@earendil-works/pi-ai": "0.80.10",
+    "@earendil-works/pi-coding-agent": "0.80.10",
+    "@earendil-works/pi-tui": "0.80.10"
+  },
   "volta": {
     "node": "24.21.0"
+  },
+  "allowScripts": {
+    "@google/genai": true,
+    "esbuild": true,
+    "lefthook": true,
+    "protobufjs": true,
+    "fsevents": false
   }
 }

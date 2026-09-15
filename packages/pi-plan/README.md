@@ -60,10 +60,10 @@ All plan versions are tracked in a git repo at `~/.pi/plan/`. Each interaction c
 ## Development
 
 ```bash
-pnpm install
-pnpm test
-pnpm typecheck
-pnpm check
+npm install
+npm test
+npm run typecheck
+npm run check
 ```
 
 To test changes manually, pass the source entry point directly to pi:

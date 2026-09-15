@@ -1,7 +1,7 @@
 [
   {
-    "label": "pnpm install",
-    "command": "pnpm install",
+    "label": "npm install",
+    "command": "npm install",
     "args": [],
     "hooks": [
       "create_worktree"

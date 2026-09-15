@@ -4,7 +4,7 @@ Guidelines for AI coding agents working in this repository.
 
 ## What this repo is
 
-A pnpm monorepo of [pi coding agent](https://github.com/earendil-works/pi) extensions. Each package under `packages/` is a self-contained pi extension that can be installed by users into their pi config.
+An npm workspace monorepo of [pi coding agent](https://github.com/earendil-works/pi) extensions. Each package under `packages/` is a self-contained pi extension that can be installed by users into their pi config.
 
 ## Packages
 
@@ -106,7 +106,7 @@ Flags:
 
 - **Runtime**: Node.js ≥ 24.0.0, ESM throughout (`"type": "module"`)
 - **Language**: TypeScript 5, strict
-- **Package manager**: pnpm 12 with workspaces
+- **Package manager**: npm 11 with workspaces
 - **Linter/formatter**: Biome
 - **Tests**: Vitest
 - **Releases**: Changesets
@@ -114,11 +114,11 @@ Flags:
 ## Development commands
 
 ```bash
-pnpm install                  # install workspace deps
-pnpm test                     # run all tests across packages
-pnpm typecheck                # tsc --noEmit across packages
-pnpm fix                      # check and auto-fix
-pnpm validate:release         # dry-run semantic-release for all packages
+npm install                   # install workspace deps
+npm test                      # run all tests across packages
+npm run typecheck             # tsc --noEmit across packages
+npm run fix                   # check and auto-fix
+npm run validate:release      # dry-run semantic-release for all packages
 ```
 
 ## Git hooks
@@ -128,13 +128,13 @@ Pre-commit runs biome check, typecheck, and tests in parallel via Lefthook (`lef
 After clone:
 
 ```bash
-mkdir -p .git/hooks && printf '#!/usr/bin/env bash\nset -euo pipefail\npnpm lefthook run pre-commit\n' > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+mkdir -p .git/hooks && printf '#!/usr/bin/env bash\nset -euo pipefail\nnpm exec -- lefthook run pre-commit\n' > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 ```
 
 Run hooks manually:
 
 ```bash
-pnpm lefthook run pre-commit
+npm exec -- lefthook run pre-commit
 ```
 
 > A global `core.hooksPath` may intercept hooks and delegate to `.git/hooks/` via a `run-local-hooks` shim. Lefthook cannot auto-install into a custom hooks path, so the wrapper is created manually.
@@ -189,7 +189,7 @@ Tests live in `src/` inside each package. Vitest is the test runner.
    - scripts: `test`, `typecheck`, `check`, `fix`
 3. `packages/<name>/tsconfig.json` - extend `../../tsconfig.base.json`
 4. `packages/<name>/src/index.ts` - default-export a function `(pi: ExtensionAPI) => void`
-5. CI picks it up automatically via `pnpm -r`
+5. CI picks it up automatically via npm workspaces
 
 For publishable packages, also add `"publishConfig": { "access": "public" }` and `"files"` to `package.json`. Private packages set `"private": true`.
 
@@ -211,4 +211,4 @@ Conventional commit format is required and enforced by commitlint (commit-msg ho
 
 Tag format: `@piotr-oles/<pkg>@<version>`. Each package gets its own `CHANGELOG.md`.
 
-Dry run (no publish, no tags): `pnpm validate:release`
+Dry run (no publish, no tags): `npm run validate:release`

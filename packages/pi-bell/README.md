@@ -17,10 +17,10 @@ Sessions without UI—including SDK-created subagent sessions, print mode, and J
 ## Development
 
 ```bash
-pnpm install
-pnpm --filter @piotr-oles/pi-bell test
-pnpm --filter @piotr-oles/pi-bell typecheck
-pnpm --filter @piotr-oles/pi-bell check
+npm install
+npm run test --workspace @piotr-oles/pi-bell
+npm run typecheck --workspace @piotr-oles/pi-bell
+npm run check --workspace @piotr-oles/pi-bell
 ```
 
 To test extension manually:

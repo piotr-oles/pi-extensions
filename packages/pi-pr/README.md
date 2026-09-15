@@ -81,10 +81,10 @@ extension is silent: it clears its status and shows nothing.
 ## Development
 
 ```bash
-pnpm install
-pnpm test
-pnpm typecheck
-pnpm check
+npm install
+npm test
+npm run typecheck
+npm run check
 ```
 
 To test changes manually:

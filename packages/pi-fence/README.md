@@ -70,10 +70,10 @@ PI_FENCE_MODE=block pi    # same, via env variable
 ## Development
 
 ```bash
-pnpm install
-pnpm test
-pnpm typecheck
-pnpm check
+npm install
+npm test
+npm run typecheck
+npm run check
 ```
 
 To test changes manually, pass the source entry point directly to pi with the `-e` flag:

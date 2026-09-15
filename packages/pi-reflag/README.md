@@ -126,10 +126,10 @@ PI_REFLAG_VERBOSE=true pi
 ## Development
 
 ```bash
-pnpm install
-pnpm test
-pnpm typecheck
-pnpm check
+npm install
+npm test
+npm run typecheck
+npm run check
 ```
 
 To test changes manually:

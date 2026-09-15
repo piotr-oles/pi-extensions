@@ -44,10 +44,10 @@ This extension is very lite on context - adds only a few lines of text to the sy
 ## Development
 
 ```bash
-pnpm install
-pnpm test
-pnpm typecheck
-pnpm check
+npm install
+npm test
+npm run typecheck
+npm run check
 ```
 
 To test changes manually, pass the source entry point directly to pi:

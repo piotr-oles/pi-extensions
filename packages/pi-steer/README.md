@@ -49,10 +49,10 @@ This extension is lite on context — adds only the chosen sections to the syste
 ## Development
 
 ```bash
-pnpm install
-pnpm test
-pnpm typecheck
-pnpm check
+npm install
+npm test
+npm run typecheck
+npm run check
 ```
 
 To test changes manually, pass the source entry point directly to pi:
