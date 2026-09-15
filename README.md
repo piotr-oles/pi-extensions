@@ -20,11 +20,11 @@ A monorepo of [pi coding agent](https://github.com/earendil-works/pi) extensions
 ## Development
 
 ```bash
-pnpm install        # install all workspace dependencies
-pnpm test           # run all package tests
-pnpm typecheck      # type-check all packages
-pnpm check          # lint + format check (biome ci)
-pnpm fix            # auto-fix lint and format issues
+npm install         # install all workspace dependencies
+npm test            # run all package tests
+npm run typecheck   # type-check all packages
+npm run check       # lint + format check (biome ci)
+npm run fix         # auto-fix lint and format issues
 ```
 
 Each package has its own `README.md` with installation and usage instructions.
@@ -34,7 +34,7 @@ Each package has its own `README.md` with installation and usage instructions.
 Pre-commit hooks run biome check, typecheck, and tests via [Lefthook](https://github.com/evilmartians/lefthook). After cloning, create the hook once:
 
 ```bash
-mkdir -p .git/hooks && printf '#!/usr/bin/env bash\nset -euo pipefail\npnpm lefthook run pre-commit\n' > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+mkdir -p .git/hooks && printf '#!/usr/bin/env bash\nset -euo pipefail\nnpm exec -- lefthook run pre-commit\n' > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 ```
 
 > The extra setup step is needed because a global `core.hooksPath` intercepts git hooks and delegates to `.git/hooks/` — lefthook cannot auto-install there.
@@ -45,7 +45,7 @@ mkdir -p .git/hooks && printf '#!/usr/bin/env bash\nset -euo pipefail\npnpm left
 2. Add a `package.json` with `"type": "module"`, a `"pi": { "extensions": ["./src/index.ts"] }` field, and scripts: `test`, `typecheck`, `check`, `fix`
 3. Add a `tsconfig.json` extending `../../tsconfig.base.json`
 4. Add `src/index.ts` with a default-exported function `(pi: ExtensionAPI) => void`
-5. CI picks it up automatically via `pnpm -r`
+5. CI picks it up automatically via npm workspaces
 
 For publishable packages add `"publishConfig": { "access": "public" }` and a `"files"` list. Private packages set `"private": true`.
 
@@ -77,7 +77,7 @@ Tags follow the format `@piotr-oles/<pkg>@<version>`, e.g. `@piotr-oles/pi-fence
 ### Dry run
 
 ```bash
-pnpm validate:release   # preview what would release without publishing
+npm run validate:release   # preview what would release without publishing
 ```
 
 ## License

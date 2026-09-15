@@ -35,10 +35,10 @@ Ported from [`code-yeongyu/pi-bash-timeout`](https://github.com/code-yeongyu/pi-
 ## Development
 
 ```bash
-pnpm install
-pnpm test
-pnpm typecheck
-pnpm check
+npm install
+npm test
+npm run typecheck
+npm run check
 ```
 
 To test changes manually, pass the source entry point directly to pi:
