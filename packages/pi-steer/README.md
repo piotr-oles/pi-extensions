@@ -32,6 +32,7 @@ Default when flag is not set: **all sections** in file order. Selection and comp
 | `executable-reasoning` | `instructions/executable-reasoning.md` |
 | `yagni` | `instructions/yagni.md` |
 | `craftsmanship` | `instructions/craftsmanship.md` |
+| `black-box-testing` | `instructions/black-box-testing.md` |
 | `progressive-disclosure` | `instructions/progressive-disclosure.md` |
 | `ste100` | `instructions/ste100.md` |
 
