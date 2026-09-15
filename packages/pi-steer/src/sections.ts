@@ -10,7 +10,7 @@ export const SECTIONS = [
   "yagni",
   "craftsmanship",
   "black-box-testing",
-  "progressive-disclosure",
+  "top-down-code",
   "ste100",
 ] as const;
 
