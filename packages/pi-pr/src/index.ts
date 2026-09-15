@@ -47,6 +47,14 @@ export default function piPr(pi: ExtensionAPI): void {
         STATUS_KEY,
         pr ? renderStatus(pr, ctx.ui.theme, detectBackground()) : undefined,
       );
+    } catch (error) {
+      // After /reload the runner marks this instance's captured ctx stale, but
+      // the interval registered in session_start keeps firing. Stop polling
+      // instead of letting the stale-ctx throw crash the process; the freshly
+      // loaded instance owns the status line from here on.
+      if (error instanceof Error && error.message.includes("stale")) {
+        stop();
+      }
     } finally {
       controller = null;
       polling = false;
