@@ -4,7 +4,7 @@
   "description": "Pi Agent extension: respond in caveman mode — cut ~75% output tokens while keeping full technical accuracy",
   "repository": {
     "type": "git",
-    "url": "https://github.com/piotr-oles/pi-extensions.git",
+    "url": "git+https://github.com/piotr-oles/pi-extensions.git",
     "directory": "packages/pi-caveman"
   },
   "keywords": [

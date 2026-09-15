@@ -4,7 +4,7 @@
   "description": "Pi Agent extension: generate a short session title from the first user message",
   "repository": {
     "type": "git",
-    "url": "https://github.com/piotr-oles/pi-extensions.git",
+    "url": "git+https://github.com/piotr-oles/pi-extensions.git",
     "directory": "packages/pi-title"
   },
   "keywords": [
