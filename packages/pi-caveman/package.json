@@ -37,8 +37,9 @@
     "@earendil-works/pi-coding-agent": "*"
   },
   "devDependencies": {
-    "@earendil-works/pi-agent-core": "^0.75.5",
-    "@earendil-works/pi-coding-agent": "^0.75.5",
+    "@earendil-works/pi-agent-core": "0.80.10",
+    "@earendil-works/pi-ai": "0.80.10",
+    "@earendil-works/pi-coding-agent": "0.80.10",
     "@marcfargas/pi-test-harness": "^0.6.1",
     "typescript": "^5.8.3",
     "vitest": "^3.2.1"

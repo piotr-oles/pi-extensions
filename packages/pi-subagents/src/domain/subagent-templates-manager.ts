@@ -161,6 +161,7 @@ const THINKING_LEVELS: ReadonlySet<ThinkingLevel> = new Set([
   "medium",
   "high",
   "xhigh",
+  "max",
 ]);
 
 function isThinkingLevel(value: string): value is ThinkingLevel {

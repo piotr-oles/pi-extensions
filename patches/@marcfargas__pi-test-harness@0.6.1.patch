@@ -1,0 +1,104 @@
+diff --git a/dist/session.js b/dist/session.js
+index f7dc5de9be959c541ee4bab0ad1424656993bbe9..a82ffa197fea33978516c4d59a67f769f28326fa 100644
+--- a/dist/session.js
++++ b/dist/session.js
+@@ -12,7 +12,7 @@ import * as fs from "node:fs";
+ import * as path from "node:path";
+ import * as os from "node:os";
+ import { createAgentSession, DefaultResourceLoader, SessionManager, SettingsManager, } from "@earendil-works/pi-coding-agent";
+-import { getModel } from "@earendil-works/pi-ai";
++import { getBuiltinModel } from "@earendil-works/pi-ai/providers/all";
+ import { createPlaybookStreamFn } from "./playbook.js";
+ import { interceptToolExecution } from "./mock-tools.js";
+ import { createMockUIContext } from "./mock-ui.js";
+@@ -38,7 +38,7 @@ export async function createTestSession(options = {}) {
+     });
+     await loader.reload();
+     // Use a real model definition (never actually called — playbook replaces streamFn)
+-    const playbookModel = getModel("openai", "gpt-4o");
++    const playbookModel = getBuiltinModel("openai", "gpt-4o");
+     // Create real session with in-memory persistence
+     const { session, extensionsResult } = await createAgentSession({
+         cwd,
+@@ -50,14 +50,20 @@ export async function createTestSession(options = {}) {
+     });
+     // Override getApiKey to bypass real auth checks (on both agent and session)
+     session.agent.getApiKey = async () => "test-key";
+-    // The session also validates via _modelRegistry.getApiKey — patch it
+-    const origModelRegistry = session._modelRegistry;
+-    if (origModelRegistry) {
+-        origModelRegistry.getApiKey = async () => "test-key";
+-        origModelRegistry.getApiKeyForProvider = async () => "test-key";
+-        origModelRegistry.getApiKeyAndHeaders = async () => ({ ok: true, apiKey: "test-key", headers: {} });
+-        origModelRegistry.hasConfiguredAuth = () => true;
+-        origModelRegistry.isUsingOAuth = () => false;
++    const modelRuntime = session._modelRuntime;
++    if (modelRuntime) {
++        modelRuntime.hasConfiguredAuth = () => true;
++        modelRuntime.checkAuth = async () => ({ type: "apiKey", apiKey: "test-key" });
++        modelRuntime.getAuth = async () => ({ auth: { apiKey: "test-key" }, env: {} });
++        modelRuntime.isUsingOAuth = () => false;
++    }
++    const legacyModelRegistry = session._modelRegistry;
++    if (legacyModelRegistry) {
++        legacyModelRegistry.getApiKey = async () => "test-key";
++        legacyModelRegistry.getApiKeyForProvider = async () => "test-key";
++        legacyModelRegistry.getApiKeyAndHeaders = async () => ({ ok: true, apiKey: "test-key", headers: {} });
++        legacyModelRegistry.hasConfiguredAuth = () => true;
++        legacyModelRegistry.isUsingOAuth = () => false;
+     }
+     // Check for extension load errors
+     if (extensionsResult.errors.length > 0) {
+diff --git a/src/session.ts b/src/session.ts
+index 83991343cb13c8297b7fc4cd04f7b910466f0edc..29fc31b9d006eee6de0fb468dbb0d3e61a86a6ef 100644
+--- a/src/session.ts
++++ b/src/session.ts
+@@ -20,7 +20,7 @@ import {
+ 	type AgentSessionEvent,
+ } from "@earendil-works/pi-coding-agent";
+ import type { AgentTool } from "@earendil-works/pi-agent-core";
+-import { getModel } from "@earendil-works/pi-ai";
++import { getBuiltinModel } from "@earendil-works/pi-ai/providers/all";
+ import { createPlaybookStreamFn, type PlaybookState } from "./playbook.js";
+ import { interceptToolExecution } from "./mock-tools.js";
+ import { createMockUIContext } from "./mock-ui.js";
+@@ -56,7 +56,7 @@ export async function createTestSession(options: TestSessionOptions = {}): Promi
+ 	await loader.reload();
+ 
+ 	// Use a real model definition (never actually called — playbook replaces streamFn)
+-	const playbookModel = getModel("openai", "gpt-4o");
++	const playbookModel = getBuiltinModel("openai", "gpt-4o");
+ 
+ 	// Create real session with in-memory persistence
+ 	const { session, extensionsResult } = await createAgentSession({
+@@ -70,14 +70,22 @@ export async function createTestSession(options: TestSessionOptions = {}): Promi
+ 
+ 	// Override getApiKey to bypass real auth checks (on both agent and session)
+ 	(session.agent as any).getApiKey = async () => "test-key";
+-	// The session also validates via _modelRegistry.getApiKey — patch it
+-	const origModelRegistry = (session as any)._modelRegistry;
+-	if (origModelRegistry) {
+-		origModelRegistry.getApiKey = async () => "test-key";
+-		origModelRegistry.getApiKeyForProvider = async () => "test-key";
+-		origModelRegistry.getApiKeyAndHeaders = async () => ({ ok: true, apiKey: "test-key", headers: {} });
+-		origModelRegistry.hasConfiguredAuth = () => true;
+-		origModelRegistry.isUsingOAuth = () => false;
++
++	const modelRuntime = (session as any)._modelRuntime;
++	if (modelRuntime) {
++		modelRuntime.hasConfiguredAuth = () => true;
++		modelRuntime.checkAuth = async () => ({ type: "apiKey", apiKey: "test-key" });
++		modelRuntime.getAuth = async () => ({ auth: { apiKey: "test-key" }, env: {} });
++		modelRuntime.isUsingOAuth = () => false;
++	}
++
++	const legacyModelRegistry = (session as any)._modelRegistry;
++	if (legacyModelRegistry) {
++		legacyModelRegistry.getApiKey = async () => "test-key";
++		legacyModelRegistry.getApiKeyForProvider = async () => "test-key";
++		legacyModelRegistry.getApiKeyAndHeaders = async () => ({ ok: true, apiKey: "test-key", headers: {} });
++		legacyModelRegistry.hasConfiguredAuth = () => true;
++		legacyModelRegistry.isUsingOAuth = () => false;
+ 	}
+ 
+ 	// Check for extension load errors

@@ -101,7 +101,7 @@ describe("loadCustomAgents", () => {
         "---",
         "description: Full agent",
         "model: anthropic/claude-haiku-4-5",
-        "thinking: low",
+        "thinking: max",
         "max_turns: 10",
         "included_tools: edit, write",
         "---",
@@ -113,7 +113,7 @@ describe("loadCustomAgents", () => {
 
     const cfg = (await load(cwd)).find((t) => t.name === "full")!;
     expect(cfg.model).toBe("anthropic/claude-haiku-4-5");
-    expect(cfg.thinkingLevel).toBe("low");
+    expect(cfg.thinkingLevel).toBe("max");
     expect(cfg.maxTurns).toBe(10);
     expect(cfg.includedTools).toEqual(["edit", "write"]);
   });
