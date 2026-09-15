@@ -31,7 +31,16 @@ jobs:
           node-version: "22"
           cache: pnpm
           registry-url: "https://registry.npmjs.org"
-      - run: pnpm install --frozen-lockfile
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint & format
+        run: pnpm check
+      - name: Type-check
+        run: pnpm typecheck
+      - name: Test
+        run: pnpm test
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
