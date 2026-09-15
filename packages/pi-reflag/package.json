@@ -4,7 +4,7 @@
   "description": "Pi Agent extension: transparently rewrite grep commands to rg (ripgrep) for faster searches",
   "repository": {
     "type": "git",
-    "url": "https://github.com/piotr-oles/pi-extensions.git",
+    "url": "git+https://github.com/piotr-oles/pi-extensions.git",
     "directory": "packages/pi-reflag"
   },
   "keywords": [

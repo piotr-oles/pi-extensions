@@ -4,7 +4,7 @@
   "description": "Pi Agent extension: save named markdown plans to disk and ask user to confirm before executing",
   "repository": {
     "type": "git",
-    "url": "https://github.com/piotr-oles/pi-extensions.git",
+    "url": "git+https://github.com/piotr-oles/pi-extensions.git",
     "directory": "packages/pi-plan"
   },
   "keywords": [

@@ -4,7 +4,7 @@
   "description": "Pi Agent extension: show the current branch's GitHub PR status (clickable #n + CI/merge/review dots) in the footer",
   "repository": {
     "type": "git",
-    "url": "https://github.com/piotr-oles/pi-extensions.git",
+    "url": "git+https://github.com/piotr-oles/pi-extensions.git",
     "directory": "packages/pi-pr"
   },
   "keywords": [

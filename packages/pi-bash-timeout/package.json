@@ -4,7 +4,7 @@
   "description": "Pi Agent extension: inject a default bash timeout and append timeout policy guidance to the system prompt",
   "repository": {
     "type": "git",
-    "url": "https://github.com/piotr-oles/pi-extensions.git",
+    "url": "git+https://github.com/piotr-oles/pi-extensions.git",
     "directory": "packages/pi-bash-timeout"
   },
   "keywords": [
