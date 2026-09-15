@@ -1,6 +1,12 @@
 packages:
   - "packages/*"
 
+allowBuilds:
+  '@google/genai': true
+  esbuild: true
+  lefthook: true
+  protobufjs: true
+
 overrides:
   '@earendil-works/pi-agent-core': 0.80.10
   '@earendil-works/pi-ai': 0.80.10

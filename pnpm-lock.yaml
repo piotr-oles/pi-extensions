@@ -1,3 +1,161 @@
+---
+lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    configDependencies: {}
+    packageManagerDependencies:
+      pnpm:
+        specifier: 12.4.2
+        version: 12.4.2
+
+packages:
+
+  '@pnpm/exe.android-arm64@12.4.2':
+    resolution: {integrity: sha512-E255MbcQ0V1577M2BV0ajWuP7KmTPYA0jqZnk3rK6Lq3kTvZWulMMb7iqRmnLsQbyWTkMEB2CfyM70loVDA8xg==}
+    cpu: [arm64]
+    os: [android]
+
+  '@pnpm/exe.android-x64@12.4.2':
+    resolution: {integrity: sha512-J1pSeCUwuKxMG70ZzpWn8JzElxiEa8NN/3N0SlZRtU2xbztChaJCKF3HaBNIj9yPfeofWzJo/lwNvDDjraQuZw==}
+    cpu: [x64]
+    os: [android]
+
+  '@pnpm/exe.darwin-arm64@12.4.2':
+    resolution: {integrity: sha512-A0WDo8iErfZBXgrLseQxw8i8Y9ctUpOEl/Uu+cubnTzpD8tT9ykIB548L8YTM2WD4OS+ZOHSxy8aGZcvKq8PaQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@pnpm/exe.darwin-x64@12.4.2':
+    resolution: {integrity: sha512-MSgJdovBWHcb5DEOvfPH9yNi/T5O1Xa4ess+E1ESGo/5yuty7S4JoiIjami+fsNXfnoQMlwsMUqYU4zAvBcNCw==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@pnpm/exe.freebsd-x64@12.4.2':
+    resolution: {integrity: sha512-h2YumlQSNvgbRPv+RXwABohX65f9bOBZn+jMIt7bFDISZPCzQ+Nvpt6Awbp4ip5PwQgYxbu5iREJ1fHE39Fm8A==}
+    cpu: [x64]
+    os: [freebsd]
+
+  '@pnpm/exe.linux-arm64-musl@12.4.2':
+    resolution: {integrity: sha512-LwSEtSEDTv6S51YLs3YvSkPyun/QmfMic1UGICUkPWFu6ByP43RdMlkKvmVkfGhAYCpnxO057vrmyJqtfZrPCA==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  '@pnpm/exe.linux-arm64@12.4.2':
+    resolution: {integrity: sha512-2dSiDXyhx+RTHsewxex8f/jVjqQXWJ2oow4kCVHEWdZKeBpgMxvZ6fHkTAUBJXgqhbKIDHvuNlZBP7gJfUWL5A==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.linux-ppc64@12.4.2':
+    resolution: {integrity: sha512-8Itc+jQk+MTz04LS9D1RcH+VctAWmzM4l1cJQ+Sx7pAJNo7EKHdRMbC0Tok1jyQ7eEHNJZD5EleYneZqWfZM+g==}
+    cpu: [ppc64]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.linux-riscv64@12.4.2':
+    resolution: {integrity: sha512-hleOeqhTVpH+z9RVMGnxvU4ZnrkBUClWjCbHD9u6kwyqhGSpevoU1wTGish+CBRhmIgMAy9pAfFpqhbAKOKNfw==}
+    cpu: [riscv64]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.linux-s390x@12.4.2':
+    resolution: {integrity: sha512-LAsQRRdP9aToENR6dtcIJ9l+e1zMYOX0tQcLGpRyLPVBQcYRLlvAPcmDshsiIHQjp05SDa9FI0czX1ZQ1a7a/A==}
+    cpu: [s390x]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.linux-x64-musl@12.4.2':
+    resolution: {integrity: sha512-kzfzH2/0BWdTABK14Yj5a1xsdkTEQUp2eXEPNakaD9jKL025lq3hyaKHIz/gIZaPDMe/1bFFK/En4ztFlbBJxw==}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@pnpm/exe.linux-x64@12.4.2':
+    resolution: {integrity: sha512-/pbt0UVTa8NMDhzOWLQRfZ6G9ROKXlJPZtx845BqyWfc7hCrWXhTLBd70yO2y8+E+IWN3oHM1s/JsIQNGk1yvg==}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.win32-arm64@12.4.2':
+    resolution: {integrity: sha512-PsW19e4dAUNpZ0cS9flaxFuAmpt2dKlH/Vvi8TZ4qyJjjQzue/CEsWm+6wKVP4CJ7IT8RdL4qh+soOPWIgF2Zw==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@pnpm/exe.win32-x64@12.4.2':
+    resolution: {integrity: sha512-+xGoeE0g55ztWvl8i5QqdmNfW3nIrTVcoQrNshEOwxthm9Ag48oXton3uxOA3/SANyz5AXexEjj2KO20NnOrEw==}
+    cpu: [x64]
+    os: [win32]
+
+  pnpm@12.4.2:
+    resolution: {integrity: sha512-CK3GYTGAJ1x8ntraOdzwjJxhrU5+rzMKTzRh8QKw+QdCNFTRF/mOctR/7wYWBwZE17/8lzpqV/UJCm18NosHyQ==}
+    engines: {node: '>=18.*'}
+    hasBin: true
+
+snapshots:
+
+  '@pnpm/exe.android-arm64@12.4.2':
+    optional: true
+
+  '@pnpm/exe.android-x64@12.4.2':
+    optional: true
+
+  '@pnpm/exe.darwin-arm64@12.4.2':
+    optional: true
+
+  '@pnpm/exe.darwin-x64@12.4.2':
+    optional: true
+
+  '@pnpm/exe.freebsd-x64@12.4.2':
+    optional: true
+
+  '@pnpm/exe.linux-arm64-musl@12.4.2':
+    optional: true
+
+  '@pnpm/exe.linux-arm64@12.4.2':
+    optional: true
+
+  '@pnpm/exe.linux-ppc64@12.4.2':
+    optional: true
+
+  '@pnpm/exe.linux-riscv64@12.4.2':
+    optional: true
+
+  '@pnpm/exe.linux-s390x@12.4.2':
+    optional: true
+
+  '@pnpm/exe.linux-x64-musl@12.4.2':
+    optional: true
+
+  '@pnpm/exe.linux-x64@12.4.2':
+    optional: true
+
+  '@pnpm/exe.win32-arm64@12.4.2':
+    optional: true
+
+  '@pnpm/exe.win32-x64@12.4.2':
+    optional: true
+
+  pnpm@12.4.2:
+    optionalDependencies:
+      '@pnpm/exe.android-arm64': 12.4.2
+      '@pnpm/exe.android-x64': 12.4.2
+      '@pnpm/exe.darwin-arm64': 12.4.2
+      '@pnpm/exe.darwin-x64': 12.4.2
+      '@pnpm/exe.freebsd-x64': 12.4.2
+      '@pnpm/exe.linux-arm64': 12.4.2
+      '@pnpm/exe.linux-arm64-musl': 12.4.2
+      '@pnpm/exe.linux-ppc64': 12.4.2
+      '@pnpm/exe.linux-riscv64': 12.4.2
+      '@pnpm/exe.linux-s390x': 12.4.2
+      '@pnpm/exe.linux-x64': 12.4.2
+      '@pnpm/exe.linux-x64-musl': 12.4.2
+      '@pnpm/exe.win32-arm64': 12.4.2
+      '@pnpm/exe.win32-x64': 12.4.2
+
+---
 lockfileVersion: '9.0'
 
 settings:
@@ -11,9 +169,7 @@ overrides:
   '@earendil-works/pi-tui': 0.80.10
 
 patchedDependencies:
-  '@marcfargas/pi-test-harness@0.6.1':
-    hash: d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec
-    path: patches/@marcfargas__pi-test-harness@0.6.1.patch
+  '@marcfargas/pi-test-harness@0.6.1': d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec
 
 importers:
 
@@ -30,106 +186,106 @@ importers:
         version: 21.0.2
       '@semantic-release/changelog':
         specifier: ^6.0.3
-        version: 6.0.3(semantic-release@25.0.5(typescript@7.0.2))
+        version: 6.0.3(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))
       '@semantic-release/commit-analyzer':
         specifier: ^13.0.1
-        version: 13.0.1(semantic-release@25.0.5(typescript@7.0.2))
+        version: 13.0.1(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))(supports-color@7.2.0)
       '@semantic-release/git':
         specifier: ^10.0.1
-        version: 10.0.1(semantic-release@25.0.5(typescript@7.0.2))
+        version: 10.0.1(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))(supports-color@7.2.0)
       '@semantic-release/github':
         specifier: ^12.0.8
-        version: 12.0.8(semantic-release@25.0.5(typescript@7.0.2))
+        version: 12.0.8(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))(supports-color@7.2.0)
       '@semantic-release/npm':
         specifier: ^13.1.5
-        version: 13.1.5(semantic-release@25.0.5(typescript@7.0.2))
+        version: 13.1.5(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))
       '@semantic-release/release-notes-generator':
         specifier: ^14.1.1
-        version: 14.1.1(semantic-release@25.0.5(typescript@7.0.2))
+        version: 14.1.1(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))(supports-color@7.2.0)
       lefthook:
         specifier: ^2.1.9
         version: 2.1.9
       semantic-release:
         specifier: ^25.0.5
-        version: 25.0.5(typescript@7.0.2)
+        version: 25.0.5(supports-color@7.2.0)(typescript@7.0.2)
       semantic-release-monorepo:
         specifier: ^8.0.2
-        version: 8.0.2(semantic-release@25.0.5(typescript@7.0.2))
+        version: 8.0.2(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))(supports-color@7.2.0)
 
   packages/pi-bash-timeout:
     devDependencies:
       '@earendil-works/pi-agent-core':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-ai':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-coding-agent':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@marcfargas/pi-test-harness':
         specifier: ^0.6.1
-        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(ws@8.21.0)(zod@4.4.3))
+        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
       vitest:
-        specifier: ^5.0.1
-        version: 5.0.1(@opentelemetry/api@1.9.0)(@types/node@25.9.1)(vite@7.3.6(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0))
+        specifier: ^5.0.0
+        version: 5.0.0(@opentelemetry/api@1.9.0)(@types/node@25.9.1)(vite@7.3.6(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0))
 
   packages/pi-bell:
     devDependencies:
       '@earendil-works/pi-coding-agent':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
       vitest:
         specifier: ^3.2.1
-        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
+        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(supports-color@7.2.0)(yaml@2.9.0)
 
   packages/pi-caveman:
     devDependencies:
       '@earendil-works/pi-agent-core':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-ai':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-coding-agent':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@marcfargas/pi-test-harness':
         specifier: ^0.6.1
-        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(ws@8.21.0)(zod@4.4.3))
+        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
       vitest:
         specifier: ^3.2.1
-        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
+        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(supports-color@7.2.0)(yaml@2.9.0)
 
   packages/pi-cwd:
     devDependencies:
       '@earendil-works/pi-agent-core':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-ai':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-coding-agent':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@marcfargas/pi-test-harness':
         specifier: ^0.6.1
-        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(ws@8.21.0)(zod@4.4.3))
+        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
       vitest:
         specifier: ^3.2.1
-        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
+        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(supports-color@7.2.0)(yaml@2.9.0)
 
   packages/pi-fence:
     dependencies:
@@ -139,22 +295,22 @@ importers:
     devDependencies:
       '@earendil-works/pi-agent-core':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-ai':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-coding-agent':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@marcfargas/pi-test-harness':
         specifier: ^0.6.1
-        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(ws@8.21.0)(zod@4.4.3))
+        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
       vitest:
         specifier: ^3.2.1
-        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
+        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(supports-color@7.2.0)(yaml@2.9.0)
 
   packages/pi-plan:
     dependencies:
@@ -164,19 +320,19 @@ importers:
     devDependencies:
       '@earendil-works/pi-agent-core':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-ai':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-coding-agent':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-tui':
         specifier: 0.80.10
         version: 0.80.10
       '@marcfargas/pi-test-harness':
         specifier: ^0.6.1
-        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(ws@8.21.0)(zod@4.4.3))
+        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))
       typebox:
         specifier: ^1.1.38
         version: 1.1.38
@@ -185,25 +341,25 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.1
-        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
+        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(supports-color@7.2.0)(yaml@2.9.0)
 
   packages/pi-pr:
     devDependencies:
       '@earendil-works/pi-agent-core':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-ai':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-coding-agent':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
       vitest:
         specifier: ^3.2.1
-        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
+        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(supports-color@7.2.0)(yaml@2.9.0)
 
   packages/pi-reflag:
     dependencies:
@@ -213,55 +369,55 @@ importers:
     devDependencies:
       '@earendil-works/pi-agent-core':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-coding-agent':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
       vitest:
         specifier: ^3.2.1
-        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
+        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(supports-color@7.2.0)(yaml@2.9.0)
 
   packages/pi-steer:
     devDependencies:
       '@earendil-works/pi-agent-core':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-ai':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-coding-agent':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@marcfargas/pi-test-harness':
         specifier: ^0.6.1
-        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(ws@8.21.0)(zod@4.4.3))
+        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
       vitest:
         specifier: ^3.2.1
-        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
+        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(supports-color@7.2.0)(yaml@2.9.0)
 
   packages/pi-subagents:
     devDependencies:
       '@earendil-works/pi-agent-core':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-ai':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-coding-agent':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-tui':
         specifier: 0.80.10
         version: 0.80.10
       '@marcfargas/pi-test-harness':
         specifier: ^0.6.1
-        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(ws@8.21.0)(zod@4.4.3))
+        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))
       strip-ansi:
         specifier: ^7.2.0
         version: 7.2.0
@@ -273,28 +429,28 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.1
-        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
+        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(supports-color@7.2.0)(yaml@2.9.0)
 
   packages/pi-title:
     devDependencies:
       '@earendil-works/pi-agent-core':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-ai':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-coding-agent':
         specifier: 0.80.10
-        version: 0.80.10(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@marcfargas/pi-test-harness':
         specifier: ^0.6.1
-        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(ws@8.21.0)(zod@4.4.3))
+        version: 0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
       vitest:
         specifier: ^3.2.1
-        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
+        version: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(supports-color@7.2.0)(yaml@2.9.0)
 
 packages:
 
@@ -1662,8 +1818,8 @@ packages:
       vite:
         optional: true
 
-  '@vitest/mocker@5.0.1':
-    resolution: {integrity: sha512-6K1DoBNAPGvuOcSsGA4D6x+5zEEff/KmOOP3uetT2TrGpVfI+HRHRnJJfKi5ib/g1vx8IYHQD8s0pbJz8WQI7Q==}
+  '@vitest/mocker@5.0.0':
+    resolution: {integrity: sha512-66PGTMIiVJP3t4a5yxU9qPtf7MdTBs8jmToMvy+HVflB3Yy13WJZTtPePdvU+wjRV02SKK5doLbSA6o9pwOmiA==}
     peerDependencies:
       msw: ^2.4.9
       vite: ^6.0.0 || ^7.0.0 || ^8.0.0
@@ -1685,8 +1841,8 @@ packages:
   '@vitest/spy@3.2.4':
     resolution: {integrity: sha512-vAfasCOe6AIK70iP5UD11Ac4siNUNJ9i/9PZ3NKx07sG6sUxeag1LWdNrMWeKKYBLlzuK+Gn65Yd5nyL6ds+nw==}
 
-  '@vitest/spy@5.0.1':
-    resolution: {integrity: sha512-rbto/mF/SGERxEgYOek7Xm6B9b+y+mVoo+f4b2LymYO8zM1b7uB5nHuhVMTP2hxdzgxvGiZYGxGIaMvL5y180Q==}
+  '@vitest/spy@5.0.0':
+    resolution: {integrity: sha512-uy+luWBAPw9XfthoHi5AkfHUnuPYEESjl0p/r+meoBnU8bxg5GDQ3Ey8MjcJ6sqahkL4PFyrvfMJJBw7LbU06g==}
 
   '@vitest/utils@3.2.4':
     resolution: {integrity: sha512-fB2V0JFrQSMsCo9HiSq3Ezpdv4iYaXRG1Sx8edX3MwxfyNn83mKiGzOcH+Fkxt4MHxr3y42fQi1oeAInqgX2QA==}
@@ -1779,8 +1935,8 @@ packages:
   brace-expansion@1.1.15:
     resolution: {integrity: sha512-EwOCDEex4quD37XhqM3omwtMoJjr//isUZz1JopUNWms+4Z2ViyM/k1YIRePpoVNnQhENnxtFjLaxNHrT7xIUg==}
 
-  brace-expansion@5.0.12:
-    resolution: {integrity: sha512-YovQ3rzhaLMIrDjNDMkNS01tea93qhEhG5xy8f6+R0l+dw3Ki+5sCoIoI942iuLZTHWogWktgwVDhU09iNEimQ==}
+  brace-expansion@5.0.9:
+    resolution: {integrity: sha512-ScQ4IuvIEF1TMlP7Zt+vjJ//9zlPb2SDcxWxM3bk8s6t6GGdJ7KO1dCcTidOPJKePW30LE/2cT7wCyPho9/Wxg==}
     engines: {node: 20 || >=22}
 
   braces@3.0.3:
@@ -2191,6 +2347,7 @@ packages:
   git-raw-commits@5.0.1:
     resolution: {integrity: sha512-Y+csSm2GD/PCSh6Isd/WiMjNAydu0VBiG9J7EdQsNA5P9uXvLayqjmTsNlK5Gs9IhblFZqOU0yid5Il5JPoLiQ==}
     engines: {node: '>=18'}
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   glob-parent@5.1.2:
@@ -2556,8 +2713,8 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
-  magic-string@1.4.1:
-    resolution: {integrity: sha512-8lyCu36ErXR0J9uaGKlKQoiLZKmtI63YGLE8G2o9jyRPdr4X47LusSOwgOJOzcVtp81fTAAjxR7BwKz682Jhow==}
+  magic-string@1.3.1:
+    resolution: {integrity: sha512-rm91zr2Ou+XueDTohjQQjdQEcYM6zVi8KVUCG8Ec3vHwUEKrhSdCNyfuIywkA6hcCAteIn0ZOtAHA6eGpiX+Pg==}
 
   make-asynchronous@1.1.0:
     resolution: {integrity: sha512-ayF7iT+44LXdxJLTrTd3TLQpFDDvPCBxXxbv+pMUSuHA5Q8zyAfwkRP6aHHwNVFBUFWtxAHqwNJxF8vMZLAbVg==}
@@ -3550,20 +3707,20 @@ packages:
       jsdom:
         optional: true
 
-  vitest@5.0.1:
-    resolution: {integrity: sha512-iA95lQbKEkvrtTkdAgnWbXfbipWiiWe/hDl2P5tMi6WFwD76G0NxXAGp/M9EOcYupeGJRr6wppMc7CoA41TQjg==}
+  vitest@5.0.0:
+    resolution: {integrity: sha512-gpsMNoRhMjMktVxPtstOH4/PJuPyovVaMDr4oDilXaGH1EcqM2OE96SoHT2VIQ6fTGtTjqmHDrEu2X9RQiXf8Q==}
     engines: {node: ^22.12.0 || ^24.0.0 || >=26.0.0}
     hasBin: true
     peerDependencies:
       '@edge-runtime/vm': '*'
       '@opentelemetry/api': ^1.9.0
       '@types/node': ^22.0.0 || >=24.0.0
-      '@vitest/browser-playwright': 5.0.1
-      '@vitest/browser-preview': 5.0.1
+      '@vitest/browser-playwright': 5.0.0
+      '@vitest/browser-preview': 5.0.0
       '@vitest/browser-webdriverio': ^5.0.0-beta.5 || >=5.0.0
-      '@vitest/coverage-istanbul': 5.0.1
-      '@vitest/coverage-v8': 5.0.1
-      '@vitest/ui': 5.0.1
+      '@vitest/coverage-istanbul': 5.0.0
+      '@vitest/coverage-v8': 5.0.0
+      '@vitest/ui': 5.0.0
       happy-dom: '*'
       jsdom: '*'
       vite: ^6.4.0 || ^7.0.0 || ^8.0.0
@@ -4100,9 +4257,9 @@ snapshots:
       conventional-commits-filter: 5.0.0
       conventional-commits-parser: 6.4.0
 
-  '@earendil-works/pi-agent-core@0.80.10(ws@8.21.0)(zod@4.4.3)':
+  '@earendil-works/pi-agent-core@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)':
     dependencies:
-      '@earendil-works/pi-ai': 0.80.10(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-ai': 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       ignore: 7.0.5
       typebox: 1.1.38
       yaml: 2.9.0
@@ -4114,16 +4271,16 @@ snapshots:
       - ws
       - zod
 
-  '@earendil-works/pi-ai@0.80.10(ws@8.21.0)(zod@4.4.3)':
+  '@earendil-works/pi-ai@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)':
     dependencies:
       '@anthropic-ai/sdk': 0.91.1(zod@4.4.3)
       '@aws-sdk/client-bedrock-runtime': 3.1048.0
-      '@google/genai': 1.52.0
+      '@google/genai': 1.52.0(supports-color@7.2.0)
       '@mistralai/mistralai': 2.2.6(@opentelemetry/api@1.9.0)
       '@opentelemetry/api': 1.9.0
       '@smithy/node-http-handler': 4.7.3
-      http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6
+      http-proxy-agent: 7.0.2(supports-color@7.2.0)
+      https-proxy-agent: 7.0.6(supports-color@7.2.0)
       openai: 6.26.0(ws@8.21.0)(zod@4.4.3)
       partial-json: 0.1.7
       typebox: 1.1.38
@@ -4135,10 +4292,10 @@ snapshots:
       - ws
       - zod
 
-  '@earendil-works/pi-coding-agent@0.80.10(ws@8.21.0)(zod@4.4.3)':
+  '@earendil-works/pi-coding-agent@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)':
     dependencies:
-      '@earendil-works/pi-agent-core': 0.80.10(ws@8.21.0)(zod@4.4.3)
-      '@earendil-works/pi-ai': 0.80.10(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-agent-core': 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-ai': 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-tui': 0.80.10
       '@silvia-odwyer/photon-node': 0.3.4
       chalk: 5.6.2
@@ -4326,9 +4483,9 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
-  '@google/genai@1.52.0':
+  '@google/genai@1.52.0(supports-color@7.2.0)':
     dependencies:
-      google-auth-library: 10.6.2
+      google-auth-library: 10.6.2(supports-color@7.2.0)
       p-retry: 4.6.2
       protobufjs: 7.6.1
       ws: 8.21.0
@@ -4348,11 +4505,11 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@marcfargas/pi-test-harness@0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(ws@8.21.0)(zod@4.4.3))':
+  '@marcfargas/pi-test-harness@0.6.1(patch_hash=d7788c437eab3f45e926788a86d2e351b7acfc7691df8395e14883d0a9282cec)(@earendil-works/pi-agent-core@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-ai@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3))':
     dependencies:
-      '@earendil-works/pi-agent-core': 0.80.10(ws@8.21.0)(zod@4.4.3)
-      '@earendil-works/pi-ai': 0.80.10(ws@8.21.0)(zod@4.4.3)
-      '@earendil-works/pi-coding-agent': 0.80.10(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-agent-core': 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-ai': 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-coding-agent': 0.80.10(supports-color@7.2.0)(ws@8.21.0)(zod@4.4.3)
 
   '@mariozechner/clipboard-darwin-arm64@0.3.9':
     optional: true
@@ -4677,25 +4834,25 @@ snapshots:
 
   '@sec-ant/readable-stream@0.4.1': {}
 
-  '@semantic-release/changelog@6.0.3(semantic-release@25.0.5(typescript@7.0.2))':
+  '@semantic-release/changelog@6.0.3(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))':
     dependencies:
       '@semantic-release/error': 3.0.0
       aggregate-error: 3.1.0
       fs-extra: 11.3.5
       lodash: 4.18.1
-      semantic-release: 25.0.5(typescript@7.0.2)
+      semantic-release: 25.0.5(supports-color@7.2.0)(typescript@7.0.2)
 
-  '@semantic-release/commit-analyzer@13.0.1(semantic-release@25.0.5(typescript@7.0.2))':
+  '@semantic-release/commit-analyzer@13.0.1(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))(supports-color@7.2.0)':
     dependencies:
       conventional-changelog-angular: 8.3.1
       conventional-changelog-writer: 8.4.0
       conventional-commits-filter: 5.0.0
       conventional-commits-parser: 6.4.0
-      debug: 4.4.3
-      import-from-esm: 2.0.0
+      debug: 4.4.3(supports-color@7.2.0)
+      import-from-esm: 2.0.0(supports-color@7.2.0)
       lodash-es: 4.18.1
       micromatch: 4.0.8
-      semantic-release: 25.0.5(typescript@7.0.2)
+      semantic-release: 25.0.5(supports-color@7.2.0)(typescript@7.0.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -4703,21 +4860,21 @@ snapshots:
 
   '@semantic-release/error@4.0.0': {}
 
-  '@semantic-release/git@10.0.1(semantic-release@25.0.5(typescript@7.0.2))':
+  '@semantic-release/git@10.0.1(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))(supports-color@7.2.0)':
     dependencies:
       '@semantic-release/error': 3.0.0
       aggregate-error: 3.1.0
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.2.0)
       dir-glob: 3.0.1
       execa: 5.1.1
       lodash: 4.18.1
       micromatch: 4.0.8
       p-reduce: 2.1.0
-      semantic-release: 25.0.5(typescript@7.0.2)
+      semantic-release: 25.0.5(supports-color@7.2.0)(typescript@7.0.2)
     transitivePeerDependencies:
       - supports-color
 
-  '@semantic-release/github@12.0.8(semantic-release@25.0.5(typescript@7.0.2))':
+  '@semantic-release/github@12.0.8(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))(supports-color@7.2.0)':
     dependencies:
       '@octokit/core': 7.0.6
       '@octokit/plugin-paginate-rest': 14.0.0(@octokit/core@7.0.6)
@@ -4725,15 +4882,15 @@ snapshots:
       '@octokit/plugin-throttling': 11.0.3(@octokit/core@7.0.6)
       '@semantic-release/error': 4.0.0
       aggregate-error: 5.0.0
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.2.0)
       dir-glob: 3.0.1
-      http-proxy-agent: 9.1.0
-      https-proxy-agent: 9.1.0
+      http-proxy-agent: 9.1.0(supports-color@7.2.0)
+      https-proxy-agent: 9.1.0(supports-color@7.2.0)
       issue-parser: 7.0.2
       lodash-es: 4.18.1
       mime: 4.1.0
       p-filter: 4.1.0
-      semantic-release: 25.0.5(typescript@7.0.2)
+      semantic-release: 25.0.5(supports-color@7.2.0)(typescript@7.0.2)
       tinyglobby: 0.2.16
       undici: 7.28.0
       url-join: 5.0.0
@@ -4741,7 +4898,7 @@ snapshots:
       - kerberos
       - supports-color
 
-  '@semantic-release/npm@13.1.5(semantic-release@25.0.5(typescript@7.0.2))':
+  '@semantic-release/npm@13.1.5(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))':
     dependencies:
       '@actions/core': 3.0.1
       '@semantic-release/error': 4.0.0
@@ -4756,21 +4913,21 @@ snapshots:
       rc: 1.2.8
       read-pkg: 10.1.0
       registry-auth-token: 5.1.1
-      semantic-release: 25.0.5(typescript@7.0.2)
+      semantic-release: 25.0.5(supports-color@7.2.0)(typescript@7.0.2)
       semver: 7.8.1
       tempy: 3.2.0
 
-  '@semantic-release/release-notes-generator@14.1.1(semantic-release@25.0.5(typescript@7.0.2))':
+  '@semantic-release/release-notes-generator@14.1.1(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))(supports-color@7.2.0)':
     dependencies:
       conventional-changelog-angular: 8.3.1
       conventional-changelog-writer: 8.4.0
       conventional-commits-filter: 5.0.0
       conventional-commits-parser: 6.4.0
-      debug: 4.4.3
-      import-from-esm: 2.0.0
+      debug: 4.4.3(supports-color@7.2.0)
+      import-from-esm: 2.0.0(supports-color@7.2.0)
       lodash-es: 4.18.1
       read-package-up: 11.0.0
-      semantic-release: 25.0.5(typescript@7.0.2)
+      semantic-release: 25.0.5(supports-color@7.2.0)(typescript@7.0.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -4929,12 +5086,12 @@ snapshots:
     optionalDependencies:
       vite: 7.3.3(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
 
-  '@vitest/mocker@5.0.1(vite@7.3.6(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0))':
+  '@vitest/mocker@5.0.0(vite@7.3.6(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0))':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
-      '@vitest/spy': 5.0.1
+      '@vitest/spy': 5.0.0
       estree-walker: 3.0.3
-      magic-string: 1.4.1
+      magic-string: 1.3.1
     optionalDependencies:
       vite: 7.3.6(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
 
@@ -4958,7 +5115,7 @@ snapshots:
     dependencies:
       tinyspy: 4.0.4
 
-  '@vitest/spy@5.0.1': {}
+  '@vitest/spy@5.0.0': {}
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -5036,7 +5193,7 @@ snapshots:
       balanced-match: 1.0.2
       concat-map: 0.0.1
 
-  brace-expansion@5.0.12:
+  brace-expansion@5.0.9:
     dependencies:
       balanced-match: 4.0.4
 
@@ -5193,9 +5350,11 @@ snapshots:
 
   data-uri-to-buffer@4.0.1: {}
 
-  debug@4.4.3:
+  debug@4.4.3(supports-color@7.2.0):
     dependencies:
       ms: 2.1.3
+    optionalDependencies:
+      supports-color: 7.2.0
 
   deep-eql@5.0.2: {}
 
@@ -5467,17 +5626,17 @@ snapshots:
 
   function-timeout@1.0.2: {}
 
-  gaxios@7.1.4:
+  gaxios@7.1.4(supports-color@7.2.0):
     dependencies:
       extend: 3.0.2
-      https-proxy-agent: 7.0.6
+      https-proxy-agent: 7.0.6(supports-color@7.2.0)
       node-fetch: 3.3.2
     transitivePeerDependencies:
       - supports-color
 
-  gcp-metadata@8.1.2:
+  gcp-metadata@8.1.2(supports-color@7.2.0):
     dependencies:
-      gaxios: 7.1.4
+      gaxios: 7.1.4(supports-color@7.2.0)
       google-logging-utils: 1.1.3
       json-bigint: 1.0.0
     transitivePeerDependencies:
@@ -5545,12 +5704,12 @@ snapshots:
       merge2: 1.4.1
       slash: 3.0.0
 
-  google-auth-library@10.6.2:
+  google-auth-library@10.6.2(supports-color@7.2.0):
     dependencies:
       base64-js: 1.5.1
       ecdsa-sig-formatter: 1.0.11
-      gaxios: 7.1.4
-      gcp-metadata: 8.1.2
+      gaxios: 7.1.4(supports-color@7.2.0)
+      gcp-metadata: 8.1.2(supports-color@7.2.0)
       google-logging-utils: 1.1.3
       jws: 4.0.1
     transitivePeerDependencies:
@@ -5593,33 +5752,33 @@ snapshots:
     dependencies:
       lru-cache: 11.5.2
 
-  http-proxy-agent@7.0.2:
+  http-proxy-agent@7.0.2(supports-color@7.2.0):
     dependencies:
       agent-base: 7.1.4
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
-  http-proxy-agent@9.1.0:
+  http-proxy-agent@9.1.0(supports-color@7.2.0):
     dependencies:
       agent-base: 9.0.0
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.2.0)
       proxy-agent-negotiate: 1.1.0
     transitivePeerDependencies:
       - kerberos
       - supports-color
 
-  https-proxy-agent@7.0.6:
+  https-proxy-agent@7.0.6(supports-color@7.2.0):
     dependencies:
       agent-base: 7.1.4
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
-  https-proxy-agent@9.1.0:
+  https-proxy-agent@9.1.0(supports-color@7.2.0):
     dependencies:
       agent-base: 9.0.0
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.2.0)
       proxy-agent-negotiate: 1.1.0
     transitivePeerDependencies:
       - kerberos
@@ -5640,9 +5799,9 @@ snapshots:
       parent-module: 1.0.1
       resolve-from: 4.0.0
 
-  import-from-esm@2.0.0:
+  import-from-esm@2.0.0(supports-color@7.2.0):
     dependencies:
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.2.0)
       import-meta-resolve: 4.2.0
     transitivePeerDependencies:
       - supports-color
@@ -5846,7 +6005,7 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  magic-string@1.4.1:
+  magic-string@1.3.1:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
 
@@ -5890,7 +6049,7 @@ snapshots:
 
   minimatch@10.2.5:
     dependencies:
-      brace-expansion: 5.0.12
+      brace-expansion: 5.0.9
 
   minimatch@3.1.5:
     dependencies:
@@ -6316,9 +6475,9 @@ snapshots:
 
   safe-buffer@5.2.1: {}
 
-  semantic-release-monorepo@8.0.2(semantic-release@25.0.5(typescript@7.0.2)):
+  semantic-release-monorepo@8.0.2(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))(supports-color@7.2.0):
     dependencies:
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.2.0)
       execa: 5.1.1
       file-url: 3.0.0
       fs-extra: 10.1.0
@@ -6329,26 +6488,26 @@ snapshots:
       pkg-up: 3.1.0
       ramda: 0.27.2
       read-pkg: 5.2.0
-      semantic-release: 25.0.5(typescript@7.0.2)
-      semantic-release-plugin-decorators: 4.0.0(semantic-release@25.0.5(typescript@7.0.2))
+      semantic-release: 25.0.5(supports-color@7.2.0)(typescript@7.0.2)
+      semantic-release-plugin-decorators: 4.0.0(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))
       tempy: 1.0.1
     transitivePeerDependencies:
       - supports-color
 
-  semantic-release-plugin-decorators@4.0.0(semantic-release@25.0.5(typescript@7.0.2)):
+  semantic-release-plugin-decorators@4.0.0(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2)):
     dependencies:
-      semantic-release: 25.0.5(typescript@7.0.2)
+      semantic-release: 25.0.5(supports-color@7.2.0)(typescript@7.0.2)
 
-  semantic-release@25.0.5(typescript@7.0.2):
+  semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2):
     dependencies:
-      '@semantic-release/commit-analyzer': 13.0.1(semantic-release@25.0.5(typescript@7.0.2))
+      '@semantic-release/commit-analyzer': 13.0.1(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))(supports-color@7.2.0)
       '@semantic-release/error': 4.0.0
-      '@semantic-release/github': 12.0.8(semantic-release@25.0.5(typescript@7.0.2))
-      '@semantic-release/npm': 13.1.5(semantic-release@25.0.5(typescript@7.0.2))
-      '@semantic-release/release-notes-generator': 14.1.1(semantic-release@25.0.5(typescript@7.0.2))
+      '@semantic-release/github': 12.0.8(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))(supports-color@7.2.0)
+      '@semantic-release/npm': 13.1.5(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))
+      '@semantic-release/release-notes-generator': 14.1.1(semantic-release@25.0.5(supports-color@7.2.0)(typescript@7.0.2))(supports-color@7.2.0)
       aggregate-error: 5.0.0
       cosmiconfig: 9.0.2(typescript@7.0.2)
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.2.0)
       env-ci: 11.2.0
       execa: 9.6.1
       figures: 6.1.0
@@ -6357,7 +6516,7 @@ snapshots:
       git-log-parser: 1.2.1
       hook-std: 4.0.0
       hosted-git-info: 9.0.3
-      import-from-esm: 2.0.0
+      import-from-esm: 2.0.0(supports-color@7.2.0)
       lodash-es: 4.18.1
       marked: 15.0.12
       marked-terminal: 7.3.0(marked@15.0.12)
@@ -6661,10 +6820,10 @@ snapshots:
       spdx-correct: 3.2.0
       spdx-expression-parse: 3.0.1
 
-  vite-node@3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0):
+  vite-node@3.2.4(@types/node@25.9.1)(jiti@2.7.0)(supports-color@7.2.0)(yaml@2.9.0):
     dependencies:
       cac: 6.7.14
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.2.0)
       es-module-lexer: 1.7.0
       pathe: 2.0.3
       vite: 7.3.6(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
@@ -6710,7 +6869,7 @@ snapshots:
       jiti: 2.7.0
       yaml: 2.9.0
 
-  vitest@3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0):
+  vitest@3.2.4(@types/node@25.9.1)(jiti@2.7.0)(supports-color@7.2.0)(yaml@2.9.0):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
@@ -6721,7 +6880,7 @@ snapshots:
       '@vitest/spy': 3.2.4
       '@vitest/utils': 3.2.4
       chai: 5.3.3
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.2.0)
       expect-type: 1.3.0
       magic-string: 0.30.21
       pathe: 2.0.3
@@ -6733,7 +6892,7 @@ snapshots:
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
       vite: 7.3.3(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
-      vite-node: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
+      vite-node: 3.2.4(@types/node@25.9.1)(jiti@2.7.0)(supports-color@7.2.0)(yaml@2.9.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 25.9.1
@@ -6751,14 +6910,14 @@ snapshots:
       - tsx
       - yaml
 
-  vitest@5.0.1(@opentelemetry/api@1.9.0)(@types/node@25.9.1)(vite@7.3.6(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)):
+  vitest@5.0.0(@opentelemetry/api@1.9.0)(@types/node@25.9.1)(vite@7.3.6(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)):
     dependencies:
       '@types/chai': 5.2.3
-      '@vitest/mocker': 5.0.1(vite@7.3.6(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0))
+      '@vitest/mocker': 5.0.0(vite@7.3.6(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0))
       chai: 6.2.2
       es-module-lexer: 2.3.2
       expect-type: 1.4.0
-      magic-string: 1.4.1
+      magic-string: 1.3.1
       obug: 2.2.1
       picomatch: 4.0.7
       std-env: 4.2.0
