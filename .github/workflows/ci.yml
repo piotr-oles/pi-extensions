@@ -5,47 +5,26 @@ on:
     branches: [main]
   pull_request:
 
-env:
-  # Opt into Node.js 24 for action runners (suppresses Node 20 deprecation warnings)
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   test:
-    name: Type-check & test (Node ${{ matrix.node-version }})
+    name: Test, Typecheck, Lint
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        # @earendil-works/pi-coding-agent requires Node >=22.19.0 (undici@8)
-        node-version: ["22"]
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
         with:
           run_install: false
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      # Lint + format check across all packages
       - name: Lint & format
         run: pnpm check
-
-      # TypeScript type-check across all packages
       - name: Type-check
         run: pnpm typecheck
-
-      # Unit + integration + smoke tests across all packages
       - name: Test
         run: pnpm test
-
