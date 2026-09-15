@@ -2,13 +2,15 @@ import { createTestSession, says, type TestSession, when } from "@marcfargas/pi-
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import piTitle, { MAX_TITLE_LENGTH, MIN_PROMPT_LENGTH, PI_TITLE_CUSTOM_TYPE } from "./index.js";
 
-vi.mock("@earendil-works/pi-ai", () => ({
-  complete: vi.fn(),
-}));
+const { mockComplete } = vi.hoisted(() => ({ mockComplete: vi.fn() }));
 
-import { complete } from "@earendil-works/pi-ai";
-
-const mockComplete = vi.mocked(complete);
+vi.mock("@earendil-works/pi-ai/providers/all", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@earendil-works/pi-ai/providers/all")>();
+  return {
+    ...actual,
+    builtinModels: () => ({ complete: mockComplete }),
+  };
+});
 
 // 82 chars — above MAX_TITLE_LENGTH (40) and MIN_PROMPT_LENGTH (60)
 const LONG_MESSAGE =

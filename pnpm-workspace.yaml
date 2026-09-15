@@ -1,2 +1,11 @@
 packages:
   - "packages/*"
+
+overrides:
+  '@earendil-works/pi-agent-core': 0.80.10
+  '@earendil-works/pi-ai': 0.80.10
+  '@earendil-works/pi-coding-agent': 0.80.10
+  '@earendil-works/pi-tui': 0.80.10
+
+patchedDependencies:
+  '@marcfargas/pi-test-harness@0.6.1': patches/@marcfargas__pi-test-harness@0.6.1.patch

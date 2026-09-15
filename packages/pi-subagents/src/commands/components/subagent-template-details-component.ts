@@ -13,6 +13,7 @@ const THINKING_LEVEL_COLORS = {
   medium: "thinkingMedium",
   high: "thinkingHigh",
   xhigh: "thinkingXhigh",
+  max: "thinkingMax",
 } as const;
 
 export class SubagentTemplateDetailsComponent implements Component {

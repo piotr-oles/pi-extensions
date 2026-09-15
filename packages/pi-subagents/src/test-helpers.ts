@@ -51,6 +51,7 @@ const FG_COLORS: Record<ThemeColor, string> = {
   thinkingMedium: "",
   thinkingHigh: "",
   thinkingXhigh: "",
+  thinkingMax: "",
   bashMode: "",
 };
 

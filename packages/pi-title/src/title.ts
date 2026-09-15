@@ -1,4 +1,5 @@
-import { type Api, complete, type Model } from "@earendil-works/pi-ai";
+import type { Api, Model } from "@earendil-works/pi-ai";
+import { builtinModels } from "@earendil-works/pi-ai/providers/all";
 
 interface GenerateSessionTitleParams {
   userPrompts: string[];
@@ -19,7 +20,8 @@ export async function generateSessionTitle({
   signal,
   previousTitle,
 }: GenerateSessionTitleParams): Promise<string | undefined> {
-  const response = await complete(
+  const models = builtinModels();
+  const response = await models.complete(
     model,
     {
       messages: [
