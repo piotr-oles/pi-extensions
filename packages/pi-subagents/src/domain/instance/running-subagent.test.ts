@@ -51,6 +51,24 @@ describe("RunningAgentInstance", () => {
       expect(done.result).toEqual({ status: "completed", message: "done", steered: false });
     });
 
+    it("completes with reason 'error' when provider returns an error response", async () => {
+      const { done } = await run(
+        new ScriptedSessionBuilder().providerError("No API key found for google."),
+      );
+      expect(done.result).toEqual({
+        status: "error",
+        error: "No API key found for google.",
+      });
+    });
+
+    it("preserves provider errors reached at the hard turn limit", async () => {
+      const { done } = await run(new ScriptedSessionBuilder().providerError("provider failed"), {
+        maxTurns: 1,
+        graceTurns: 0,
+      });
+      expect(done.result).toEqual({ status: "error", error: "provider failed" });
+    });
+
     it("completes with reason 'error' when session throws", async () => {
       const { done } = await run(new ScriptedSessionBuilder().fail("network timeout"));
       expect(done.result).toEqual({ status: "error", error: "network timeout" });

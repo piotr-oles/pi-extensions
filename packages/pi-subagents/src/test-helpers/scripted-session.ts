@@ -18,6 +18,7 @@ export type Step = TurnStep | EventStep | SideEffectStep;
 
 export type Completion =
   | { readonly kind: "complete"; readonly text: string }
+  | { readonly kind: "provider-error"; readonly message: string }
   | { readonly kind: "error"; readonly message: string };
 
 /**
@@ -72,7 +73,18 @@ export class ScriptedSession {
       return;
     }
 
-    if (this.completion.kind === "error") {
+    if (this.completion.kind === "provider-error") {
+      await this.handler?.({
+        type: "turn_end",
+        message: {
+          role: "assistant",
+          content: [],
+          stopReason: "error",
+          errorMessage: this.completion.message,
+        },
+        toolResults: [],
+      } as unknown as AgentSessionEvent);
+    } else if (this.completion.kind === "error") {
       throw new Error(this.completion.message);
     }
   }
