@@ -56,6 +56,10 @@ export class SubagentToolResultComponent implements Component {
     this.summary.invalidate();
     this.details.invalidate();
   }
+
+  dispose(): void {
+    this.summary.dispose();
+  }
 }
 
 class SubagentSummaryComponent implements Component {
@@ -83,6 +87,10 @@ class SubagentSummaryComponent implements Component {
 
   invalidate() {
     this.container.invalidate();
+  }
+
+  dispose(): void {
+    this.icon.dispose();
   }
 }
 
@@ -310,6 +318,10 @@ class SubagentIconComponent implements Component {
   }
 
   invalidate() {}
+
+  dispose(): void {
+    this.stopAnimation();
+  }
 
   private syncAnimation(): void {
     if (this.entry.status === "running") {

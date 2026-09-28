@@ -160,7 +160,10 @@ export class RunningSubagent {
           if (event.message.role === "assistant") {
             this.state.lastMessage = event.message;
           }
-          if (this.config.maxTurns) {
+          if (
+            this.config.maxTurns &&
+            (event.message.role !== "assistant" || event.message.stopReason !== "error")
+          ) {
             if (
               !this.state.steered &&
               this.config.graceTurns > 0 &&
@@ -201,6 +204,13 @@ export class RunningSubagent {
         onDone(this.done({ status: "exceeded_limit", limit: this.state.exceededLimit }));
       } else if (this.state.aborted) {
         onDone(this.done({ status: "aborted" }));
+      } else if (this.state.lastMessage?.stopReason === "error") {
+        onDone(
+          this.done({
+            status: "error",
+            error: this.state.lastMessage.errorMessage ?? "Unknown provider error",
+          }),
+        );
       } else {
         onDone(
           this.done({

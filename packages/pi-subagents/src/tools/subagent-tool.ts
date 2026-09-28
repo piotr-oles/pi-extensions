@@ -1,6 +1,6 @@
 import type { TextContent } from "@earendil-works/pi-ai";
 import { defineTool, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import type { Component } from "@earendil-works/pi-tui";
+import { type Component, Text } from "@earendil-works/pi-tui";
 import type { DoneSubagent } from "../domain/instance/done-subagent.js";
 import type { SubagentInstancesManager } from "../domain/subagent-instances-manager.js";
 import type { SubagentTemplatesManager } from "../domain/subagent-templates-manager.js";
@@ -76,11 +76,18 @@ export function createSubagentTool(deps: SubagentToolDeps) {
       ctx.ui.setWorkingIndicator({ frames: [ctx.ui.theme.fg("dim", "●")] });
       ctx.ui.setWorkingMessage("Waiting for subagents");
 
-      const done = await promise;
+      let done: DoneSubagent;
+      try {
+        done = await promise;
+      } finally {
+        if (!instanceManager.isRunning()) {
+          ctx.ui.setWorkingIndicator();
+          ctx.ui.setWorkingMessage();
+        }
+      }
 
-      if (!instanceManager.isRunning()) {
-        ctx.ui.setWorkingIndicator();
-        ctx.ui.setWorkingMessage();
+      if (done.result.status === "error") {
+        throw new Error(done.result.error);
       }
 
       return {
@@ -102,6 +109,13 @@ export function createSubagentTool(deps: SubagentToolDeps) {
     },
     /** Custom rendering for tool result display */
     renderResult(result, _options, theme, context): Component {
+      if (context.isError) {
+        if (context.lastComponent instanceof SubagentToolResultComponent) {
+          context.lastComponent.dispose();
+        }
+        const error = result.content[0];
+        return new Text(error.type === "text" ? error.text : "", 0, 0);
+      }
       if (!(context.lastComponent instanceof SubagentToolResultComponent)) {
         return new SubagentToolResultComponent(
           result.details,

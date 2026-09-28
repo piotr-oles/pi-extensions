@@ -43,6 +43,11 @@ export class ScriptedSessionBuilder {
     return this;
   }
 
+  providerError(message: string): this {
+    this.completion = { kind: "provider-error", message };
+    return this;
+  }
+
   fail(message: string): this {
     this.completion = { kind: "error", message };
     return this;
