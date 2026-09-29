@@ -1,6 +1,6 @@
 {
   "name": "@piotr-oles/pi-subagents",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Pi Agent extension: spawn specialized subagents with isolated sessions",
   "repository": {
     "type": "git",

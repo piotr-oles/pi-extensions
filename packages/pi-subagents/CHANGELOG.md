@@ -1,3 +1,10 @@
+# [@piotr-oles/pi-subagents-v1.0.4](https://github.com/piotr-oles/pi-extensions/compare/@piotr-oles/pi-subagents-v1.0.3...@piotr-oles/pi-subagents-v1.0.4) (2026-09-29)
+
+
+### Bug Fixes
+
+* **pi-subagents:** handle empty id string ([09ace4b](https://github.com/piotr-oles/pi-extensions/commit/09ace4bf4dced629e3dd46c778879386d3af3085))
+
 # [@piotr-oles/pi-subagents-v1.0.3](https://github.com/piotr-oles/pi-extensions/compare/@piotr-oles/pi-subagents-v1.0.2...@piotr-oles/pi-subagents-v1.0.3) (2026-09-28)
 
 
