@@ -33,14 +33,14 @@ export function createSubagentTool(deps: SubagentToolDeps) {
     executionMode: "parallel",
     execute: async (toolCallId, params, signal, onUpdate, ctx) => {
       const availableTools = pi.getActiveTools();
-      const resolvedId = params.id ?? instanceManager.id(toolCallId);
+      const id = typeof params.id === "string" && params.id !== "" ? params.id : undefined;
       const onUpdateThrottled = onUpdate ? throttle(onUpdate, 500) : undefined;
 
       let promise: Promise<DoneSubagent>;
 
-      if (params.id) {
+      if (id) {
         promise = instanceManager.followUp({
-          id: resolvedId,
+          id,
           prompt: params.prompt,
           description: params.description,
           signal,
@@ -49,6 +49,7 @@ export function createSubagentTool(deps: SubagentToolDeps) {
           },
         });
       } else {
+        const generatedId = instanceManager.id(toolCallId);
         const template = templatesManager.getTemplate(params.name);
         if (!template) {
           const availableSubagents = templatesManager
@@ -60,7 +61,7 @@ export function createSubagentTool(deps: SubagentToolDeps) {
           );
         }
         promise = instanceManager.spawn({
-          id: resolvedId,
+          id: generatedId,
           ctx,
           template,
           prompt: params.prompt,
