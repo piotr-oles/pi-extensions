@@ -22,42 +22,48 @@ export default function piPr(pi: ExtensionAPI): void {
   });
 
   let timer: NodeJS.Timeout | null = null;
-  let controller: AbortController | null = null;
-  let polling = false;
+  const controllers = new Set<AbortController>();
+
+  const abort = () => {
+    for (const controller of controllers) {
+      controller.abort();
+    }
+    controllers.clear();
+  };
 
   const stop = () => {
     if (timer) {
       clearInterval(timer);
       timer = null;
     }
-    controller?.abort();
-    controller = null;
-    polling = false;
+    abort();
   };
 
-  const pollOnce = async (ctx: ExtensionContext) => {
-    if (polling) {
-      return;
+  const poll = async (ctx: ExtensionContext) => {
+    if (controllers.size !== 0) {
+      // Abort pending requests before starting new one
+      abort();
     }
-    polling = true;
-    controller = new AbortController();
+    const controller = new AbortController();
     try {
+      controllers.add(controller);
       const pr = await fetchPullRequest(pi, controller.signal);
-      ctx.ui.setStatus(
-        STATUS_KEY,
-        pr ? renderStatus(pr, ctx.ui.theme, detectBackground()) : undefined,
-      );
+      if (!controller.signal.aborted) {
+        ctx.ui.setStatus(
+          STATUS_KEY,
+          pr ? renderStatus(pr, ctx.ui.theme, detectBackground()) : undefined,
+        );
+      }
     } finally {
-      controller = null;
-      polling = false;
+      controllers.delete(controller);
     }
   };
 
   pi.on("session_start", (_event, ctx) => {
     stop();
-    void pollOnce(ctx);
+    void poll(ctx);
     const ms = intervalMs(pi);
-    timer = setInterval(() => void pollOnce(ctx), ms);
+    timer = setInterval(() => void poll(ctx), ms);
   });
 
   pi.on("session_shutdown", () => stop());
@@ -65,7 +71,7 @@ export default function piPr(pi: ExtensionAPI): void {
   // Refresh right after the agent opens a PR so the footer updates immediately.
   pi.on("tool_result", (event, ctx) => {
     if (isBashToolResult(event) && isPrCreateCommand(String(event.input.command ?? ""))) {
-      void pollOnce(ctx);
+      void poll(ctx);
     }
   });
 
@@ -73,7 +79,7 @@ export default function piPr(pi: ExtensionAPI): void {
     description: "Open the current branch's PR in the browser and refresh its status",
     handler: async (_args: string, ctx: ExtensionCommandContext) => {
       await pi.exec("gh", ["pr", "view", "--web"], { timeout: 5_000 }).catch(() => {});
-      await pollOnce(ctx);
+      await poll(ctx);
     },
   });
 }
