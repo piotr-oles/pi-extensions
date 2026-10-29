@@ -10,9 +10,10 @@ import piBashTimeout from "./index.js";
 
 function withFlags(flags: Record<string, string>) {
   return (pi: any) => {
+    piBashTimeout(pi);
+    // Pi applies CLI flag values after extension setup.
     const orig = pi.getFlag.bind(pi);
     pi.getFlag = (name: string) => (name in flags ? flags[name] : orig(name));
-    piBashTimeout(pi);
   };
 }
 
@@ -81,16 +82,27 @@ describe("pi-bash-timeout", { timeout: 30_000 }, () => {
     expect(bash.executed[0]?.timeout).toBe(120);
   });
 
-  it("uses the flag value over the built-in default", async () => {
+  it("document broken late flag handling for bash timeouts and policy", async () => {
     const bash = captureExec();
     t = await createTestSession({
-      extensionFactories: [withFlags({ "pi-bash-timeout-default": "45" })],
+      extensionFactories: [
+        withFlags({ "pi-bash-timeout-default": "10", "pi-bash-timeout-max": "20" }),
+      ],
       mockTools: { bash: bash.handler },
     });
 
-    await t.run(when("run", [calls("bash", { command: "echo hi" }), says("done")]));
+    await t.run(
+      when("run", [
+        calls("bash", { command: "echo hi" }),
+        calls("bash", { command: "sleep 120", timeout: 120 }),
+        says("done"),
+      ]),
+    );
 
-    expect(bash.executed[0]?.timeout).toBe(45);
+    // Broken: late CLI flags do not change bash timeouts or the policy.
+    expect.soft(bash.executed.map((params) => params.timeout)).toEqual([120, 120]);
+    expect.soft(t.session.systemPrompt).toContain("Default timeout: 120s");
+    expect.soft(t.session.systemPrompt).toContain("Maximum timeout: 600s");
   });
 
   it("does not touch non-bash tool calls", async () => {
