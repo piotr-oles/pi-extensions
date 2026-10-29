@@ -24,16 +24,11 @@ export default function piBashTimeout(pi: ExtensionAPI): void {
     description: "Maximum allowed bash timeout in seconds. Positive integer.",
   });
 
-  const config = resolveBashTimeoutConfig(
-    { default: pi.getFlag(DEFAULT_FLAG), max: pi.getFlag(MAX_FLAG) },
-    process.env,
-  );
-  const promptSection = buildBashTimeoutPrompt(config);
-
   pi.on("tool_call", (event) => {
     if (!isToolCallEventType("bash", event)) {
       return;
     }
+    const config = getConfig();
     const timeout = event.input.timeout;
     if (timeout === undefined || timeout <= 0) {
       event.input.timeout = config.defaultSeconds;
@@ -43,6 +38,14 @@ export default function piBashTimeout(pi: ExtensionAPI): void {
   });
 
   pi.on("before_agent_start", (event) => ({
-    systemPrompt: `${event.systemPrompt}\n\n${promptSection}`,
+    systemPrompt: `${event.systemPrompt}\n\n${buildBashTimeoutPrompt(getConfig())}`,
   }));
+
+  function getConfig() {
+    // Pi applies CLI flag values after extension setup.
+    return resolveBashTimeoutConfig(
+      { default: pi.getFlag(DEFAULT_FLAG), max: pi.getFlag(MAX_FLAG) },
+      process.env,
+    );
+  }
 }
