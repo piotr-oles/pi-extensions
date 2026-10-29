@@ -82,7 +82,7 @@ describe("pi-bash-timeout", { timeout: 30_000 }, () => {
     expect(bash.executed[0]?.timeout).toBe(120);
   });
 
-  it("document broken late flag handling for bash timeouts and policy", async () => {
+  it("uses flags supplied after setup for bash timeouts and policy", async () => {
     const bash = captureExec();
     t = await createTestSession({
       extensionFactories: [
@@ -99,10 +99,9 @@ describe("pi-bash-timeout", { timeout: 30_000 }, () => {
       ]),
     );
 
-    // Broken: late CLI flags do not change bash timeouts or the policy.
-    expect.soft(bash.executed.map((params) => params.timeout)).toEqual([120, 120]);
-    expect.soft(t.session.systemPrompt).toContain("Default timeout: 120s");
-    expect.soft(t.session.systemPrompt).toContain("Maximum timeout: 600s");
+    expect.soft(bash.executed.map((params) => params.timeout)).toEqual([10, 20]);
+    expect.soft(t.session.systemPrompt).toContain("Default timeout: 10s");
+    expect.soft(t.session.systemPrompt).toContain("Maximum timeout: 20s");
   });
 
   it("does not touch non-bash tool calls", async () => {
