@@ -1,6 +1,6 @@
 {
   "name": "@piotr-oles/pi-bash-timeout",
-  "version": "0.0.0",
+  "version": "1.0.1",
   "description": "Pi Agent extension: inject a default bash timeout and append timeout policy guidance to the system prompt",
   "repository": {
     "type": "git",
