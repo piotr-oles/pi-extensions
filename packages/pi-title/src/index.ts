@@ -61,6 +61,10 @@ export default function piTitle(pi: ExtensionAPI) {
   });
 
   pi.on("before_agent_start", (event, ctx) => {
+    // Runs started by a custom message (pi.sendMessage with triggerTurn) have no prompt.
+    if (typeof event.prompt !== "string") {
+      return;
+    }
     const userPrompt = event.prompt.trim();
     if (!userPrompt || isLocked(ctx)) {
       return;
