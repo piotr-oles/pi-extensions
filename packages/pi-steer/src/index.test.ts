@@ -46,12 +46,12 @@ describe("pi-steer", { timeout: 30_000 }, () => {
     });
     await t.run(when("First turn", [says("Done.")]));
 
-    process.env.PI_STEER = "craftsmanship";
+    process.env.PI_STEER = "strategic-programming";
     await t.session.reload();
     await t.run(when("Second turn", [says("Done.")]));
 
     expect(t.session.agent.state.systemPrompt).toContain(loadSection("ste100"));
-    expect(t.session.agent.state.systemPrompt).not.toContain(loadSection("craftsmanship"));
+    expect(t.session.agent.state.systemPrompt).not.toContain(loadSection("strategic-programming"));
     expect(
       t.session.sessionManager
         .getEntries()

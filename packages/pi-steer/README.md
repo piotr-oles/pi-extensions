@@ -15,11 +15,11 @@ pi install npm:@piotr-oles/pi-steer
 Control via the `--pi-steer` CLI flag (takes precedence) or the `PI_STEER` environment variable. Value is a comma-separated list of section names:
 
 ```bash
-pi --pi-steer executable-reasoning,craftsmanship # only these two, in this order
-pi --pi-steer=-craftsmanship                     # all except craftsmanship
-pi --pi-steer off                                # disable entirely
-PI_STEER=yagni,ste100 pi                         # same, via env variable
-pi                                               # default: all sections, file order
+pi --pi-steer executable-reasoning,strategic-programming  # only these two, in this order
+pi --pi-steer=-strategic-programming                      # all except strategic programming
+pi --pi-steer off                                         # disable entirely
+PI_STEER=yagni,ste100 pi                                  # select sections via environment variable
+pi                                                        # default: all sections, file order
 ```
 
 Default when flag is not set: **all sections** in file order. Selection and composed text are captured once per session. Resumed sessions restore their snapshot and ignore current flag, environment, and instruction-file changes.
@@ -31,14 +31,12 @@ Default when flag is not set: **all sections** in file order. Selection and comp
 | `escalate-ambiguity` | `instructions/escalate-ambiguity.md` |
 | `executable-reasoning` | `instructions/executable-reasoning.md` |
 | `yagni` | `instructions/yagni.md` |
-| `craftsmanship` | `instructions/craftsmanship.md` |
+| `strategic-programming` | `instructions/strategic-programming.md` |
 | `black-box-testing` | `instructions/black-box-testing.md` |
-| `progressive-disclosure` | `instructions/progressive-disclosure.md` |
+| `top-down-code` | `instructions/top-down-code.md` |
 | `ste100` | `instructions/ste100.md` |
 
 Prefix a name with `-` to exclude it. An exclusion-only list starts with all sections. Use `=` after `--pi-steer` when value starts with `-`, as shown above. When inclusions and exclusions are mixed, inclusions define the initial selection and exclusions remove from it.
-
-Unknown names are dropped. Duplicates are collapsed. Empty or all-unknown input falls through to the default (all sections).
 
 ## How it works
 

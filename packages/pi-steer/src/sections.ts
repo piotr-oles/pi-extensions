@@ -8,7 +8,7 @@ export const SECTIONS = [
   "escalate-ambiguity",
   "executable-reasoning",
   "yagni",
-  "craftsmanship",
+  "strategic-programming",
   "black-box-testing",
   "top-down-code",
   "ste100",
