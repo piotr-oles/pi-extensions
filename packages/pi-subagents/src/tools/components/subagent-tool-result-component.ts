@@ -6,6 +6,7 @@ import type { RunningAgentSessionEntry } from "../../domain/instance/running-sub
 import type { SubagentSessionEntry } from "../../domain/types.js";
 import { formatDuration, formatFilePath, formatUsage, getFirstLine } from "../../format.js";
 import { InlineContainer } from "./inline-container.js";
+import { truncateToolLine } from "./truncate-tool-line.js";
 
 export class SubagentToolResultComponent implements Component {
   private readonly summary: SubagentSummaryComponent;
@@ -189,7 +190,7 @@ class SubagentSummaryTextComponent implements Component {
   }
 
   render(width: number): string[] {
-    return [truncateToWidth(this.text(), width, "", true)];
+    return [truncateToolLine(this.text(), width, "", true)];
   }
 
   invalidate() {}

@@ -1,11 +1,16 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { createAgentSession } from "@earendil-works/pi-coding-agent";
+import {
+  createAgentSession,
+  initTheme,
+  ToolExecutionComponent,
+} from "@earendil-works/pi-coding-agent";
+import { ProcessTerminal, sliceByColumn, TUI } from "@earendil-works/pi-tui";
 import stripAnsi from "strip-ansi";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SubagentInstancesManager } from "../domain/subagent-instances-manager.js";
 import { SubagentTemplatesManager } from "../domain/subagent-templates-manager.js";
 import { ScriptedSessionBuilder } from "../test-helpers/scripted-session-builder.js";
-import { makeAgentTemplate, makeRunning, mockTheme } from "../test-helpers.js";
+import { makeAgentTemplate, makeDone, makeRunning, mockTheme } from "../test-helpers.js";
 import { createSubagentTool } from "./subagent-tool.js";
 
 vi.mock("@earendil-works/pi-coding-agent", async (importOriginal) => {
@@ -151,6 +156,32 @@ describe("subagent tool", () => {
     expect(onInvalidate).not.toHaveBeenCalled();
   });
 
+  it.each([
+    "foreground",
+    "background",
+  ] as const)("keeps the header %s on each truncation dot", (color) => {
+    const header = makeToolCard()
+      .render(28)
+      .find((line) => stripAnsi(line).includes("subagent"))!;
+    const dots = stripAnsi(header).indexOf("...");
+    expect(dots).toBeGreaterThan(0);
+    const headerColor = colorAt(header, dots - 1, color);
+    expect([0, 1, 2].map((offset) => colorAt(header, dots + offset, color))).toEqual([
+      headerColor,
+      headerColor,
+      headerColor,
+    ]);
+  });
+
+  it("keeps the card background after a clipped result summary", () => {
+    const card = makeToolCard();
+    card.updateResult({ content: [], details: makeDone().toEntry(), isError: false });
+
+    const summary = card.render(10).find((line) => stripAnsi(line).trimStart().startsWith("✓"))!;
+    expect(stripAnsi(summary)).toMatch(/^ ✓ 0 · \d  $/);
+    expect(colorAt(summary, 9, "background")).toBe(colorAt(summary, 1, "background"));
+  });
+
   it("renders Pi tool errors when expanded", () => {
     const ctx = makeContext();
     const tool = createSubagentTool({
@@ -178,3 +209,33 @@ describe("subagent tool", () => {
     expect(stripAnsi(expanded.render(120).join("\n"))).toContain(providerError);
   });
 });
+
+function makeToolCard(): ToolExecutionComponent {
+  initTheme("dark");
+  const cwd = process.cwd();
+  const tool = createSubagentTool({
+    pi: {} as ExtensionAPI,
+    instanceManager: new SubagentInstancesManager(1),
+    templatesManager: new SubagentTemplatesManager(cwd),
+  });
+  return new ToolExecutionComponent(
+    tool.name,
+    "tool-call-1",
+    { name: "developer", description: "Review the proposed changes" },
+    undefined,
+    tool,
+    new TUI(new ProcessTerminal()),
+    cwd,
+  );
+}
+
+function colorAt(line: string, column: number, color: "foreground" | "background"): string {
+  const channel = color === "foreground" ? 3 : 4;
+  const setColor = new RegExp(`^${channel}8;[\\d;]+m`);
+  const resetColor = new RegExp(`^(?:0?|${channel}9)m`);
+  const prefix = sliceByColumn(line, 0, column + 1);
+  const code = prefix
+    .split("\x1b[")
+    .findLast((part) => setColor.test(part) || resetColor.test(part));
+  return code?.match(setColor)?.[0] ?? "default";
+}

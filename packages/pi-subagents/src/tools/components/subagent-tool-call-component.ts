@@ -1,6 +1,7 @@
 import type { Theme } from "@earendil-works/pi-coding-agent";
-import { type Component, Text, truncateToWidth } from "@earendil-works/pi-tui";
+import { type Component, Text } from "@earendil-works/pi-tui";
 import type { SubagentToolParamsType } from "../types.js";
+import { truncateToolLine } from "./truncate-tool-line.js";
 
 export class SubagentToolCallComponent implements Component {
   constructor(
@@ -23,10 +24,8 @@ export class SubagentToolCallComponent implements Component {
     const id = params.id ? theme.fg("syntaxNumber", `#${params.id}`) : undefined;
     const name = params.name ? theme.fg("accent", params.name) : undefined;
     const description = params.description ? theme.fg("dim", params.description) : undefined;
-    const header = truncateToWidth(
-      [toolTitle, id, name, description].filter(Boolean).join(" "),
-      width,
-    );
+    const title = [toolTitle, id, name, description].filter(Boolean).join(" ");
+    const header = truncateToolLine(title, width);
 
     if (expanded && params.prompt) {
       const prompt = new Text(theme.fg("dim", params.prompt.trim()), 0, 1);
