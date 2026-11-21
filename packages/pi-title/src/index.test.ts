@@ -144,6 +144,23 @@ describe("pi-title", { timeout: 30_000 }, () => {
       expect(sessionName()).toBeUndefined();
       expect(t.events.uiCallsFor("notify").length).toBeGreaterThan(0);
     });
+
+    it("ignores runs started by a custom message, which have no prompt", async () => {
+      t = await createTestSession({ extensionFactories: [piTitle] });
+      const errors: unknown[] = [];
+      t.session.extensionRunner.onError((error: unknown) => errors.push(error));
+
+      // Newer pi fires before_agent_start for custom-message runs without a `prompt` field.
+      await t.session.extensionRunner.emitBeforeAgentStart(
+        undefined as any,
+        undefined,
+        "",
+        {} as any,
+      );
+
+      expect(errors).toEqual([]);
+      expect(mockComplete).not.toHaveBeenCalled();
+    });
   });
 
   describe("session_shutdown", () => {
