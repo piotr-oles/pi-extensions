@@ -1,5 +1,10 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { createAgentSession } from "@earendil-works/pi-coding-agent";
+import {
+  createAgentSession,
+  initTheme,
+  ToolExecutionComponent,
+} from "@earendil-works/pi-coding-agent";
+import { ProcessTerminal, sliceByColumn, TUI } from "@earendil-works/pi-tui";
 import stripAnsi from "strip-ansi";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SubagentInstancesManager } from "../domain/subagent-instances-manager.js";
@@ -151,6 +156,35 @@ describe("subagent tool", () => {
     expect(onInvalidate).not.toHaveBeenCalled();
   });
 
+  it("documents the broken background behind the truncation dots", () => {
+    initTheme("dark");
+    const ctx = makeContext();
+    const tool = createSubagentTool({
+      pi: {} as ExtensionAPI,
+      instanceManager: new SubagentInstancesManager(1),
+      templatesManager: new SubagentTemplatesManager(ctx.cwd),
+    });
+    const card = new ToolExecutionComponent(
+      tool.name,
+      "tool-call-1",
+      { name: "developer", description: "Review the proposed changes" },
+      undefined,
+      tool,
+      new TUI(new ProcessTerminal()),
+      ctx.cwd,
+    );
+
+    const header = card.render(28).find((line) => stripAnsi(line).includes("subagent"))!;
+    const dots = stripAnsi(header).indexOf("...");
+    expect(dots).toBeGreaterThan(0);
+    // Broken: The dots use the terminal background, not the tool card background.
+    expect([0, 1, 2].map((offset) => backgroundAt(header, dots + offset))).toEqual([
+      "default",
+      "default",
+      "default",
+    ]);
+  });
+
   it("renders Pi tool errors when expanded", () => {
     const ctx = makeContext();
     const tool = createSubagentTool({
@@ -178,3 +212,9 @@ describe("subagent tool", () => {
     expect(stripAnsi(expanded.render(120).join("\n"))).toContain(providerError);
   });
 });
+
+function backgroundAt(line: string, column: number): string {
+  const prefix = sliceByColumn(line, 0, column + 1);
+  const code = prefix.split("\x1b[").findLast((part) => /^(?:0?|49|48;[\d;]+)m/.test(part));
+  return code?.match(/^48;[\d;]+m/)?.[0] ?? "default";
+}
