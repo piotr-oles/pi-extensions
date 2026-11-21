@@ -23,10 +23,9 @@ export class SubagentToolCallComponent implements Component {
     const id = params.id ? theme.fg("syntaxNumber", `#${params.id}`) : undefined;
     const name = params.name ? theme.fg("accent", params.name) : undefined;
     const description = params.description ? theme.fg("dim", params.description) : undefined;
-    const header = truncateToWidth(
-      [toolTitle, id, name, description].filter(Boolean).join(" "),
-      width,
-    );
+    const title = [toolTitle, id, name, description].filter(Boolean).join(" ");
+    // Reset only the foreground so the truncation dots keep the tool card background.
+    const header = truncateToWidth(title, width).replaceAll("\x1b[0m", "\x1b[39m");
 
     if (expanded && params.prompt) {
       const prompt = new Text(theme.fg("dim", params.prompt.trim()), 0, 1);

@@ -156,7 +156,7 @@ describe("subagent tool", () => {
     expect(onInvalidate).not.toHaveBeenCalled();
   });
 
-  it("documents the broken background behind the truncation dots", () => {
+  it("keeps the tool card background behind the truncation dots", () => {
     initTheme("dark");
     const ctx = makeContext();
     const tool = createSubagentTool({
@@ -177,11 +177,11 @@ describe("subagent tool", () => {
     const header = card.render(28).find((line) => stripAnsi(line).includes("subagent"))!;
     const dots = stripAnsi(header).indexOf("...");
     expect(dots).toBeGreaterThan(0);
-    // Broken: The dots use the terminal background, not the tool card background.
+    const headerBackground = backgroundAt(header, dots - 1);
     expect([0, 1, 2].map((offset) => backgroundAt(header, dots + offset))).toEqual([
-      "default",
-      "default",
-      "default",
+      headerBackground,
+      headerBackground,
+      headerBackground,
     ]);
   });
 
