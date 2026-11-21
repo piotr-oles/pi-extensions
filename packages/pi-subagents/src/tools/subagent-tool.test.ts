@@ -156,7 +156,7 @@ describe("subagent tool", () => {
     expect(onInvalidate).not.toHaveBeenCalled();
   });
 
-  it("keeps the tool card background behind the truncation dots", () => {
+  it.each(["foreground", "background"] as const)("documents the truncation dot %s", (color) => {
     initTheme("dark");
     const ctx = makeContext();
     const tool = createSubagentTool({
@@ -177,11 +177,12 @@ describe("subagent tool", () => {
     const header = card.render(28).find((line) => stripAnsi(line).includes("subagent"))!;
     const dots = stripAnsi(header).indexOf("...");
     expect(dots).toBeGreaterThan(0);
-    const headerBackground = backgroundAt(header, dots - 1);
-    expect([0, 1, 2].map((offset) => backgroundAt(header, dots + offset))).toEqual([
-      headerBackground,
-      headerBackground,
-      headerBackground,
+    // Broken: The dots use the default foreground instead of the header text color.
+    const headerColor = color === "foreground" ? "default" : colorAt(header, dots - 1, color);
+    expect([0, 1, 2].map((offset) => colorAt(header, dots + offset, color))).toEqual([
+      headerColor,
+      headerColor,
+      headerColor,
     ]);
   });
 
@@ -213,8 +214,13 @@ describe("subagent tool", () => {
   });
 });
 
-function backgroundAt(line: string, column: number): string {
+function colorAt(line: string, column: number, color: "foreground" | "background"): string {
+  const channel = color === "foreground" ? 3 : 4;
+  const setColor = new RegExp(`^${channel}8;[\\d;]+m`);
+  const resetColor = new RegExp(`^(?:0?|${channel}9)m`);
   const prefix = sliceByColumn(line, 0, column + 1);
-  const code = prefix.split("\x1b[").findLast((part) => /^(?:0?|49|48;[\d;]+)m/.test(part));
-  return code?.match(/^48;[\d;]+m/)?.[0] ?? "default";
+  const code = prefix
+    .split("\x1b[")
+    .findLast((part) => setColor.test(part) || resetColor.test(part));
+  return code?.match(setColor)?.[0] ?? "default";
 }
