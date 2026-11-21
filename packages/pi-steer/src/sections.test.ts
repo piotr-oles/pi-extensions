@@ -33,13 +33,15 @@ describe("parseSelection", () => {
   });
 
   it("exclusion starts with all sections and removes named sections", () => {
-    expect(parseSelection("-craftsmanship")).toEqual(
-      SECTIONS.filter((name) => name !== "craftsmanship"),
+    expect(parseSelection("-strategic-programming")).toEqual(
+      SECTIONS.filter((name) => name !== "strategic-programming"),
     );
   });
 
   it("exclusion removes sections from an explicit selection", () => {
-    expect(parseSelection("craftsmanship,ste100,-craftsmanship")).toEqual(["ste100"]);
+    expect(parseSelection("strategic-programming,ste100,-strategic-programming")).toEqual([
+      "ste100",
+    ]);
   });
 
   it("dedupes and drops unknown names", () => {
