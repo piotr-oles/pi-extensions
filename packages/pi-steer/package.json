@@ -1,6 +1,6 @@
 {
   "name": "@piotr-oles/pi-steer",
-  "version": "1.2.1",
+  "version": "2.0.0",
   "description": "Pi Agent extension: steer model behavior by composing system-prompt instruction sections from individual files via a flag",
   "repository": {
     "type": "git",
