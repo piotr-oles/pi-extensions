@@ -1,5 +1,6 @@
 import type { Component } from "@earendil-works/pi-tui";
-import { Container, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+import { Container, visibleWidth } from "@earendil-works/pi-tui";
+import { truncateToolLine } from "./truncate-tool-line.js";
 
 export class InlineContainer implements Component {
   private readonly container: Container;
@@ -46,7 +47,7 @@ export class InlineContainer implements Component {
 
     const text = parts.join(this.gap);
 
-    return [truncateToWidth(text, width, "", true)];
+    return [truncateToolLine(text, width, "", true)];
   }
 
   invalidate() {

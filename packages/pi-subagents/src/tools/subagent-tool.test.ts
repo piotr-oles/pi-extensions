@@ -173,14 +173,13 @@ describe("subagent tool", () => {
     ]);
   });
 
-  it("documents the broken background after a clipped result summary", () => {
+  it("keeps the card background after a clipped result summary", () => {
     const card = makeToolCard();
     card.updateResult({ content: [], details: makeDone().toEntry(), isError: false });
 
     const summary = card.render(10).find((line) => stripAnsi(line).trimStart().startsWith("✓"))!;
     expect(stripAnsi(summary)).toMatch(/^ ✓ 0 · \d  $/);
-    // Broken: Padding after the summary uses the terminal background.
-    expect(colorAt(summary, 9, "background")).toBe("default");
+    expect(colorAt(summary, 9, "background")).toBe(colorAt(summary, 1, "background"));
   });
 
   it("renders Pi tool errors when expanded", () => {
