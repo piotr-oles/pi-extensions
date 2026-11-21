@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SubagentInstancesManager } from "../domain/subagent-instances-manager.js";
 import { SubagentTemplatesManager } from "../domain/subagent-templates-manager.js";
 import { ScriptedSessionBuilder } from "../test-helpers/scripted-session-builder.js";
-import { makeAgentTemplate, makeRunning, mockTheme } from "../test-helpers.js";
+import { makeAgentTemplate, makeDone, makeRunning, mockTheme } from "../test-helpers.js";
 import { createSubagentTool } from "./subagent-tool.js";
 
 vi.mock("@earendil-works/pi-coding-agent", async (importOriginal) => {
@@ -160,24 +160,9 @@ describe("subagent tool", () => {
     "foreground",
     "background",
   ] as const)("keeps the header %s on each truncation dot", (color) => {
-    initTheme("dark");
-    const ctx = makeContext();
-    const tool = createSubagentTool({
-      pi: {} as ExtensionAPI,
-      instanceManager: new SubagentInstancesManager(1),
-      templatesManager: new SubagentTemplatesManager(ctx.cwd),
-    });
-    const card = new ToolExecutionComponent(
-      tool.name,
-      "tool-call-1",
-      { name: "developer", description: "Review the proposed changes" },
-      undefined,
-      tool,
-      new TUI(new ProcessTerminal()),
-      ctx.cwd,
-    );
-
-    const header = card.render(28).find((line) => stripAnsi(line).includes("subagent"))!;
+    const header = makeToolCard()
+      .render(28)
+      .find((line) => stripAnsi(line).includes("subagent"))!;
     const dots = stripAnsi(header).indexOf("...");
     expect(dots).toBeGreaterThan(0);
     const headerColor = colorAt(header, dots - 1, color);
@@ -186,6 +171,16 @@ describe("subagent tool", () => {
       headerColor,
       headerColor,
     ]);
+  });
+
+  it("documents the broken background after a clipped result summary", () => {
+    const card = makeToolCard();
+    card.updateResult({ content: [], details: makeDone().toEntry(), isError: false });
+
+    const summary = card.render(10).find((line) => stripAnsi(line).trimStart().startsWith("✓"))!;
+    expect(stripAnsi(summary)).toMatch(/^ ✓ 0 · \d  $/);
+    // Broken: Padding after the summary uses the terminal background.
+    expect(colorAt(summary, 9, "background")).toBe("default");
   });
 
   it("renders Pi tool errors when expanded", () => {
@@ -215,6 +210,25 @@ describe("subagent tool", () => {
     expect(stripAnsi(expanded.render(120).join("\n"))).toContain(providerError);
   });
 });
+
+function makeToolCard(): ToolExecutionComponent {
+  initTheme("dark");
+  const cwd = process.cwd();
+  const tool = createSubagentTool({
+    pi: {} as ExtensionAPI,
+    instanceManager: new SubagentInstancesManager(1),
+    templatesManager: new SubagentTemplatesManager(cwd),
+  });
+  return new ToolExecutionComponent(
+    tool.name,
+    "tool-call-1",
+    { name: "developer", description: "Review the proposed changes" },
+    undefined,
+    tool,
+    new TUI(new ProcessTerminal()),
+    cwd,
+  );
+}
 
 function colorAt(line: string, column: number, color: "foreground" | "background"): string {
   const channel = color === "foreground" ? 3 : 4;
