@@ -156,7 +156,10 @@ describe("subagent tool", () => {
     expect(onInvalidate).not.toHaveBeenCalled();
   });
 
-  it.each(["foreground", "background"] as const)("documents the truncation dot %s", (color) => {
+  it.each([
+    "foreground",
+    "background",
+  ] as const)("keeps the header %s on each truncation dot", (color) => {
     initTheme("dark");
     const ctx = makeContext();
     const tool = createSubagentTool({
@@ -177,8 +180,7 @@ describe("subagent tool", () => {
     const header = card.render(28).find((line) => stripAnsi(line).includes("subagent"))!;
     const dots = stripAnsi(header).indexOf("...");
     expect(dots).toBeGreaterThan(0);
-    // Broken: The dots use the default foreground instead of the header text color.
-    const headerColor = color === "foreground" ? "default" : colorAt(header, dots - 1, color);
+    const headerColor = colorAt(header, dots - 1, color);
     expect([0, 1, 2].map((offset) => colorAt(header, dots + offset, color))).toEqual([
       headerColor,
       headerColor,

@@ -1,6 +1,7 @@
 import type { Theme } from "@earendil-works/pi-coding-agent";
-import { type Component, Text, truncateToWidth } from "@earendil-works/pi-tui";
+import { type Component, Text } from "@earendil-works/pi-tui";
 import type { SubagentToolParamsType } from "../types.js";
+import { truncateToolLine } from "./truncate-tool-line.js";
 
 export class SubagentToolCallComponent implements Component {
   constructor(
@@ -24,8 +25,7 @@ export class SubagentToolCallComponent implements Component {
     const name = params.name ? theme.fg("accent", params.name) : undefined;
     const description = params.description ? theme.fg("dim", params.description) : undefined;
     const title = [toolTitle, id, name, description].filter(Boolean).join(" ");
-    // Reset only the foreground so the truncation dots keep the tool card background.
-    const header = truncateToWidth(title, width).replaceAll("\x1b[0m", "\x1b[39m");
+    const header = truncateToolLine(title, width);
 
     if (expanded && params.prompt) {
       const prompt = new Text(theme.fg("dim", params.prompt.trim()), 0, 1);
