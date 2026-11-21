@@ -1,3 +1,10 @@
+# [@piotr-oles/pi-subagents-v1.0.5](https://github.com/piotr-oles/pi-extensions/compare/@piotr-oles/pi-subagents-v1.0.4...@piotr-oles/pi-subagents-v1.0.5) (2026-11-21)
+
+
+### Bug Fixes
+
+* **pi-subagents:** preserve background on truncation dots ([#80](https://github.com/piotr-oles/pi-extensions/issues/80)) ([cf43fbf](https://github.com/piotr-oles/pi-extensions/commit/cf43fbfb5fae802a2c1a3d25a874c21affd0566c))
+
 # [@piotr-oles/pi-subagents-v1.0.4](https://github.com/piotr-oles/pi-extensions/compare/@piotr-oles/pi-subagents-v1.0.3...@piotr-oles/pi-subagents-v1.0.4) (2026-09-29)
 
 
