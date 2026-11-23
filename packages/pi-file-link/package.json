@@ -1,0 +1,45 @@
+{
+  "name": "@piotr-oles/pi-file-link",
+  "version": "0.0.0",
+  "description": "Pi extension: render local Markdown links as file URLs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/piotr-oles/pi-extensions.git",
+    "directory": "packages/pi-file-link"
+  },
+  "keywords": [
+    "pi-package"
+  ],
+  "type": "module",
+  "files": [
+    "src",
+    "!src/*.test.ts"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check": "biome ci src/",
+    "fix": "biome check --write src/",
+    "release": "semantic-release -e semantic-release-monorepo -e ../../.releaserc.json"
+  },
+  "dependencies": {
+    "micromark": "^4.0.2",
+    "micromark-util-decode-string": "^2.0.1"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "^1.6.0"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "1.6.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1"
+  }
+}

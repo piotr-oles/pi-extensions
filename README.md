@@ -7,6 +7,7 @@ A monorepo of [pi coding agent](https://github.com/earendil-works/pi) extensions
 | Package | Description |
 |---------|-------------|
 | [`pi-fence`](packages/pi-fence) | Detects and handles decorative fence/divider comments in written code — warn, block, or auto-remove |
+| [`pi-file-link`](packages/pi-file-link) | Turns local Markdown links in assistant replies into clickable `file://` links for Zed |
 | [`pi-caveman`](packages/pi-caveman) | Makes the agent respond in caveman mode — cuts ~75% of output tokens while keeping full technical accuracy |
 | [`pi-plan`](packages/pi-plan) | Adds a `plan` tool — saves a named markdown plan to disk, opens it for review, and waits for user confirmation before proceeding |
 | [`pi-reflag`](packages/pi-reflag) | Transparently rewrites `grep` → `rg` (ripgrep) and `find` → `fd` before they execute — faster searches, zero agent behavior change |
