@@ -1,6 +1,6 @@
 {
   "name": "@piotr-oles/pi-file-link",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Pi extension: render local Markdown links as file URLs",
   "repository": {
     "type": "git",
